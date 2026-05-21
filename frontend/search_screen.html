@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DirkMhob - Search</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body, html {
+            min-height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f4f6f9;
+        }
+
+        /* --- THE CHOSEN PHONE FRAME --- */
+        .phone-frame {
+            width: 100%;
+            max-width: 412px;
+            height: 100vh;
+            position: relative;
+            background-color: #ffffff;
+            overflow: hidden;
+            border-radius: 32px;
+            border: 1px solid rgba(15, 23, 42, 0.08);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.15);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- FLOATING APP HEADER SEARCH BAR --- */
+        .header-section {
+            background-color: #ffffff;
+            padding: 24px 20px 16px 20px;
+        }
+
+        .search-container {
+            display: flex;
+            align-items: center;
+            background-color: #ffffff;
+            border-radius: 50px;
+            padding: 12px 18px;
+            /* Replicates your specific deep blurry down-shadow frame look */
+            box-shadow: 0 6px 20px rgba(0, 119, 200, 0.15);
+            border: 1px solid rgba(0, 119, 200, 0.05);
+        }
+
+        .search-icon {
+            color: #94a3b8;
+            margin-right: 12px;
+            font-size: 1.3rem;
+        }
+
+        .search-container input {
+            border: none;
+            outline: none;
+            width: 100%;
+            font-size: 1rem;
+            color: #334155;
+        }
+
+        .search-container input::placeholder {
+            color: #94a3b8;
+        }
+
+        /* --- SCROLLABLE MAIN FEED CONTENT --- */
+        .scrollable-content {
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 80px; /* Room for fixed bottom navbar block */
+        }
+
+        .scrollable-content::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* --- FEED SECTION WRAPPERS --- */
+        .feed-section {
+            margin-top: 24px;
+        }
+
+        .section-heading {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #000000;
+            padding: 0 20px;
+            margin-bottom: 12px;
+            letter-spacing: -0.3px;
+        }
+
+        /* --- HORIZONTAL BOX SCROLLERS --- */
+        .horizontal-scroll-container {
+            overflow-x: auto;
+            white-space: nowrap;
+            padding: 0 20px;
+        }
+
+        .horizontal-scroll-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        .square-placeholder-card {
+            display: inline-block;
+            width: 80px;
+            height: 80px;
+            background-color: #dbdbdb; /* Matches your solid card mock color */
+            border-radius: 18px; /* Smooth heavy corners layout */
+            margin-right: 12px;
+            cursor: pointer;
+            border: none;
+            object-fit: cover;
+        }
+
+        /* Recent searches blank space row height spacer */
+        .empty-row-spacer {
+            height: 24px;
+        }
+
+        /* --- POPULAR TAG CHIPS WRAPPER --- */
+        .tags-grid-flex {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 0 20px;
+        }
+
+        .pill-search-tag {
+            background-color: #ffffff;
+            color: #000000;
+            border: 1px solid #ced6e0;
+            padding: 6px 18px;
+            border-radius: 50px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .pill-search-tag:hover {
+            background-color: #f1f5f9;
+            border-color: #a8b2c1;
+        }
+
+        /* --- FIXED BOTTOM NAVIGATION BAR --- */
+        .bottom-nav-bar {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 68px;
+            background-color: #ffffff;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: none;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-weight: 600;
+            width: 25%;
+            height: 100%;
+            justify-content: center;
+            text-decoration: none;
+        }
+
+        .nav-item.active {
+            color: #0077c8;
+        }
+
+        .nav-icon {
+            font-size: 1.4rem;
+            margin-bottom: 2px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="phone-frame">
+        
+        <!-- SEARCH TOP BAR -->
+        <header class="header-section">
+            <div class="search-container">
+                <span class="search-icon">🔍</span>
+                <input type="text" placeholder="search Food or Restaurants...">
+            </div>
+        </header>
+
+        <!-- MAIN SCROLLABLE STREAM CONTENT -->
+        <div class="scrollable-content">
+
+            <!-- POPULAR CUISINES -->
+            <div class="feed-section">
+                <h3 class="section-heading">Popular cuisines</h3>
+                <div class="horizontal-scroll-container">
+                    <!-- You can swap these <button> tags for <img> tags once you have your image assets ready -->
+                    <button class="square-placeholder-card" aria-label="Cuisine category item"></button>
+                    <button class="square-placeholder-card" aria-label="Cuisine category item"></button>
+                    <button class="square-placeholder-card" aria-label="Cuisine category item"></button>
+                    <button class="square-placeholder-card" aria-label="Cuisine category item"></button>
+                    <button class="square-placeholder-card" aria-label="Cuisine category item"></button>
+                </div>
+            </div>
+
+            <!-- RECENT SEARCHES Spacer -->
+            <div class="feed-section">
+                <h3 class="section-heading">Recent searches</h3>
+                <div class="empty-row-spacer"></div>
+            </div>
+
+            <!-- FEATURED ON DIRKMHOB -->
+            <div class="feed-section">
+                <h3 class="section-heading">Featured on DirkMhob</h3>
+                <div class="horizontal-scroll-container">
+                    <button class="square-placeholder-card" aria-label="Featured venue item"></button>
+                    <button class="square-placeholder-card" aria-label="Featured venue item"></button>
+                    <button class="square-placeholder-card" aria-label="Featured venue item"></button>
+                    <button class="square-placeholder-card" aria-label="Featured venue item"></button>
+                    <button class="square-placeholder-card" aria-label="Featured venue item"></button>
+                </div>
+            </div>
+
+            <!-- POPULAR SEARCH TERMS IN RESTAURANTS -->
+            <div class="feed-section">
+                <h3 class="section-heading">Popular searches in restaurants</h3>
+                <div class="tags-grid-flex">
+                    <button class="pill-search-tag" onclick="fillSearch('pizza')">pizza</button>
+                    <button class="pill-search-tag" onclick="fillSearch('pizza')">pizza</button>
+                    <button class="pill-search-tag" onclick="fillSearch('pizza')">pizza</button>
+                    <button class="pill-search-tag" onclick="fillSearch('pizza')">pizza</button>
+                    <button class="pill-search-tag" onclick="fillSearch('pizza')">pizza</button>
+                    <button class="pill-search-tag" onclick="fillSearch('pizza')">pizza</button>
+                    <button class="pill-search-tag" onclick="fillSearch('pizza')">pizza</button>
+                    <button class="pill-search-tag" onclick="fillSearch('pizza')">pizza</button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- FIXED FOOTER BUTTON NAVIGATION BAR -->
+        <nav class="bottom-nav-bar">
+            <a href="home_screen.html" class="nav-item">
+                <span class="nav-icon">🏠</span>
+                <span>Home</span>
+            </a>
+            <a href="cart_screen.html" class="nav-item">
+                <span class="nav-icon">🛒</span>
+                <span>Cart</span>
+            </a>
+            <a href="search_screen.html" class="nav-item active">
+                <span class="nav-icon">🔍</span>
+                <span>Search</span>
+            </a>
+            <a href="profile_screen.html" class="nav-item" onclick="alert('Profile screen placeholder')">
+                <span class="nav-icon">👤</span>
+                <span>Profile</span>
+            </a>
+        </nav>
+
+    </div>
+
+    <!-- --- DYNAMIC HELPER INTERACTIVE SCRIPTS --- -->
+    <script>
+        function fillSearch(keywordText) {
+            // Automatically places the clicked tag keyword inside the text query area element
+            const searchInput = document.querySelector('.search-container input');
+            searchInput.value = keywordText;
+            searchInput.focus();
+        }
+    </script>
+</body>
+</html>

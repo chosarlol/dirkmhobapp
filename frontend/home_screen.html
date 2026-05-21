@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DirkMhob - Home</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body, html {
+            min-height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f4f6f9;
+        }
+
+        /* --- THE CHOSEN PHONE FRAME --- */
+        .phone-frame {
+            width: 100%;
+            max-width: 412px;
+            height: 100vh;
+            position: relative;
+            background-color: #f8fafc;
+            overflow: hidden;
+            border-radius: 32px;
+            border: 1px solid rgba(15, 23, 42, 0.08);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.15);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- TOP HEADER NAVIGATION --- */
+        .header-section {
+            background-color: #0077c8;
+            padding: 20px 16px 24px 16px;
+            border-bottom-left-radius: 28px;
+            border-bottom-right-radius: 28px;
+            box-shadow: 0 4px 12px rgba(0, 119, 200, 0.15);
+        }
+
+        .search-container {
+            display: flex;
+            align-items: center;
+            background-color: #ffffff;
+            border-radius: 50px;
+            padding: 10px 16px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        }
+
+        .search-icon {
+            color: #94a3b8;
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+
+        .search-container input {
+            border: none;
+            outline: none;
+            width: 100%;
+            font-size: 0.95rem;
+            color: #334155;
+        }
+
+        .search-container input::placeholder {
+            color: #94a3b8;
+        }
+
+        .notification-btn {
+            background: none;
+            border: none;
+            color: #ffffff;
+            font-size: 1.4rem;
+            margin-left: 12px;
+            cursor: pointer;
+        }
+
+        /* --- SCROLLABLE CONTAINER --- */
+        .scrollable-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 0 80px 0;
+        }
+
+        .scrollable-content::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* --- HORIZONTAL ADS/BANNER ROW --- */
+        .promo-scroll-wrapper {
+            overflow-x: auto;
+            white-space: nowrap;
+            padding: 8px 16px 20px 16px; /* add top padding so promos sit below header */
+            margin-bottom: 20px;
+            scroll-snap-type: x mandatory;
+        }
+
+        .promo-scroll-wrapper::-webkit-scrollbar,
+        .categories-wrapper::-webkit-scrollbar {
+            display: none;
+        }
+
+        .promo-card-link {
+            display: inline-block;
+            margin-right: 12px;
+            text-decoration: none;
+            scroll-snap-align: start;
+            vertical-align: top; /* prevent baseline clipping */
+        }
+
+        .promo-card {
+            width: 180px;
+            height: 120px;
+            padding: 14px;
+            border-radius: 16px;
+            background: radial-gradient(circle at top left, #0052d4, #001f66 60%, #000b26 100%);
+            color: #ffffff;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+            border: 1px dashed rgba(255, 255, 255, 0.35);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .promo-card .badge {
+            background-color: rgba(255, 255, 255, 0.14);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 999px;
+            padding: 4px 10px;
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .promo-card .offer-title {
+            font-size: 0.75rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: #93c5fd;
+            margin-bottom: 4px;
+        }
+
+        .promo-card .discount {
+            font-size: 1.5rem;
+            font-weight: 900;
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+
+        .promo-card .offer-details {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.85);
+            line-height: 1.3;
+        }
+
+        .see-more-card {
+            display: inline-flex;
+            width: 180px;
+            height: 120px;
+            border-radius: 16px;
+            background-color: #cbd5e1;
+            color: #1e293b;
+            justify-content: center;
+            align-items: center;
+            font-weight: 700;
+            text-decoration: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            margin-right: 12px;
+            scroll-snap-align: start;
+            border: 1px solid rgba(148, 163, 184, 0.45);
+        }
+
+        .promo-img-placeholder {
+            width: 180px;
+            height: 120px;
+            border-radius: 16px;
+            object-fit: cover;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            background-color: #cbd5e1; /* Visual placeholder background */
+            display: block;
+        }
+
+        /* --- CATEGORIES ROW --- */
+        .categories-wrapper {
+            display: flex;
+            overflow-x: auto;
+            gap: 12px;
+            padding: 0 16px;
+            margin-bottom: 24px;
+            scroll-snap-type: x mandatory;
+        }
+
+        .categories-wrapper::-webkit-scrollbar {
+            display: none;
+        }
+
+        .category-item {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-width: 85px;
+            padding: 10px 0;
+            cursor: pointer;
+            background: none;
+            border: none;
+            scroll-snap-align: start;
+        }
+
+        .category-item.see-more {
+            min-width: 100px;
+            border-radius: 18px;
+            border: 1px dashed #93c5fd;
+            background-color: #eff6ff;
+            color: #2563eb;
+            font-weight: 700;
+        }
+
+        .category-item.see-more span {
+            color: #2563eb;
+        }
+
+        .category-img-placeholder {
+            width: 65px;
+            height: 65px;
+            border-radius: 16px;
+            object-fit: cover;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.04);
+            margin-bottom: 6px;
+            background-color: #e2e8f0;
+            display: block;
+        }
+
+        .category-item span {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #475569;
+        }
+
+        /* --- RESTAURANT LIST LISTINGS --- */
+        .section-heading {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #0f172a;
+            padding: 0 16px;
+            margin-bottom: 14px;
+        }
+
+        .restaurant-list {
+            padding: 0 16px;
+        }
+
+        .restaurant-card {
+            background-color: #ffffff;
+            border-radius: 20px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            margin-bottom: 14px;
+            box-shadow: 0 4px 15px rgba(15, 23, 42, 0.03);
+            border: 1px solid rgba(15, 23, 42, 0.04);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .restaurant-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .restaurant-logo-img {
+            width: 85px;
+            height: 85px;
+            border-radius: 12px;
+            object-fit: contain;
+            margin-right: 16px;
+            flex-shrink: 0;
+            border: 1px solid #e2e8f0;
+            background-color: #f8fafc;
+        }
+
+        .restaurant-details {
+            flex: 1;
+        }
+
+        .restaurant-name {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 4px;
+        }
+
+        .restaurant-cuisine {
+            font-size: 0.85rem;
+            color: #64748b;
+            margin-bottom: 6px;
+        }
+
+        .restaurant-stats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: #475569;
+            align-items: center;
+        }
+
+        .stat-rating {
+            color: #ea580c;
+            font-weight: 700;
+        }
+
+        .stat-tag {
+            background-color: #f0fdf4;
+            color: #16a34a;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        /* --- FIXED BOTTOM NAVIGATION BAR --- */
+        .bottom-nav-bar {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 68px;
+            background-color: #ffffff;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: none;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .nav-item.active {
+            color: #0077c8;
+        }
+
+        .nav-icon {
+            font-size: 1.4rem;
+            margin-bottom: 2px;
+        }
+
+        /* --- AUTH REQUIRED GUEST MODAL POP-UP --- */
+        .modal-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(4px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .auth-modal-card {
+            width: 85%;
+            background-color: #ffffff;
+            border-radius: 24px;
+            padding: 28px 20px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.open .auth-modal-card {
+            transform: translate(0) scale(1);
+        }
+
+        .modal-icon {
+            font-size: 3rem;
+            margin-bottom: 12px;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 8px;
+        }
+
+        .modal-text {
+            font-size: 0.9rem;
+            color: #64748b;
+            margin-bottom: 24px;
+            line-height: 1.4;
+        }
+
+        .modal-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .btn-modal-primary {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #0077c8 0%, #005fa0 100%);
+            color: #ffffff;
+            border: none;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-modal-secondary {
+            width: 100%;
+            padding: 12px;
+            background-color: #f1f5f9;
+            color: #475569;
+            border: none;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-modal-close {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            font-size: 0.85rem;
+            margin-top: 8px;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="phone-frame">
+        
+        <!-- HEADER SEARCH -->
+        <header class="header-section">
+            <div class="search-container">
+                <span class="search-icon">🔍</span>
+                <input type="text" placeholder="search Food or Restaurants...">
+                <button class="notification-btn" onclick="triggerAuthCheck()">🔔</button>
+            </div>
+        </header>
+
+        <!-- MAIN SCROLLABLE BODY -->
+        <div class="scrollable-content">
+            
+            <!-- PROMOTION BANNERS -->
+            <div class="promo-scroll-wrapper">
+                <a href="#" class="promo-card-link" onclick="triggerAuthCheck()">
+                    <img src="promo1.jpg" alt="DirkMhob Promo" class="promo-img-placeholder">
+                </a>
+                <a href="#" class="promo-card-link" onclick="triggerAuthCheck()">
+                    <img src="data:image/svg+xml;utf8,<svg xmlns='http://w3.org' width='180' height='120' viewBox='0 0 180 120'><rect width='100%' height='100%' fill='%230077c8'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23ffffff' font-family='sans-serif' font-size='14'>Texas Promo (180x120)</text></svg>" alt="Texas Chicken Promo" class="promo-img-placeholder">
+                </a>
+                <a href="#" class="promo-card-link" onclick="triggerAuthCheck()">
+                    <img src="data:image/svg+xml;utf8,<svg xmlns='http://w3.org' width='180' height='120' viewBox='0 0 180 120'><rect width='100%' height='100%' fill='%23b91c1c'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23ffffff' font-family='sans-serif' font-size='14'>Domino Promo (180x120)</text></svg>" alt="Domino's Promo" class="promo-img-placeholder">
+                </a>
+                <a href="#" class="see-more-card" onclick="triggerAuthCheck()">See more</a>
+            </div>
+
+            <!-- CATEGORIES SELECTION FEED -->
+            <div class="categories-wrapper">
+                <button class="category-item" onclick="triggerAuthCheck()">
+                    <!-- REPLACE WITH YOUR IMAGE PATH (e.g. src="asian.png") -->
+                    <img src="asian_dishes.jpg" alt="Asian Cuisine" class="category-img-placeholder">
+                    <span>Asian</span>
+                </button>
+                <button class="category-item" onclick="triggerAuthCheck()">
+                    <!-- REPLACE WITH YOUR IMAGE PATH -->
+                    <img src="khmer_dishes.jpg" alt="Khmer Cuisine" class="category-img-placeholder">
+                    <span>Khmer</span>
+                </button>
+                <button class="category-item" onclick="triggerAuthCheck()">
+                    <!-- REPLACE WITH YOUR IMAGE PATH -->
+                    <img src="coffee_dishes.jpg" alt="Coffee" class="category-img-placeholder">
+                    <span>Coffee</span>
+                </button>
+                <button class="category-item" onclick="triggerAuthCheck()">
+                    <!-- REPLACE WITH YOUR IMAGE PATH -->
+                    <img src="pastry_dishes.jpg" alt="Pastry" class="category-img-placeholder">
+                    <span>Pastry</span>
+                </button>                <button class="category-item see-more" onclick="triggerAuthCheck()">
+                    <span>See more</span>
+                </button>            </div>
+
+            <!-- RESTAURANTS FEED LIST -->
+            <h3 class="section-heading">Restaurants near you</h3>
+            
+            <div class="restaurant-list">
+                <!-- Restaurant Item 1 -->
+                <div class="restaurant-card" onclick="triggerAuthCheck()">
+                    <!-- REPLACE WITH YOUR IMAGE PATH (e.g. src="brown_logo.png") -->
+                    <img src="brown_logo.jpg" alt="Brown Logo" class="restaurant-logo-img">
+                    <div class="restaurant-details">
+                        <div class="restaurant-name">Brown - TK Avenue</div>
+                        <div class="restaurant-cuisine">Bakery • Coffee</div>
+                        <div class="restaurant-stats">
+                            <span class="stat-rating">⭐ 4.6 (250+)</span>
+                            <span class="stat-tag">Free Delivery</span>
+                            <span>⏱️ 20-30 min • 2.0 km</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Restaurant Item 2 -->
+                <div class="restaurant-card" onclick="triggerAuthCheck()">
+                    <!-- REPLACE WITH YOUR IMAGE PATH -->
+                    <img src="texas_logo.jpg" alt="Texas Chicken Logo" class="restaurant-logo-img">
+                    <div class="restaurant-details">
+                        <div class="restaurant-name">Texas Chicken</div>
+                        <div class="restaurant-cuisine">Fast Food • Fried Chicken</div>
+                        <div class="restaurant-stats">
+                            <span class="stat-rating">⭐ 4.5 (120)</span>
+                            <span class="stat-tag">Free Delivery</span>
+                            <span>⏱️ 15-25 min • 1.2 km</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Restaurant Item 3 -->
+                <div class="restaurant-card" onclick="triggerAuthCheck()">
+                    <!-- REPLACE WITH YOUR IMAGE PATH -->
+                    <img src="kfc_logo.png" alt="KFC Logo" class="restaurant-logo-img">
+                    <div class="restaurant-details">
+                        <div class="restaurant-name">KFC - TK Avenue</div>
+                        <div class="restaurant-cuisine">Fast Food • Fried Chicken</div>
+                        <div class="restaurant-stats">
+                            <span class="stat-rating">⭐ 4.4 (700+)</span>
+                            <span>⏱️ 10-20 min • 1.5 km</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- FIXED BOTTOM FOOTER NAVIGATION -->
+        <nav class="bottom-nav-bar">
+            <button class="nav-item active">
+                <a href="home_screen.html" class="nav-item"></a>
+                <span class="nav-icon">🏠</span>
+                <span>Home</span>
+            </button>
+            <button class="nav-item" onclick="triggerAuthCheck()">
+                <a href="cart_screen.html" class="nav-item"></a>
+                <span class="nav-icon">🛒</span>
+                <span>Cart</span>
+            </button>
+            <button class="nav-item" onclick="triggerAuthCheck()">
+                <a href="search_screen.html" class="nav-item"></a>
+                <span class="nav-icon">🔍</span>
+                <span>Search</span>
+            </button>
+            <button class="nav-item" onclick="triggerAuthCheck()">
+                <a href="profile_screen.html" class="nav-item"></a>
+                <span class="nav-icon">👤</span>
+                <span>Profile</span>
+            </button>
+        </nav>
+
+        <!-- --- POPUP DIALOGUE BOX FOR GUESTS --- -->
+        <div class="modal-overlay" id="authModal">
+            <div class="auth-modal-card">
+                <div class="modal-icon">🔐</div>
+                <h4 class="modal-title">Account Required</h4>
+                <p class="modal-text">To view menu details, manage your profile, or purchase delicious meals, please sign in or create an account.</p>
+                <div class="modal-actions">
+                    <button class="btn-modal-primary" onclick="navigateTo('login.html')">Sign In</button>
+                    <button class="btn-modal-secondary" onclick="navigateTo('signup.html')">Create Account</button>
+                    <button class="btn-modal-close" onclick="closeAuthModal()">Continue as Guest</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- --- APP ROUTING LOGIC --- -->
+    <script>
+        let isGuestUser = true; 
+
+        function triggerAuthCheck() {
+            if (isGuestUser) {
+                document.getElementById('authModal').classList.add('open');
+            } else {
+                alert("Proceeding to selection page!");
+            }
+        }
+
+        function closeAuthModal() {
+            document.getElementById('authModal').classList.remove('open');
+        }
+
+        function navigateTo(pageUrl) {
+            window.location.href = pageUrl;
+        }
+    </script>
+</body>
+</html>

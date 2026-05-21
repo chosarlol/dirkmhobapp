@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DirkMhob</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body, html {
+            min-height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f4f6f9;
+            overflow: hidden;
+        }
+
+        .phone-frame {
+            width: 100%;
+            max-width: 412px;
+            min-height: 100vh;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 28px;
+            background-color: #ffffff;
+            background-image: 
+                repeating-linear-gradient(45deg, rgba(0, 119, 200, 0.04), rgba(0, 119, 200, 0.04) 2px, transparent 2px, transparent 40px),
+                repeating-linear-gradient(-45deg, rgba(0, 119, 200, 0.04), rgba(0, 119, 200, 0.04) 2px, #ffffff 2px, #ffffff 40px);
+            overflow: hidden;
+            border-radius: 32px;
+            border: 1px solid rgba(15, 23, 42, 0.08);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.15);
+        }
+
+        .phone-frame::before {
+            content: '';
+            position: absolute;
+            top: -20%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(0,119,200,0.15) 0%, rgba(255,255,255,0) 70%);
+            z-index: 1;
+        }
+
+        /* --- LOADING SCREEN STYLES --- */
+        #splash-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease-out, visibility 0.5s;
+        }
+
+        .logo-container {
+            text-align: center;
+            /* Slide the whole logo assembly in from the left side */
+            animation: driveIn 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        .bike-icon {
+            width: 180px;
+            height: auto;
+            /* Give the bike a continuous riding/vibration animation */
+            animation: rideVibration 0.2s linear infinite alternate;
+            animation-delay: 1.2s; /* Starts right after the drive-in completes */
+        }
+
+        .brand-name {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #333333;
+            margin-top: 15px;
+        }
+
+        /* Splash Screen Animations */
+        @keyframes driveIn {
+            0% {
+                transform: translateX(-150%) scale(0.7);
+                opacity: 0;
+            }
+            70% {
+                transform: translateX(10%) scale(1.05);
+                opacity: 1;
+            }
+            100% {
+                transform: translateX(0) scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes rideVibration {
+            0% { transform: translateY(0) rotate(0deg); }
+            100% { transform: translateY(-3px) rotate(1deg); }
+        }
+
+        /* --- AUTH SCREEN STYLES (HIDDEN AT START) --- */
+        #auth-screen {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            opacity: 0;
+            transform: scale(0.95);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+
+        #auth-screen.visible {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .auth-container {
+            width: 100%;
+            max-width: 360px;
+            text-align: center;
+        }
+
+        .auth-logo {
+            width: 100px;
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            margin-bottom: 10px;
+            color: #222;
+        }
+
+        p {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 0.95rem;
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            margin-bottom: 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-primary {
+            background-color: #1a8cff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #0073e6;
+        }
+
+        .btn-secondary {
+            background-color: #f0f2f5;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background-color: #e4e6eb;
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-frame">
+        <!-- 1. Animation Loading Screen -->
+        <div id="splash-screen">
+            <div class="logo-container">
+                <!-- Ensure your logo file is inside the same folder -->
+                <img src="logo.png" alt="DirkMhob Bike" class="bike-icon">
+                <div class="brand-name"></div>
+            </div>
+        </div>
+
+        <!-- 2. Main Login / Signup Screen -->
+        <div id="auth-screen">
+            <div class="auth-container">
+            <img src="logo.png" alt="Logo" class="auth-logo">
+            <h2>Welcome to DirkMhob</h2>
+            <p>Your foods delivered in a flash.</p>
+            
+            <button class="btn btn-primary" onclick="window.location.href='login.html'">Sign In</button>
+            <button class="btn btn-secondary" onclick="window.location.href='home_screen.html'">Continue as Guest</button>
+            <p>Don't have an account? <a href="#" onclick="window.location.href='signup.html'">Sign Up</a></p>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Screen Transition Controller -->
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            const splash = document.getElementById('splash-screen');
+            const auth = document.getElementById('auth-screen');
+
+            // Wait 3.5 seconds (drive in + vibrate a bit) then switch screens
+            setTimeout(() => {
+                // Fade out the splash panel
+                splash.style.opacity = '0';
+                splash.style.visibility = 'hidden';
+
+                // Smoothly fade in the login options
+                auth.classList.add('visible');
+            }, 3500); 
+        });
+    </script>
+</body>
+</html>

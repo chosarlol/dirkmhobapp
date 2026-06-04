@@ -348,6 +348,9 @@
             cursor: pointer;
             font-size: 0.75rem;
             font-weight: 600;
+            text-decoration: none;
+            flex: 1;
+            justify-content: center;
         }
 
         .nav-item.active {
@@ -465,7 +468,7 @@
         <header class="header-section">
             <div class="search-container">
                 <span class="search-icon">🔍</span>
-                <input type="text" placeholder="search Food or Restaurants...">
+                <input type="text" placeholder="Search Food or Restaurants...">
                 <button class="notification-btn" onclick="triggerAuthCheck()">🔔</button>
             </div>
         </header>
@@ -565,26 +568,22 @@
 
         <!-- FIXED BOTTOM FOOTER NAVIGATION -->
         <nav class="bottom-nav-bar">
-            <button class="nav-item active">
-                <a href="home_screen.html" class="nav-item"></a>
+            <a href="home_screen.html" class="nav-item active">
                 <span class="nav-icon">🏠</span>
                 <span>Home</span>
-            </button>
-            <button class="nav-item" onclick="triggerAuthCheck()">
-                <a href="cart_screen.html" class="nav-item"></a>
+            </a>
+            <a href="cart_screen.html" class="nav-item">
                 <span class="nav-icon">🛒</span>
                 <span>Cart</span>
-            </button>
-            <button class="nav-item" onclick="triggerAuthCheck()">
-                <a href="search_screen.html" class="nav-item"></a>
+            </a>
+            <a href="search_screen.html" class="nav-item">
                 <span class="nav-icon">🔍</span>
                 <span>Search</span>
-            </button>
-            <button class="nav-item" onclick="triggerAuthCheck()">
-                <a href="profile_screen.html" class="nav-item"></a>
+            </a>
+            <a href="profile_screen.html" class="nav-item">
                 <span class="nav-icon">👤</span>
                 <span>Profile</span>
-            </button>
+            </a>
         </nav>
 
         <!-- --- POPUP DIALOGUE BOX FOR GUESTS --- -->
@@ -602,6 +601,8 @@
         </div> -->
 
     </div>
+
+
 
     <!-- --- APP ROUTING LOGIC --- -->
     <!-- <script>

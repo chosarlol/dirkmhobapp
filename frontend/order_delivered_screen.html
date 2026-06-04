@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DirkMhob - Order Delivered</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body, html {
+            min-height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f4f6f9;
+        }
+
+        .phone-frame {
+            width: 100%;
+            max-width: 412px;
+            height: 100vh;
+            position: relative;
+            background-color: #ffffff;
+            overflow: hidden;
+            border-radius: 32px;
+            border: 1px solid rgba(15, 23, 42, 0.08);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.15);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .scrollable-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px 20px 120px 20px;
+        }
+        .scrollable-content::-webkit-scrollbar { display: none; }
+
+        /* --- CLOSE BUTTON --- */
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.3rem;
+            color: #334155;
+            cursor: pointer;
+            margin-bottom: 12px;
+            padding: 4px;
+            display: inline-block;
+        }
+
+        /* --- ENJOY HEADING --- */
+        .enjoy-heading {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #000000;
+            margin-bottom: 20px;
+        }
+
+        /* --- RESTAURANT CARD --- */
+        .restaurant-card {
+            background-color: #ffffff;
+            border-radius: 16px;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06);
+            border: 1px solid #f1f5f9;
+            margin-bottom: 16px;
+            position: relative;
+        }
+
+        .res-logo {
+            width: 52px;
+            height: 52px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #f59e0b, #e8002d);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.65rem;
+            font-weight: 900;
+            color: #ffffff;
+            margin-right: 12px;
+            flex-shrink: 0;
+            letter-spacing: -0.5px;
+        }
+
+        .res-info { flex: 1; }
+        .res-name { font-size: 0.95rem; font-weight: 700; color: #000000; margin-bottom: 2px; }
+
+        .order-id-badge {
+            background-color: #1a7de8;
+            color: #ffffff;
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 20px;
+            margin-left: 6px;
+        }
+
+        .total-paid { font-size: 0.8rem; color: #94a3b8; margin-bottom: 2px; }
+        .order-status { font-size: 1rem; font-weight: 800; color: #000000; }
+
+        .food-preview {
+            width: 70px;
+            height: 60px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #fde68a, #fbbf24);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            flex-shrink: 0;
+        }
+
+        /* --- DIVIDER --- */
+        .divider {
+            height: 1px;
+            background-color: #f1f5f9;
+            margin: 14px 0;
+        }
+
+        /* --- INFO ROWS --- */
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+        }
+
+        .info-label {
+            font-size: 0.9rem;
+            color: #94a3b8;
+            font-weight: 500;
+        }
+
+        .info-value {
+            font-size: 0.9rem;
+            color: #334155;
+            font-weight: 600;
+        }
+
+        /* --- RIDER CARD --- */
+        .rider-card {
+            background-color: #ffffff;
+            border-radius: 16px;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06);
+            border: 1px solid #f1f5f9;
+            margin: 14px 0;
+        }
+
+        .rider-avatar {
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1a7de8, #5ea4f3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            margin-right: 12px;
+            flex-shrink: 0;
+            border: 2px solid #e2e8f0;
+        }
+
+        .rider-text { flex: 1; }
+        .rider-role { font-size: 0.75rem; color: #94a3b8; }
+        .rider-name { font-size: 0.95rem; font-weight: 700; color: #000000; }
+
+        .rider-actions { display: flex; gap: 10px; }
+        .action-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 1.5px solid #e2e8f0;
+            background: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+            transition: background 0.15s;
+        }
+        .action-btn:hover { background: #f8fafc; }
+
+        /* --- REVIEW SECTION --- */
+        .review-section {
+            background-color: #ffffff;
+            border-radius: 16px;
+            padding: 18px 16px;
+            box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06);
+            border: 1px solid #f1f5f9;
+        }
+
+        .review-heading {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #000000;
+            margin-bottom: 14px;
+        }
+
+        /* Stars */
+        .stars-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .star {
+            font-size: 1.8rem;
+            cursor: pointer;
+            color: #e2e8f0;
+            transition: color 0.15s, transform 0.1s;
+        }
+        .star.selected { color: #f59e0b; }
+        .star:hover { transform: scale(1.15); }
+
+        /* Textarea */
+        .review-input {
+            width: 100%;
+            min-height: 100px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 12px 14px;
+            font-size: 0.9rem;
+            color: #334155;
+            resize: none;
+            outline: none;
+            background-color: #f8fafc;
+            transition: border 0.2s;
+        }
+        .review-input:focus { border-color: #1a7de8; background-color: #ffffff; }
+        .review-input::placeholder { color: #cbd5e1; }
+
+        /* --- BOTTOM SUBMIT BUTTON --- */
+        .bottom-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: #ffffff;
+            padding: 16px 20px 28px 20px;
+            box-shadow: 0 -4px 20px rgba(15, 23, 42, 0.08);
+        }
+
+        .submit-btn {
+            width: 100%;
+            background-color: #1a7de8;
+            color: #ffffff;
+            border: none;
+            border-radius: 16px;
+            padding: 16px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(26, 125, 232, 0.35);
+            transition: background 0.2s, transform 0.1s;
+        }
+        .submit-btn:hover { background-color: #1565c0; }
+        .submit-btn:active { transform: scale(0.98); }
+    </style>
+</head>
+<body>
+
+<div class="phone-frame">
+
+    <div class="scrollable-content">
+
+        <!-- Close -->
+        <button class="close-btn" onclick="history.back()">✕</button>
+
+        <!-- Heading -->
+        <h1 class="enjoy-heading">Enjoy your meal!</h1>
+
+        <!-- Restaurant Card -->
+        <div class="restaurant-card">
+            <div class="res-logo">TEXAS</div>
+            <div class="res-info">
+                <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:4px;">
+                    <span class="res-name">Texas Chicken-TK Avenue</span>
+                    <span class="order-id-badge">CKDCKD-6767</span>
+                </div>
+                <div class="total-paid">Total Paid $10.12</div>
+                <div class="order-status">Order Delivered</div>
+            </div>
+            <div class="food-preview">🍗</div>
+        </div>
+
+        <!-- Address & Delivered at -->
+        <div style="padding: 0 4px;">
+            <div class="info-row">
+                <span class="info-label">Address</span>
+                <span class="info-value">Portola Drive</span>
+            </div>
+            <div class="divider"></div>
+            <div class="info-row">
+                <span class="info-label">Delivered at</span>
+                <span class="info-value">09:45 PM</span>
+            </div>
+        </div>
+
+        <!-- Rider Card -->
+        <div class="rider-card">
+            <div class="rider-avatar">👨</div>
+            <div class="rider-text">
+                <div class="rider-role">Deliverer</div>
+                <div class="rider-name">Seang Cha</div>
+            </div>
+            <div class="rider-actions">
+                <button class="action-btn">💬</button>
+                <button class="action-btn">📞</button>
+            </div>
+        </div>
+
+        <!-- Review Section -->
+        <div class="review-section">
+            <div class="review-heading">How was your experience?</div>
+            <div class="stars-row">
+                <span class="star" onclick="selectStar(1)">☆</span>
+                <span class="star" onclick="selectStar(2)">☆</span>
+                <span class="star" onclick="selectStar(3)">☆</span>
+                <span class="star" onclick="selectStar(4)">☆</span>
+                <span class="star" onclick="selectStar(5)">☆</span>
+            </div>
+            <textarea class="review-input" placeholder="Share your thoughts..."></textarea>
+        </div>
+
+    </div>
+
+    <!-- Submit Button -->
+    <div class="bottom-bar">
+        <button class="submit-btn" onclick="submitReview()">Submit</button>
+    </div>
+
+</div>
+
+<script>
+    let selectedRating = 0;
+
+    function selectStar(rating) {
+        selectedRating = rating;
+        const stars = document.querySelectorAll('.star');
+        stars.forEach((star, index) => {
+            if (index < rating) {
+                star.textContent = '★';
+                star.classList.add('selected');
+            } else {
+                star.textContent = '☆';
+                star.classList.remove('selected');
+            }
+        });
+    }
+
+    function submitReview() {
+        const comment = document.querySelector('.review-input').value;
+        if (selectedRating === 0) {
+            alert('Please select a star rating!');
+            return;
+        }
+        alert(`Thank you for your review! ⭐ ${selectedRating}/5`);
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DirkMhob - Checkout</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body, html {
+            min-height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f4f6f9;
+        }
+
+        .phone-frame {
+            width: 100%;
+            max-width: 412px;
+            height: 100vh;
+            position: relative;
+            background-color: #f4f6f9;
+            overflow: hidden;
+            border-radius: 32px;
+            border: 1px solid rgba(15, 23, 42, 0.08);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.15);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- TOP HEADER BAR --- */
+        .top-header {
+            background-color: #1e88e5;
+            padding: 20px 16px 16px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .back-btn {
+            position: absolute;
+            left: 16px;
+            background: none;
+            border: none;
+            color: #ffffff;
+            font-size: 1.4rem;
+            cursor: pointer;
+            padding: 4px;
+        }
+
+        .header-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        /* --- SCROLLABLE CONTENT --- */
+        .scrollable-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 0 100px 0;
+        }
+        .scrollable-content::-webkit-scrollbar { display: none; }
+
+        /* --- MAP SECTION --- */
+        .map-section {
+            width: 100%;
+            height: 180px;
+            position: relative;
+            background: linear-gradient(135deg, #8db8d8 0%, #6a9fbf 30%, #4a8aa8 60%, #7aad96 100%);
+            overflow: hidden;
+        }
+
+        .map-overlay {
+            position: absolute;
+            inset: 0;
+            background-image:
+                repeating-linear-gradient(0deg, rgba(255,255,255,0.05) 0px, rgba(255,255,255,0.05) 1px, transparent 1px, transparent 40px),
+                repeating-linear-gradient(90deg, rgba(255,255,255,0.05) 0px, rgba(255,255,255,0.05) 1px, transparent 1px, transparent 40px);
+        }
+
+        /* Simulated map blocks */
+        .map-block {
+            position: absolute;
+            border-radius: 4px;
+            opacity: 0.6;
+        }
+
+        .map-pin {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -70%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .pin-icon {
+            width: 36px;
+            height: 36px;
+            background-color: #1e88e5;
+            border-radius: 50% 50% 50% 0;
+            transform: rotate(-45deg);
+            box-shadow: 0 4px 12px rgba(30, 136, 229, 0.5);
+            border: 3px solid #ffffff;
+        }
+
+        .pin-dot {
+            width: 8px;
+            height: 8px;
+            background-color: rgba(30, 136, 229, 0.3);
+            border-radius: 50%;
+            margin-top: 4px;
+        }
+
+        .edit-pin-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background-color: #ffffff;
+            border: none;
+            border-radius: 20px;
+            padding: 6px 14px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #334155;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        /* --- INFO CARDS SECTION --- */
+        .cards-section {
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .info-card {
+            background-color: #ffffff;
+            border-radius: 16px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .info-card:hover { background-color: #f8fafc; }
+
+        .card-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background-color: #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            margin-right: 14px;
+            flex-shrink: 0;
+        }
+
+        .card-text { flex: 1; }
+        .card-label { font-size: 0.95rem; font-weight: 700; color: #000000; margin-bottom: 2px; }
+        .card-value { font-size: 0.82rem; color: #94a3b8; }
+
+        .card-arrow {
+            color: #94a3b8;
+            font-size: 1rem;
+        }
+
+        /* --- PAYMENT SECTION --- */
+        .payment-section {
+            padding: 0 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .payment-option {
+            background-color: #ffffff;
+            border-radius: 16px;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .payment-option:hover { background-color: #f8fafc; }
+
+        .payment-logo {
+            width: 48px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 800;
+            margin-right: 14px;
+            flex-shrink: 0;
+            letter-spacing: -0.5px;
+        }
+
+        .khqr-logo {
+            background-color: #e8002d;
+            color: #ffffff;
+            font-size: 0.65rem;
+        }
+
+        .wing-logo {
+            background-color: #1a3a6b;
+            color: #f59e0b;
+            font-size: 0.65rem;
+        }
+
+        .card-logo {
+            background-color: #f1f5f9;
+            color: #64748b;
+            font-size: 1.2rem;
+        }
+
+        .payment-name { flex: 1; font-size: 0.95rem; font-weight: 600; color: #000000; }
+        .payment-sub { font-size: 0.8rem; color: #94a3b8; }
+
+        /* Radio button */
+        .radio-btn {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: 2px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .radio-btn.selected {
+            border-color: #1e88e5;
+        }
+
+        .radio-inner {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #1e88e5;
+        }
+
+        /* --- BOTTOM TOTAL + PLACE ORDER --- */
+        .bottom-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: #ffffff;
+            padding: 16px 20px 28px 20px;
+            box-shadow: 0 -4px 20px rgba(15, 23, 42, 0.08);
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+
+        .total-label {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #64748b;
+        }
+
+        .total-amount {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: #000000;
+        }
+
+        .place-order-btn {
+            width: 100%;
+            background-color: #1e88e5;
+            color: #ffffff;
+            border: none;
+            border-radius: 16px;
+            padding: 16px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            box-shadow: 0 6px 20px rgba(30, 136, 229, 0.35);
+        }
+
+        .place-order-btn:hover { background-color: #1565c0; }
+        .place-order-btn:active { transform: scale(0.98); }
+    </style>
+</head>
+<body>
+
+<div class="phone-frame">
+
+    <!-- TOP HEADER -->
+    <div class="top-header">
+        <button class="back-btn" onclick="history.back()">←</button>
+        <span class="header-title">Checkout</span>
+    </div>
+
+    <!-- SCROLLABLE CONTENT -->
+    <div class="scrollable-content">
+
+        <!-- MAP -->
+        <div class="map-section">
+            <div class="map-overlay"></div>
+
+            <!-- Simulated map buildings -->
+            <div class="map-block" style="width:80px;height:50px;background:#a0b8cc;top:10px;left:20px;"></div>
+            <div class="map-block" style="width:60px;height:40px;background:#8aacbf;top:80px;left:10px;"></div>
+            <div class="map-block" style="width:100px;height:60px;background:#b0c8d8;top:30px;left:120px;"></div>
+            <div class="map-block" style="width:70px;height:45px;background:#90b0c4;top:100px;left:140px;"></div>
+            <div class="map-block" style="width:90px;height:55px;background:#a8c0d0;top:20px;right:20px;"></div>
+            <div class="map-block" style="width:50px;height:35px;background:#80a8bc;top:90px;right:30px;"></div>
+            <!-- Roads -->
+            <div class="map-block" style="width:100%;height:18px;background:rgba(255,255,255,0.3);top:65px;left:0;border-radius:0;"></div>
+            <div class="map-block" style="width:18px;height:100%;background:rgba(255,255,255,0.3);left:105px;top:0;border-radius:0;"></div>
+
+            <!-- Pin -->
+            <div class="map-pin">
+                <div class="pin-icon"></div>
+                <div class="pin-dot"></div>
+            </div>
+
+            <button class="edit-pin-btn">Edit Pin</button>
+        </div>
+
+        <!-- INFO CARDS -->
+        <div class="cards-section">
+
+            <div class="info-card">
+                <div class="card-icon">🏠</div>
+                <div class="card-text">
+                    <div class="card-label">Home</div>
+                    <div class="card-value">Portola Drive</div>
+                </div>
+                <span class="card-arrow">›</span>
+            </div>
+
+            <div class="info-card">
+                <div class="card-icon">📞</div>
+                <div class="card-text">
+                    <div class="card-label">Phone</div>
+                    <div class="card-value">0123456789</div>
+                </div>
+                <span class="card-arrow">›</span>
+            </div>
+
+            <div class="info-card">
+                <div class="card-icon">⏱️</div>
+                <div class="card-text">
+                    <div class="card-label">Delivery time</div>
+                    <div class="card-value">20-30 mins</div>
+                </div>
+                <span class="card-arrow">›</span>
+            </div>
+
+        </div>
+
+        <!-- PAYMENT OPTIONS -->
+        <div class="payment-section">
+
+            <!-- KHQR -->
+            <div class="payment-option" onclick="selectPayment('khqr')">
+                <div class="payment-logo khqr-logo">KHQR</div>
+                <div class="payment-name">KHQR</div>
+                <div class="radio-btn selected" id="radio-khqr">
+                    <div class="radio-inner"></div>
+                </div>
+            </div>
+
+            <!-- Wing -->
+            <div class="payment-option" onclick="selectPayment('wing')">
+                <div class="payment-logo wing-logo">XXX</div>
+                <div class="payment-name">XXX-6747</div>
+                <div class="radio-btn" id="radio-wing"></div>
+            </div>
+
+            <!-- Add new card -->
+            <div class="payment-option" onclick="selectPayment('card')">
+                <div class="payment-logo card-logo">💳</div>
+                <div class="payment-name">Add new card</div>
+                <div class="radio-btn" id="radio-card"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- BOTTOM BAR -->
+    <div class="bottom-bar">
+        <div class="total-row">
+            <span class="total-label">Total</span>
+            <span class="total-amount">$ 10.12</span>
+        </div>
+        <button class="place-order-btn" onclick="placeOrder()">Place Order</button>
+    </div>
+
+</div>
+
+<script>
+    let selectedPayment = 'khqr';
+
+    function selectPayment(method) {
+        // Reset all
+        ['khqr', 'wing', 'card'].forEach(m => {
+            const radio = document.getElementById('radio-' + m);
+            radio.classList.remove('selected');
+            radio.innerHTML = '';
+        });
+
+        // Select chosen
+        selectedPayment = method;
+        const selected = document.getElementById('radio-' + method);
+        selected.classList.add('selected');
+        selected.innerHTML = '<div class="radio-inner"></div>';
+    }
+
+    function placeOrder() {
+        alert('Order placed successfully! 🎉');
+    }
+</script>
+
+</body>
+</html>

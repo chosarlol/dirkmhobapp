@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DirkMhob - Order Tracking</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body, html {
+            min-height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f4f6f9;
+        }
+
+        .phone-frame {
+            width: 100%;
+            max-width: 412px;
+            height: 100vh;
+            position: relative;
+            background-color: #ffffff;
+            overflow: hidden;
+            border-radius: 32px;
+            border: 1px solid rgba(15, 23, 42, 0.08);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.15);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- MAP SECTION (top 55%) --- */
+        .map-section {
+            width: 100%;
+            height: 58%;
+            position: relative;
+            background: linear-gradient(160deg, #7aad96 0%, #6a9fbf 25%, #8db8d8 50%, #4a8aa8 75%, #5a9060 100%);
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .map-overlay {
+            position: absolute;
+            inset: 0;
+            background-image:
+                repeating-linear-gradient(0deg, rgba(255,255,255,0.04) 0px, rgba(255,255,255,0.04) 1px, transparent 1px, transparent 35px),
+                repeating-linear-gradient(90deg, rgba(255,255,255,0.04) 0px, rgba(255,255,255,0.04) 1px, transparent 1px, transparent 35px);
+        }
+
+        /* Simulated map roads and blocks */
+        .road-h {
+            position: absolute;
+            height: 14px;
+            background: rgba(255,255,255,0.35);
+            border-radius: 2px;
+        }
+        .road-v {
+            position: absolute;
+            width: 14px;
+            background: rgba(255,255,255,0.35);
+            border-radius: 2px;
+        }
+        .map-block {
+            position: absolute;
+            border-radius: 6px;
+            opacity: 0.55;
+        }
+
+        /* Route line */
+        .route-line {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        /* Home pin */
+        .home-pin {
+            position: absolute;
+            bottom: 28%;
+            left: 38%;
+            transform: translate(-50%, 50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .home-pin-circle {
+            width: 32px;
+            height: 32px;
+            background-color: #1a7de8;
+            border-radius: 50%;
+            border: 3px solid #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            box-shadow: 0 3px 10px rgba(26,125,232,0.5);
+        }
+
+        /* Rider pin */
+        .rider-pin {
+            position: absolute;
+            top: 38%;
+            left: 52%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .rider-pin-circle {
+            width: 36px;
+            height: 36px;
+            background-color: #1a7de8;
+            border-radius: 50%;
+            border: 3px solid #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            box-shadow: 0 3px 10px rgba(26,125,232,0.5);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 3px 10px rgba(26,125,232,0.5); }
+            50% { box-shadow: 0 3px 20px rgba(26,125,232,0.9), 0 0 0 8px rgba(26,125,232,0.15); }
+        }
+
+        /* Red boundary highlight */
+        .area-highlight {
+            position: absolute;
+            top: 15%;
+            left: 18%;
+            width: 55%;
+            height: 50%;
+            border: 3px solid #e8002d;
+            border-radius: 40% 30% 50% 20% / 30% 50% 30% 60%;
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        /* X and Help buttons */
+        .map-btn-close {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            width: 36px;
+            height: 36px;
+            background: #ffffff;
+            border: none;
+            border-radius: 50%;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #334155;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .map-btn-help {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: #ffffff;
+            border: none;
+            border-radius: 20px;
+            padding: 8px 16px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #334155;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        /* --- BOTTOM PANEL --- */
+        .bottom-panel {
+            flex: 1;
+            background-color: #ffffff;
+            padding: 20px 20px 0 20px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .status-heading {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #000000;
+            margin-bottom: 4px;
+        }
+
+        .status-sub {
+            font-size: 0.9rem;
+            color: #94a3b8;
+            margin-bottom: 20px;
+        }
+
+        /* --- PROGRESS STEPS --- */
+        .progress-section {
+            margin-bottom: 16px;
+        }
+
+        .steps-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .step-circle {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            flex-shrink: 0;
+            position: relative;
+            z-index: 2;
+        }
+
+        .step-circle.done {
+            background-color: #1a7de8;
+            box-shadow: 0 3px 10px rgba(26,125,232,0.4);
+        }
+
+        .step-circle.active {
+            background-color: #1a7de8;
+            box-shadow: 0 3px 10px rgba(26,125,232,0.4);
+            animation: pulse 2s infinite;
+        }
+
+        .step-circle.pending {
+            background-color: #e2e8f0;
+        }
+
+        .step-line {
+            flex: 1;
+            height: 3px;
+            margin: 0 4px;
+        }
+
+        .step-line.done { background-color: #1a7de8; }
+        .step-line.pending { background-color: #e2e8f0; }
+
+        .progress-hint {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            text-align: center;
+        }
+
+        /* --- DIVIDER --- */
+        .divider {
+            height: 1px;
+            background-color: #f1f5f9;
+            margin: 14px 0;
+        }
+
+        /* --- RIDER INFO --- */
+        .rider-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .rider-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1a7de8, #5ea4f3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            flex-shrink: 0;
+            border: 2px solid #e2e8f0;
+        }
+
+        .rider-text { flex: 1; }
+        .rider-role { font-size: 0.78rem; color: #94a3b8; font-weight: 500; }
+        .rider-name { font-size: 1rem; font-weight: 700; color: #000000; }
+
+        .rider-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-btn {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            border: 1.5px solid #e2e8f0;
+            background: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+            transition: background 0.15s;
+        }
+        .action-btn:hover { background: #f8fafc; }
+
+        /* --- ORDER DETAIL BUTTON --- */
+        .order-detail-btn {
+            margin: 14px 0 20px 0;
+            width: 100%;
+            background-color: #1a7de8;
+            color: #ffffff;
+            border: none;
+            border-radius: 16px;
+            padding: 16px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(26, 125, 232, 0.35);
+            transition: background 0.2s, transform 0.1s;
+        }
+        .order-detail-btn:hover { background-color: #1565c0; }
+        .order-detail-btn:active { transform: scale(0.98); }
+    </style>
+</head>
+<body>
+
+<div class="phone-frame">
+
+    <!-- MAP SECTION -->
+    <div class="map-section">
+        <div class="map-overlay"></div>
+
+        <!-- Roads -->
+        <div class="road-h" style="width:100%;top:30%;"></div>
+        <div class="road-h" style="width:100%;top:55%;"></div>
+        <div class="road-h" style="width:100%;top:72%;"></div>
+        <div class="road-v" style="height:100%;left:25%;"></div>
+        <div class="road-v" style="height:100%;left:55%;"></div>
+        <div class="road-v" style="height:100%;right:20%;"></div>
+
+        <!-- Map blocks (buildings) -->
+        <div class="map-block" style="width:70px;height:50px;background:#8aacbf;top:5%;left:5%;"></div>
+        <div class="map-block" style="width:50px;height:40px;background:#7a9cb0;top:5%;left:30%;"></div>
+        <div class="map-block" style="width:90px;height:55px;background:#90b0c4;top:5%;right:5%;"></div>
+        <div class="map-block" style="width:60px;height:45px;background:#6a9ab4;top:38%;left:5%;"></div>
+        <div class="map-block" style="width:80px;height:50px;background:#85a8bc;top:60%;left:30%;"></div>
+        <div class="map-block" style="width:65px;height:42px;background:#7aa0b8;top:60%;right:5%;"></div>
+        <div class="map-block" style="width:55px;height:38px;background:#80aa9a;top:38%;right:5%;"></div>
+
+        <!-- Route SVG -->
+        <svg class="route-line" viewBox="0 0 412 240" preserveAspectRatio="none">
+            <path d="M 210 90 Q 180 130 155 165" stroke="#1a7de8" stroke-width="5" fill="none" stroke-linecap="round" stroke-dasharray="8 4" opacity="0.9"/>
+        </svg>
+
+        <!-- Area highlight -->
+        <div class="area-highlight"></div>
+
+        <!-- Home pin -->
+        <div class="home-pin">
+            <div class="home-pin-circle">🏠</div>
+        </div>
+
+        <!-- Rider pin -->
+        <div class="rider-pin">
+            <div class="rider-pin-circle">🛵</div>
+        </div>
+
+        <!-- Buttons -->
+        <button class="map-btn-close" onclick="history.back()">✕</button>
+        <button class="map-btn-help">Help</button>
+    </div>
+
+    <!-- BOTTOM PANEL -->
+    <div class="bottom-panel">
+
+        <div class="status-heading">Heading your way</div>
+        <div class="status-sub">arriving soon</div>
+
+        <!-- Progress Steps -->
+        <div class="progress-section">
+            <div class="steps-row">
+                <!-- Step 1: Order placed -->
+                <div class="step-circle done">🧾</div>
+                <div class="step-line done"></div>
+                <!-- Step 2: Confirmed -->
+                <div class="step-circle done">✅</div>
+                <div class="step-line done"></div>
+                <!-- Step 3: Preparing (active) -->
+                <div class="step-circle active">🍽️</div>
+                <div class="step-line pending"></div>
+                <!-- Step 4: On the way -->
+                <div class="step-circle pending">🛵</div>
+                <div class="step-line pending"></div>
+                <!-- Step 5: Delivered -->
+                <div class="step-circle pending">😊</div>
+            </div>
+            <p class="progress-hint">Give Seang a moment drop off your order.</p>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Rider Info -->
+        <div class="rider-info">
+            <div class="rider-avatar">👨</div>
+            <div class="rider-text">
+                <div class="rider-role">Deliverer</div>
+                <div class="rider-name">Seang Cha</div>
+            </div>
+            <div class="rider-actions">
+                <button class="action-btn">💬</button>
+                <button class="action-btn">📞</button>
+            </div>
+        </div>
+
+        <!-- Order Detail Button -->
+        <button class="order-detail-btn">Order Detail</button>
+
+    </div>
+
+</div>
+
+</body>
+</html>

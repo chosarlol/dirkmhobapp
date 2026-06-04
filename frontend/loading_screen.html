@@ -201,15 +201,15 @@
             <p>Your foods delivered in a flash.</p>
             
             <button class="btn btn-primary" onclick="window.location.href='login.html'">Sign In</button>
-            <button class="btn btn-secondary" onclick="window.location.href='home_screen.html'">Continue as Guest</button>
-            <p>Don't have an account? <a href="#" onclick="window.location.href='signup.html'">Sign Up</a></p>
+            <button class="btn btn-secondary" onclick="window.location.href='signup.html'">Sign Up</button>
+            <!-- <p>Don't have an account? <a href="#" onclick="window.location.href='signup.html'">Sign Up</a></p> -->
 
             </div>
         </div>
     </div>
 
-    <!-- 3. Screen Transition Controller -->
-    <script>
+
+<script>
         window.addEventListener('DOMContentLoaded', () => {
             const splash = document.getElementById('splash-screen');
             const auth = document.getElementById('auth-screen');
@@ -225,5 +225,33 @@
             }, 3500); 
         });
     </script>
+<!-- --- APP ROUTING LOGIC --- -->
+<!-- <script>
+    console.log("Home screen loaded. Reading token from storage:", localStorage.getItem('isAdminLoggedIn'));
+
+    function triggerAuthCheck() {
+        const loggedInStatus = localStorage.getItem('isAdminLoggedIn');
+        console.log("Click detected! Current status token is:", loggedInStatus);
+
+        // Direct conditional bypassing any variables
+        if (loggedInStatus === 'true') {
+            console.log("Access granted. Bypassing modal.");
+            alert("Proceeding to selection page!");
+        } else {
+            console.warn("Access denied. Showing popup modal.");
+            document.getElementById('authModal').classList.add('open');
+        }
+    }
+
+    function closeAuthModal() {
+        document.getElementById('authModal').classList.remove('open');
+    }
+
+    function navigateTo(pageUrl) {
+        window.location.href = pageUrl;
+    }
+</script> -->
+
+
 </body>
 </html>

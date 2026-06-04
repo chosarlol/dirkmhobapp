@@ -276,40 +276,93 @@
         <h2 class="page-title">Welcome Back</h2>
 
         <!-- Login Form Card -->
-        <div class="login-card">
-            <form action="#" method="POST" onsubmit="event.preventDefault();">
-                
-                <div class="form-group">
-                    <label for="username">Username</label>
-                    <div class="input-wrapper">
-                        <input type="text" id="username" placeholder="Enter your username" required>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <div class="input-wrapper">
-                        <input type="password" id="password" placeholder="••••••••" required>
-                    </div>
-                </div>
-
-                <div class="form-options">
-                    <label class="remember-me">
-                        <input type="checkbox" id="remember">
-                        Remember me
-                    </label>
-                    <a href="#" class="forgot-password">Forgot password?</a>
-                </div>
-
-                <button type="submit" class="btn-login">Sign In</button>
-
-                <div class="signup-redirect">
-                    Don't have an account? <a href="#" onclick="window.location.href='signup.html'">Sign up</a>
-                </div>
-
-            </form>
+    <div class="login-card">
+        <!-- Removed action and post attributes to prevent native browser overrides -->
+     <form onsubmit="return false;">
+        
+        <div class="form-group">
+            <label for="username">Username</label>
+            <div class="input-wrapper">
+                <input type="text" id="username" placeholder="Enter your username" required>
+            </div>
         </div>
-    </div>
+
+        <div class="form-group">
+            <label for="password">Password</label>
+            <div class="input-wrapper">
+                <input type="password" id="password" placeholder="••••••••" required>
+            </div>
+        </div>
+
+        <div class="form-options">
+            <label class="remember-me">
+                <input type="checkbox" id="remember">
+                Remember me
+            </label>
+            <a href="#" class="forgot-password">Forgot password?</a>
+        </div>
+
+        <!-- Changed type from "submit" to "button" to hand complete control to JS -->
+        <button type="button" id="submit-login-btn" class="btn-login">Sign In</button>
+
+        <div class="signup-redirect">
+            Don't have an account? <a href="#" onclick="window.location.href='signup.html'">Sign up</a>
+        </div>
+    </form>
+</div>
+
+<script>
+document.getElementById('submit-login-btn').addEventListener('click', async () => {
+    const usernameInput = document.getElementById('username').value;
+    const passwordInput = document.getElementById('password').value;
+    const loginButton = document.getElementById('submit-login-btn');
+
+    if (!usernameInput || !passwordInput) {
+        alert('Please fill out all fields.');
+        return;
+    }
+
+    loginButton.disabled = true;
+    loginButton.innerText = "Signing in...";
+
+    try {
+        const response = await fetch('http://localhost:8000/api/login/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                username: usernameInput,
+                password: passwordInput
+            })
+        });
+
+        const data = await response.json();
+        console.log("Server Response Data:", data); // Check this in console!
+
+        if (response.ok && data.status === 'success') {
+            console.log("Attempting redirection to home_screen.html now...");
+
+            // Save the authentication state in the browser storage
+            localStorage.setItem('isAdminLoggedIn', 'true');
+            
+            // Force redirection using different methods
+            window.location.replace('home_screen.html'); 
+        } else {
+            alert('Login failed: ' + (data.message || 'Unknown error'));
+        }
+
+    } catch (error) {
+        console.error('Network Error:', error);
+        alert('Could not connect to the backend server.');
+    } finally {
+        loginButton.disabled = false;
+        loginButton.innerText = "Sign In";
+    }
+});
+</script>
+
+
 
 </body>
 </html>

@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DirkMhob - Browse</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+
+        body, html {
+            min-height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f4f6f9;
+        }
+
+        .phone-frame {
+            width: 100%;
+            max-width: 390px;
+            height: 100vh;
+            position: relative;
+            background-color: #f4f6f9;
+            overflow: hidden;
+            border-radius: 32px;
+            border: 1px solid rgba(15,23,42,0.08);
+            box-shadow: 0 25px 60px rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* HEADER */
+        .header-section {
+            background-color: #1a7de8;
+            padding: 20px 16px 16px 16px;
+        }
+
+        .search-container {
+            display: flex;
+            align-items: center;
+            background-color: #ffffff;
+            border-radius: 50px;
+            padding: 10px 16px;
+        }
+        .search-icon { color: #94a3b8; margin-right: 10px; font-size: 1rem; }
+        .search-container input {
+            border: none; outline: none; width: 100%;
+            font-size: 0.9rem; color: #334155; background: transparent;
+        }
+
+        /* SCROLLABLE */
+        .scrollable-content { flex: 1; overflow-y: auto; padding-bottom: 80px; }
+        .scrollable-content::-webkit-scrollbar { display: none; }
+
+        /* CATEGORIES */
+        .category-row {
+            display: flex;
+            justify-content: space-around;
+            padding: 16px 16px 8px 16px;
+        }
+
+        .cat-pill {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+        }
+
+        .cat-circle {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 3px solid transparent;
+            background-color: #e2e8f0;
+            flex-shrink: 0;
+        }
+        .cat-circle img {
+            width: 64px;
+            height: 64px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .cat-pill.active .cat-circle { border-color: #1a7de8; }
+        .cat-label { font-size: 0.78rem; font-weight: 600; color: #64748b; }
+        .cat-pill.active .cat-label { color: #1a7de8; font-weight: 700; }
+
+        /* PROMO BANNER */
+        .promo-banner {
+            margin: 4px 16px 12px 16px;
+            background-color: #e2e8f0;
+            border-radius: 50px;
+            padding: 10px 20px;
+            text-align: center;
+            font-size: 0.82rem;
+            color: #64748b;
+        }
+
+        /* RESTAURANT CARDS */
+        .restaurant-list {
+            padding: 0 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .restaurant-card {
+            background-color: #ffffff;
+            border-radius: 16px;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 2px 8px rgba(15,23,42,0.05);
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .card-thumb {
+            width: 90px;
+            height: 80px;
+            border-radius: 12px;
+            flex-shrink: 0;
+            background-color: #f1f5f9;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+        }
+        .card-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+        .card-body { flex: 1; }
+        .card-name { font-size: 0.95rem; font-weight: 700; color: #000000; margin-bottom: 2px; }
+        .card-desc { font-size: 0.75rem; color: #94a3b8; margin-bottom: 6px; line-height: 1.4; }
+        .card-price { font-size: 1rem; font-weight: 700; color: #000000; }
+
+        .add-btn {
+            width: 32px; height: 32px;
+            background-color: #ffffff;
+            border: 2px solid #1a7de8;
+            border-radius: 50%;
+            color: #1a7de8;
+            font-size: 1.3rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            align-self: flex-end;
+        }
+
+        /* BOTTOM NAV */
+        .bottom-nav-bar {
+            position: absolute;
+            bottom: 0; width: 100%; height: 68px;
+            background-color: #ffffff;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 10;
+        }
+        .nav-item {
+            display: flex; flex-direction: column; align-items: center;
+            background: none; border: none; color: #94a3b8;
+            font-size: 0.75rem; font-weight: 600;
+            width: 25%; height: 100%; justify-content: center;
+            text-decoration: none;
+        }
+        .nav-item.active { color: #1a7de8; }
+        .nav-icon { font-size: 1.4rem; margin-bottom: 2px; }
+    </style>
+</head>
+<body>
+<div class="phone-frame">
+
+    <header class="header-section">
+        <div class="search-container">
+            <span class="search-icon">🔍</span>
+            <input type="text" placeholder="search Food or Restaurants...">
+        </div>
+    </header>
+
+    <div class="scrollable-content">
+
+        <!-- 4 CATEGORIES -->
+        <div class="category-row">
+            <div class="cat-pill" onclick="window.location.href='asian_dish.html'">
+                <div class="cat-circle">
+                    <img src="asian_dishes.jpg" alt="Asian" onerror="this.parentElement.innerHTML='🍜'">
+                </div>
+                <span class="cat-label">Asian</span>
+            </div>
+            <div class="cat-pill" onclick="window.location.href='khmer_dish.html'">
+                <div class="cat-circle">
+                    <img src="khmer_dishes.jpg" alt="Khmer" onerror="this.parentElement.innerHTML='🥗'">
+                </div>
+                <span class="cat-label">Khmer</span>
+            </div>
+            <div class="cat-pill active" onclick="window.location.href='coffee_dish.html'">
+                <div class="cat-circle">
+                    <img src="coffee_dishes.jpg" alt="Coffee" onerror="this.parentElement.innerHTML='☕'">
+                </div>
+                <span class="cat-label">Coffee</span>
+            </div>
+            <div class="cat-pill" onclick="window.location.href='pastry_dish.html'">
+                <div class="cat-circle">
+                    <img src="pastry_dishes.jpg" alt="Pastry" onerror="this.parentElement.innerHTML='🥐'">
+                </div>
+                <span class="cat-label">Pastry</span>
+            </div>
+        </div>
+
+        <!-- PROMO -->
+        <div class="promo-banner">new exclusive deal — use code <strong>DIRK30</strong></div>
+
+        <!-- RESTAURANTS -->
+        <div class="restaurant-list">
+
+            <a class="restaurant-card" href="res_brown.html">
+                <div class="card-thumb">
+                    <img src="brown_logo.jpg" alt="Brown" onerror="this.parentElement.innerHTML='🟤'">
+                </div>
+                <div class="card-body">
+                    <div class="card-name">Brown - TK Avenue</div>
+                    <div class="card-desc">Bakery • Coffee · ⭐ 4.6 (250+) · 🚚 Free · ⏱️ 20-30 min</div>
+                    <div class="card-price">$ 3.65</div>
+                </div>
+            </a>
+
+            <a class="restaurant-card" href="res_kfc.html">
+                <div class="card-thumb">
+                    <img src="kfc_logo.png" alt="KFC" onerror="this.parentElement.innerHTML='🍗'">
+                </div>
+                <div class="card-body">
+                    <div class="card-name">KFC – TK Avenue</div>
+                    <div class="card-desc">Fast Food • Fried Chicken · ⭐ 4.5 (300+) · 🚚 Free · ⏱️ 15-25 min</div>
+                    <div class="card-price">$ 3.50</div>
+                </div>
+            </a>
+
+            <a class="restaurant-card" href="res_texas.html">
+                <div class="card-thumb">
+                    <img src="texas_logo.jpg" alt="Texas Chicken" onerror="this.parentElement.innerHTML='🤠'">
+                </div>
+                <div class="card-body">
+                    <div class="card-name">Texas Chicken</div>
+                    <div class="card-desc">Fast Food • Fried Chicken · ⭐ 4.5 (120+) · 🚚 Free · ⏱️ 15-25 min</div>
+                    <div class="card-price">$ 2.90</div>
+                </div>
+            </a>
+
+        </div>
+    </div>
+
+    <nav class="bottom-nav-bar">
+        <a href="home_screen.html" class="nav-item">
+            <span class="nav-icon">🏠</span><span>Home</span>
+        </a>
+        <a href="cart_screen.html" class="nav-item">
+            <span class="nav-icon">🛒</span><span>Cart</span>
+        </a>
+        <a href="#" class="nav-item active">
+            <span class="nav-icon">🔍</span><span>Search</span>
+        </a>
+        <a href="profile_screen.html" class="nav-item">
+            <span class="nav-icon">👤</span><span>Profile</span>
+        </a>
+    </nav>
+
+</div>
+</body>
+</html>

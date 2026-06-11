@@ -338,7 +338,7 @@
                 <div class="pin-dot"></div>
             </div>
 
-            <button class="edit-pin-btn">Edit Pin</button>
+            <button class="edit-pin-btn" onclick="editPinPrompt()">Edit Pin</button>
         </div>
 
         <!-- INFO CARDS -->
@@ -405,9 +405,23 @@
 
     <!-- BOTTOM BAR -->
     <div class="bottom-bar">
+        <div class="summary-block">
+            <div class="summary-row">
+                <span>Subtotal</span>
+                <span id="subtotal-value">$ 0.00</span>
+            </div>
+            <div class="summary-row">
+                <span>Delivery Fee</span>
+                <span id="delivery-value">$ 2.50</span>
+            </div>
+            <div class="summary-row discount">
+                <span>Discount</span>
+                <span id="discount-value">-$ 0.00</span>
+            </div>
+        </div>
         <div class="total-row">
             <span class="total-label">Total</span>
-            <span class="total-amount">$ 10.12</span>
+            <span class="total-amount">$ 0.00</span>
         </div>
         <button class="place-order-btn" onclick="placeOrder()">Place Order</button>
     </div>
@@ -416,25 +430,58 @@
 
 <script>
     let selectedPayment = 'khqr';
+    let currentPin = 'Portola Drive';
 
     function selectPayment(method) {
-        // Reset all
         ['khqr', 'wing', 'card'].forEach(m => {
             const radio = document.getElementById('radio-' + m);
             radio.classList.remove('selected');
             radio.innerHTML = '';
         });
 
-        // Select chosen
         selectedPayment = method;
         const selected = document.getElementById('radio-' + method);
         selected.classList.add('selected');
         selected.innerHTML = '<div class="radio-inner"></div>';
     }
 
-    function placeOrder() {
-        alert('Order placed successfully! 🎉');
+    function loadCheckoutInfo() {
+        const checkoutStr = localStorage.getItem('checkoutInfo');
+        if (!checkoutStr) return;
+        const checkout = JSON.parse(checkoutStr);
+        const subtotal = checkout.total.totalUSD || 0;
+        const delivery = 2.5;
+        const discount = Math.min(7.62, subtotal);
+        const total = subtotal + delivery - discount;
+
+        document.getElementById('subtotal-value').textContent = `$ ${subtotal.toFixed(2)}`;
+        document.getElementById('delivery-value').textContent = `$ ${delivery.toFixed(2)}`;
+        document.getElementById('discount-value').textContent = `-$ ${discount.toFixed(2)}`;
+        document.getElementById('total-amount').textContent = `$ ${total.toFixed(2)}`;
     }
+
+    function editPinPrompt() {
+        const newPin = prompt('Enter a new delivery pin or location:', currentPin);
+        if (newPin && newPin.trim().length > 0) {
+            currentPin = newPin.trim();
+            document.querySelector('.card-value').textContent = currentPin;
+        }
+    }
+
+    function placeOrder() {
+        const checkoutStr = localStorage.getItem('checkoutInfo');
+        if (checkoutStr) {
+            localStorage.setItem('currentOrder', JSON.stringify({
+                ...JSON.parse(checkoutStr),
+                pin: currentPin,
+                paymentMethod: selectedPayment,
+                status: 'confirmed'
+            }));
+        }
+        window.location.href = 'order_comfirm.html';
+    }
+
+    document.addEventListener('DOMContentLoaded', loadCheckoutInfo);
 </script>
 
 </body>

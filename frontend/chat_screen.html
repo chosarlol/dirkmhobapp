@@ -261,8 +261,8 @@
 <div class="phone-container">
     
     <header class="app-bar">
-        <button class="back-btn" onclick="window.location.href='check_out3.html'">&#8592;</button>
-        <span class="user-name">Seang</span>
+        <button class="back-btn" onclick="history.back()">&#8592;</button>
+        <span class="user-name">Driver</span>
         <button class="call-btn">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M6.62 10.79a15.15 15.15 0 0 0 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
         </button>
@@ -270,29 +270,29 @@
 
     <!-- Message Bubble Board -->
     <main class="chat-content">
-        <div class="msg-row sent">
-            <div class="bubble">Hello</div>
+        <div class="msg-row received">
+            <div class="bubble">Hi! I just picked up your KFC order from TK Avenue and I'm on my way.</div>
             <span class="timestamp">09:30</span>
         </div>
 
         <div class="msg-row sent">
-            <div class="bubble">is my KFC order on the way?</div>
-            <span class="timestamp">09:30</span>
+            <div class="bubble">Great, thank you! Can you confirm the delivery address?</div>
+            <span class="timestamp">09:31</span>
         </div>
 
         <div class="msg-row received">
-            <div class="bubble">is my KFC order on the way?</div>
-            <span class="timestamp">09:35</span>
+            <div class="bubble">Yes, I'm heading to Portola Drive. I should arrive within 12 minutes.</div>
+            <span class="timestamp">09:32</span>
         </div>
 
         <div class="msg-row sent">
-            <div class="bubble">Awesome! When do you think you'll arrive?</div>
-            <span class="timestamp">09:30</span>
+            <div class="bubble">Perfect. Please let me know if you're delayed.</div>
+            <span class="timestamp">09:33</span>
         </div>
 
         <div class="msg-row received">
-            <div class="bubble">I should be there in about 15 minutes</div>
-            <span class="timestamp">09:30</span>
+            <div class="bubble">Sure, I'll keep you updated. Thanks!</div>
+            <span class="timestamp">09:34</span>
         </div>
     </main>
 
@@ -331,7 +331,55 @@
             <span>🎙️</span>
         </div>
     </div>
-</div>
+    </div>
+
+    <script>
+        const chatInput = document.querySelector('.chat-input');
+        const chatContent = document.querySelector('.chat-content');
+
+        function appendMessage(text, type) {
+            const wrapper = document.createElement('div');
+            wrapper.className = `msg-row ${type}`;
+            wrapper.innerHTML = `
+                <div class="bubble">${text}</div>
+                <span class="timestamp">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+            `;
+            chatContent.appendChild(wrapper);
+            chatContent.scrollTop = chatContent.scrollHeight;
+        }
+
+        function sendMessage() {
+            const text = chatInput.value.trim();
+            if (!text) return;
+            appendMessage(text, 'sent');
+            chatInput.value = '';
+
+            setTimeout(() => {
+                const reply = getAutoReply(text.toLowerCase());
+                appendMessage(reply, 'received');
+            }, 800);
+        }
+
+        function getAutoReply(text) {
+            if (text.includes('where') || text.includes('arrive')) {
+                return 'I am about 10 minutes away. I will be there soon.';
+            }
+            if (text.includes('delay') || text.includes('late')) {
+                return 'I am on my way. There is a small traffic delay, but I am moving now.';
+            }
+            if (text.includes('thank')) {
+                return 'You are welcome! I will update you when I reach your location.';
+            }
+            return 'Got it! I am heading there now.';
+        }
+
+        chatInput.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                sendMessage();
+            }
+        });
+    </script>
 
 </body>
 </html>

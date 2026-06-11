@@ -247,32 +247,7 @@
 
     <!-- Main Content Area -->
     <main class="content">
-        
-        <!-- Food Item 1 -->
-        <div class="card">
-            <img class="card-img" src="https://placeholder.com" alt="Eva Set A">
-            <div class="card-details">
-                <div class="card-header">
-                    <span class="item-name">EVA SET A</span>
-                    <span class="item-price">$ 9.49</span>
-                </div>
-                <p class="item-description">Spicy Delight Burger Fried Chicken (Ori/Spicy) 1pc Rice 2pcs Mashed Potato/Coleslaw (reg) Coke Refill</p>
-            </div>
-            <button class="add-btn">+</button>
-        </div>
-
-        <!-- Food Item 2 -->
-        <div class="card">
-            <img class="card-img" src="https://placeholder.com" alt="Mega Bytes">
-            <div class="card-details">
-                <div class="card-header">
-                    <span class="item-name">MEGA BYTES</span>
-                    <span class="item-price">$ 5.75</span>
-                </div>
-                <p class="item-description">A crispy chicken tender 20pcs</p>
-            </div>
-            <button class="add-btn">+</button>
-        </div>
+        <div id="checkout-items"></div>
 
         <!-- Delivery Address Selector -->
         <div class="info-row">
@@ -302,19 +277,19 @@
             </div>
             <div class="summary-row">
                 <span>Subtotal</span>
-                <span>$ 15.24</span>
+                <span id="subtotal-value">$ 0.00</span>
             </div>
             <div class="summary-row">
                 <span>Delivery Fee</span>
-                <span>$ 2.5</span>
+                <span id="delivery-value">$ 2.50</span>
             </div>
             <div class="summary-row discount">
                 <span>Discount</span>
-                <span class="value">-$ 7.62</span>
+                <span id="discount-value" class="value">-$ 0.00</span>
             </div>
             <div class="total-row">
                 <span>Total</span>
-                <span>$ 10.12</span>
+                <span id="total-value">$ 0.00</span>
             </div>
         </div>
 
@@ -322,11 +297,70 @@
 
     <!-- Bottom Submission Area -->
 <footer class="footer">
-    <a href="check_out2.html" style="text-decoration: none;">
-        <button class="continue-btn" type="button">Continue</button>
-    </a>
+        <button class="continue-btn" type="button" onclick="continueToPayment()">Continue</button>
 </footer>
 </div>
+
+<script>
+    function loadCart() {
+        const cartItemsStr = localStorage.getItem('cartItems');
+        const cartTotalStr = localStorage.getItem('cartTotal');
+        if (!cartItemsStr || !cartTotalStr) {
+            window.location.href = 'cart_screen.html';
+            return null;
+        }
+        return {
+            items: JSON.parse(cartItemsStr),
+            total: JSON.parse(cartTotalStr)
+        };
+    }
+
+    function renderCheckoutItems() {
+        const cart = loadCart();
+        if (!cart) return;
+
+        const container = document.getElementById('checkout-items');
+        container.innerHTML = '';
+
+        cart.items.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `
+                <img class="card-img" src="https://placeholder.com" alt="${item.name}">
+                <div class="card-details">
+                    <div class="card-header">
+                        <span class="item-name">${item.name}</span>
+                        <span class="item-price">$ ${item.price.toFixed(2)}</span>
+                    </div>
+                    <p class="item-description">${item.restaurant} · Qty ${item.quantity}</p>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+
+        const subtotal = cart.total.totalUSD;
+        const delivery = 2.5;
+        const discount = Math.min(7.62, subtotal);
+        const total = subtotal + delivery - discount;
+
+        document.getElementById('subtotal-value').textContent = `$ ${subtotal.toFixed(2)}`;
+        document.getElementById('delivery-value').textContent = `$ ${delivery.toFixed(2)}`;
+        document.getElementById('discount-value').textContent = `-$ ${discount.toFixed(2)}`;
+        document.getElementById('total-value').textContent = `$ ${total.toFixed(2)}`;
+    }
+
+    function continueToPayment() {
+        const cart = loadCart();
+        if (!cart) return;
+        localStorage.setItem('checkoutInfo', JSON.stringify({
+            items: cart.items,
+            total: cart.total
+        }));
+        window.location.href = 'check_out2.html';
+    }
+
+    document.addEventListener('DOMContentLoaded', renderCheckoutItems);
+</script>
 
 </body>
 </html>

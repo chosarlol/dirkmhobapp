@@ -330,6 +330,34 @@
         }
         .order-detail-btn:hover { background-color: #1565c0; }
         .order-detail-btn:active { transform: scale(0.98); }
+
+        .tracking-toast {
+            display: none;
+            position: absolute;
+            bottom: 110px;
+            left: 20px;
+            right: 20px;
+            background-color: #1e88e5;
+            color: #ffffff;
+            padding: 14px 16px;
+            border-radius: 18px;
+            box-shadow: 0 10px 24px rgba(30, 136, 229, 0.3);
+            z-index: 12;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .tracking-toast button {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: #ffffff;
+            border-radius: 14px;
+            padding: 10px 14px;
+            cursor: pointer;
+            font-weight: 700;
+        }
     </style>
 </head>
 <body>
@@ -376,7 +404,7 @@
         </div>
 
         <!-- Buttons -->
-        <button class="map-btn-close" onclick="history.back()">✕</button>
+        <button class="map-btn-close" onclick="window.location.href='home_screen.html'">✕</button>
         <button class="map-btn-help">Help</button>
     </div>
 
@@ -423,11 +451,58 @@
         </div>
 
         <!-- Order Detail Button -->
-        <button class="order-detail-btn">Order Detail</button>
+        <button class="order-detail-btn" onclick="openOrderDetail()">Order Detail</button>
+        <button id="delivery-button" class="order-detail-btn" style="display:none; margin-top:12px;" onclick="goToDelivered()">Your food has been delivered</button>
+        <div class="tracking-toast" id="delivery-toast">
+            <span>Your order has been delivered.</span>
+            <button onclick="goToDelivered()">View</button>
+        </div>
 
     </div>
 
 </div>
 
+<script>
+    function openOrderDetail() {
+        window.location.href = 'order_comfirm.html';
+    }
+
+    function setDeliveryNotification() {
+        const notification = {
+            title: 'Your food has been delivered',
+            body: 'Tap to view delivery details.',
+            target: 'order_delivered_screen.html',
+            unread: true
+        };
+        localStorage.setItem('deliveryNotification', JSON.stringify(notification));
+    }
+
+    function goToDelivered() {
+        const notification = getDeliveryNotification();
+        if (notification) {
+            localStorage.setItem('deliveryNotification', JSON.stringify({ ...notification, unread: false }));
+        }
+        window.location.href = 'order_delivered_screen.html';
+    }
+
+    function getDeliveryNotification() {
+        const raw = localStorage.getItem('deliveryNotification');
+        return raw ? JSON.parse(raw) : null;
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+            const btn = document.getElementById('delivery-button');
+            const toast = document.getElementById('delivery-toast');
+            if (btn) {
+                btn.style.display = 'block';
+            }
+            if (toast) {
+                toast.style.display = 'flex';
+            }
+            setDeliveryNotification();
+        }, 30000);
+    });
+</script>
 </body>
 </html>

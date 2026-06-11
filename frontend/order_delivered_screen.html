@@ -368,6 +368,17 @@
         }
         alert(`Thank you for your review! ⭐ ${selectedRating}/5`);
     }
+    document.addEventListener('DOMContentLoaded', function() {
+        localStorage.removeItem('deliveryNotification');
+        const currentOrderStr = localStorage.getItem('currentOrder');
+        if (currentOrderStr) {
+            const currentOrder = JSON.parse(currentOrderStr);
+            if (currentOrder.status !== 'delivered') {
+                currentOrder.status = 'delivered';
+                localStorage.setItem('currentOrder', JSON.stringify(currentOrder));
+            }
+        }
+    });
 </script>
 
 </body>

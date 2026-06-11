@@ -72,12 +72,25 @@
         }
 
         .notification-btn {
+            position: relative;
             background: none;
             border: none;
             color: #ffffff;
             font-size: 1.4rem;
             margin-left: 12px;
             cursor: pointer;
+        }
+
+        .notif-dot {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #ef4444;
+            display: none;
+            box-shadow: 0 0 0 2px rgba(255,255,255,0.65);
         }
 
         /* --- SCROLLABLE CONTAINER --- */
@@ -469,7 +482,7 @@
             <div class="search-container">
                 <span class="search-icon">🔍</span>
                 <input type="text" placeholder="Search Food or Restaurants...">
-                <button class="notification-btn" onclick="triggerAuthCheck()">🔔</button>
+                <button class="notification-btn" id="notificationButton" onclick="handleNotificationClick(event)">🔔<span id="notif-dot" class="notif-dot"></span></button>
             </div>
         </header>
 
@@ -520,7 +533,7 @@
             
             <div class="restaurant-list">
                 <!-- Restaurant Item 1 -->
-                <div class="restaurant-card" onclick="triggerAuthCheck()">
+                <div class="restaurant-card" onclick="window.location.href='res_brown.html'">
                     <!-- REPLACE WITH YOUR IMAGE PATH (e.g. src="brown_logo.png") -->
                     <img src="brown_logo.jpg" alt="Brown Logo" class="restaurant-logo-img">
                     <div class="restaurant-details">
@@ -535,7 +548,7 @@
                 </div>
 
                 <!-- Restaurant Item 2 -->
-                <div class="restaurant-card" onclick="triggerAuthCheck()">
+                <div class="restaurant-card" onclick="window.location.href='res_texas.html'">
                     <!-- REPLACE WITH YOUR IMAGE PATH -->
                     <img src="texas_logo.jpg" alt="Texas Chicken Logo" class="restaurant-logo-img">
                     <div class="restaurant-details">
@@ -550,7 +563,7 @@
                 </div>
 
                 <!-- Restaurant Item 3 -->
-                <div class="restaurant-card" onclick="triggerAuthCheck()">
+                <div class="restaurant-card" onclick="window.location.href='res_kfc.html'">
                     <!-- REPLACE WITH YOUR IMAGE PATH -->
                     <img src="kfc_logo.png" alt="KFC Logo" class="restaurant-logo-img">
                     <div class="restaurant-details">
@@ -605,24 +618,34 @@
 
 
     <!-- --- APP ROUTING LOGIC --- -->
-    <!-- <script>
-        let isGuestUser = true; 
+    <script>
+        function getDeliveryNotification() {
+            const notificationStr = localStorage.getItem('deliveryNotification');
+            return notificationStr ? JSON.parse(notificationStr) : null;
+        }
 
-        function triggerAuthCheck() {
-            if (isGuestUser) {
-                document.getElementById('authModal').classList.add('open');
+        function updateNotificationBadge() {
+            const notification = getDeliveryNotification();
+            const dot = document.getElementById('notif-dot');
+            if (notification && notification.unread) {
+                dot.style.display = 'block';
             } else {
-                alert("Proceeding to selection page!");
+                dot.style.display = 'none';
             }
         }
 
-        function closeAuthModal() {
-            document.getElementById('authModal').classList.remove('open');
+        function handleNotificationClick(event) {
+            const notification = getDeliveryNotification();
+            if (notification && notification.unread) {
+                const nextPage = notification.target || 'order_delivered_screen.html';
+                localStorage.setItem('deliveryNotification', JSON.stringify({ ...notification, unread: false }));
+                window.location.href = nextPage;
+                return;
+            }
+            alert('No new notifications at the moment.');
         }
 
-        function navigateTo(pageUrl) {
-            window.location.href = pageUrl;
-        }
-    </script> -->
+        document.addEventListener('DOMContentLoaded', updateNotificationBadge);
+    </script>
 </body>
 </html>

@@ -337,7 +337,7 @@
                     <span class="total-price">$ 18.98</span>
                 </div>
 
-                <button class="btn-place-order" onclick="alert('Order placed!')">Place Order</button>
+                <button class="btn-place-order" onclick="goToCheckout()">Place Order</button>
             </div>
 
             <!-- ORDERED ITEMS SECTION -->
@@ -347,29 +347,8 @@
                     <a href="#" class="see-all-link">See All</a>
                 </div>
 
-                <div class="ordered-item-card">
-                    <img src="data:image/svg+xml;utf8,<svg xmlns='http://w3.org' width='70' height='70' viewBox='0 0 70 70'><rect width='100%' height='100%' fill='%23d4a574'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23ffffff' font-size='10'>Pasta</text></svg>" alt="Carbonara Spaghetti" class="ordered-item-image">
-                    <div class="ordered-item-info">
-                        <div class="ordered-item-name">Carbonara Spaghetti</div>
-                        <div class="ordered-item-restaurant">Delivery - Toul Kork Street 2004<br>From Brown - TK Avenue</div>
-                        <div class="status-and-track">
-                            <span class="status-badge">Arriving</span>
-                            <button class="btn-track" onclick="alert('Tracking order...')">Track</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="ordered-item-card">
-                    <img src="data:image/svg+xml;utf8,<svg xmlns='http://w3.org' width='70' height='70' viewBox='0 0 70 70'><rect width='100%' height='100%' fill='%2393d4a6'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23ffffff' font-size='9'>Matcha</text></svg>" alt="Iced Matcha Latte" class="ordered-item-image">
-                    <div class="ordered-item-info">
-                        <div class="ordered-item-name">Iced Matcha Latte (M)</div>
-                        <div class="ordered-item-restaurant">Delivery - Toul Kork Street 2004<br>From Brown - TK Avenue</div>
-                        <div class="status-and-track">
-                            <span class="status-badge">Arriving</span>
-                            <button class="btn-track" onclick="alert('Tracking order...')">Track</button>
-                        </div>
-                    </div>
-                </div>
+                <div id="ordered-items-list"></div>
+                <div id="ordered-items-empty" style="color:#64748b; padding:16px 0;">No confirmed order yet.</div>
             </div>
 
         </main>
@@ -400,11 +379,23 @@
     <script>
         const KHR_RATE = 4010;
 
+        function getDefaultCart() {
+            const defaultItems = [
+                { name: 'EVA SET A', price: 9.49, quantity: 1, restaurant: 'KFC - TK Avenue' },
+                { name: 'Mega Bytes', price: 5.75, quantity: 1, restaurant: 'KFC - TK Avenue' }
+            ];
+            const subtotal = defaultItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+            return {
+                items: defaultItems,
+                total: { totalUSD: subtotal, totalKHR: subtotal * KHR_RATE }
+            };
+        }
+
         function loadCartFromStorage() {
             const cartItemsStr = localStorage.getItem('cartItems');
             const cartTotalStr = localStorage.getItem('cartTotal');
             
-            if (!cartItemsStr) return null;
+            if (!cartItemsStr || !cartTotalStr) return null;
             
             return {
                 items: JSON.parse(cartItemsStr),
@@ -412,22 +403,29 @@
             };
         }
 
-        function renderCartItems() {
+        function saveCartToStorage(cart) {
+            localStorage.setItem('cartItems', JSON.stringify(cart.items));
+            localStorage.setItem('cartTotal', JSON.stringify(cart.total));
+        }
+
+        function ensureCartInStorage() {
             const cart = loadCartFromStorage();
+            if (cart) return cart;
+            const defaultCart = getDefaultCart();
+            saveCartToStorage(defaultCart);
+            return defaultCart;
+        }
+
+        function renderCartItems() {
+            const cart = ensureCartInStorage();
             if (!cart || cart.items.length === 0) return;
 
             const orderSummarySection = document.querySelector('.order-summary-section');
             const totalLabel = orderSummarySection.querySelector('.total-label');
             const totalPrice = orderSummarySection.querySelector('.total-price');
             
-            // Clear existing items (keep first 2 elements: label and one item)
-            const itemsContainer = orderSummarySection.querySelector('.order-item');
-            const parent = itemsContainer.parentElement;
-            
-            // Remove all order-item divs
             document.querySelectorAll('.order-item').forEach(el => el.remove());
             
-            let itemCount = 0;
             let totalQuantity = 0;
             
             // Render each cart item
@@ -445,23 +443,63 @@
                         </div>
                     </div>
                 `;
-                parent.insertBefore(itemDiv, parent.querySelector('.order-total'));
+                orderSummarySection.insertBefore(itemDiv, orderSummarySection.querySelector('.order-total'));
                 totalQuantity += item.quantity;
             });
             
-            // Update total
             totalLabel.textContent = `Total ${totalQuantity} items`;
             totalPrice.textContent = `$ ${cart.total.totalUSD.toFixed(2)}`;
         }
 
-        // Load cart when page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            renderCartItems();
-        });
+        function getCurrentOrder() {
+            const currentOrderStr = localStorage.getItem('currentOrder');
+            return currentOrderStr ? JSON.parse(currentOrderStr) : null;
+        }
+
+        function renderConfirmedOrder() {
+            const order = getCurrentOrder();
+            const list = document.getElementById('ordered-items-list');
+            const emptyText = document.getElementById('ordered-items-empty');
+            if (!list || !emptyText) return;
+
+            list.innerHTML = '';
+            if (!order || !order.items || order.items.length === 0) {
+                emptyText.style.display = 'block';
+                return;
+            }
+
+            emptyText.style.display = 'none';
+            order.items.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'ordered-item-card';
+                card.innerHTML = `
+                    <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='70' height='70' viewBox='0 0 70 70'><rect width='100%' height='100%' fill='%23f0ad4e'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23ffffff' font-size='10'>${item.name.substring(0, 6)}</text></svg>" alt="${item.name}" class="ordered-item-image">
+                    <div class="ordered-item-info">
+                        <div class="ordered-item-name">${item.name}</div>
+                        <div class="ordered-item-restaurant">${item.restaurant || 'From recent order'}</div>
+                        <div class="status-and-track">
+                            <span class="status-badge">${order.status === 'delivered' ? 'Delivered' : 'Arriving'}</span>
+                            <button class="btn-track" onclick="window.location.href='tracking_screen.html'">Track</button>
+                        </div>
+                    </div>
+                `;
+                list.appendChild(card);
+            });
+        }
+
+        function goToCheckout() {
+            ensureCartInStorage();
+            window.location.href = 'check_out.html';
+        }
 
         function navigateTo(pageUrl) {
             window.location.href = pageUrl;
         }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            renderCartItems();
+            renderConfirmedOrder();
+        });
     </script>
 </body>
 </html>

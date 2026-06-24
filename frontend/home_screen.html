@@ -3,8 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DirkMhob - Home</title>
+    <title>DirkMhob | Food Delivery</title>
     <style>
+        :root {
+            --primary: #0077c8;
+            --secondary: #ff6b35;
+            --background: #f8fafc;
+            --surface: #ffffff;
+            --text: #1e293b;
+            --muted: #64748b;
+            --border: #e2e8f0;
+            --shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+            --radius: 24px;
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
@@ -12,612 +24,1020 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
         }
 
-        body, html {
-            min-height: 100%;
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background: var(--background);
+            color: var(--text);
+            line-height: 1.5;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        img {
+            display: block;
+            max-width: 100%;
+        }
+
+        button,
+        input {
+            font: inherit;
+        }
+
+        .container {
+            width: min(1280px, calc(100% - 2rem));
+            margin: 0 auto;
+        }
+
+        .site-header {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: rgba(248, 250, 252, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(226, 232, 240, 0.9);
+        }
+
+        .navbar {
             display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 1rem 0;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            font-weight: 800;
+            font-size: 1.15rem;
+            color: var(--text);
+        }
+
+        .brand-mark {
+            display: inline-flex;
+            align-items: center;
             justify-content: center;
-            align-items: center;
-            background-color: #f4f6f9;
+            width: 42px;
+            height: 42px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #fff;
+            box-shadow: 0 12px 25px rgba(0, 119, 200, 0.22);
         }
 
-        /* --- THE CHOSEN PHONE FRAME --- */
-        .phone-frame {
-            width: 100%;
-            max-width: 412px;
-            height: 100vh;
-            position: relative;
-            background-color: #f8fafc;
-            overflow: hidden;
-            border-radius: 32px;
-            border: 1px solid rgba(15, 23, 42, 0.08);
-            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.15);
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* --- TOP HEADER NAVIGATION --- */
-        .header-section {
-            background-color: #0077c8;
-            padding: 20px 16px 24px 16px;
-            border-bottom-left-radius: 28px;
-            border-bottom-right-radius: 28px;
-            box-shadow: 0 4px 12px rgba(0, 119, 200, 0.15);
-        }
-
-        .search-container {
+        .nav-links {
             display: flex;
             align-items: center;
-            background-color: #ffffff;
-            border-radius: 50px;
-            padding: 10px 16px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+            gap: 1.1rem;
+            color: var(--muted);
+            font-weight: 600;
         }
 
-        .search-icon {
-            color: #94a3b8;
-            margin-right: 10px;
-            font-size: 1.2rem;
+        .nav-links a:hover {
+            color: var(--primary);
         }
 
-        .search-container input {
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .search-pill {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            padding: 0.7rem 0.95rem;
+            min-width: 260px;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+        }
+
+        .search-pill input {
             border: none;
             outline: none;
             width: 100%;
-            font-size: 0.95rem;
-            color: #334155;
+            background: transparent;
+            color: var(--text);
         }
 
-        .search-container input::placeholder {
-            color: #94a3b8;
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            border-radius: 999px;
+            padding: 0.8rem 1.15rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), #005fa0);
+            color: #fff;
+            box-shadow: 0 12px 24px rgba(0, 119, 200, 0.22);
+        }
+
+        .btn-secondary {
+            background: var(--surface);
+            color: var(--primary);
+            border: 1px solid rgba(0, 119, 200, 0.15);
         }
 
         .notification-btn {
             position: relative;
-            background: none;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
             border: none;
-            color: #ffffff;
-            font-size: 1.4rem;
-            margin-left: 12px;
+            background: var(--surface);
             cursor: pointer;
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
         }
 
         .notif-dot {
             position: absolute;
-            top: 6px;
-            right: 6px;
+            top: 8px;
+            right: 8px;
             width: 8px;
             height: 8px;
+            background: var(--secondary);
             border-radius: 50%;
-            background-color: #ef4444;
-            display: none;
-            box-shadow: 0 0 0 2px rgba(255,255,255,0.65);
-        }
-
-        /* --- SCROLLABLE CONTAINER --- */
-        .scrollable-content {
-            flex: 1;
-            overflow-y: auto;
-            padding: 16px 0 80px 0;
-        }
-
-        .scrollable-content::-webkit-scrollbar {
             display: none;
         }
 
-        /* --- HORIZONTAL ADS/BANNER ROW --- */
-        .promo-scroll-wrapper {
-            overflow-x: auto;
-            white-space: nowrap;
-            padding: 8px 16px 20px 16px; /* add top padding so promos sit below header */
-            margin-bottom: 20px;
-            scroll-snap-type: x mandatory;
+        .hero-section {
+            padding: 3rem 0 2rem;
         }
 
-        .promo-scroll-wrapper::-webkit-scrollbar,
-        .categories-wrapper::-webkit-scrollbar {
-            display: none;
+        .hero-card {
+            display: grid;
+            grid-template-columns: 1.05fr 0.95fr;
+            gap: 2rem;
+            padding: 2.2rem;
+            border-radius: 32px;
+            background: linear-gradient(135deg, rgba(0, 119, 200, 0.97), rgba(255, 107, 53, 0.9)), url('https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80') center/cover;
+            box-shadow: var(--shadow);
+            color: #fff;
+            overflow: hidden;
         }
 
-        .promo-card-link {
-            display: inline-block;
-            margin-right: 12px;
-            text-decoration: none;
-            scroll-snap-align: start;
-            vertical-align: top; /* prevent baseline clipping */
+        .hero-content {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-self: flex-start;
+            padding: 0.45rem 0.8rem;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.16);
+            font-size: 0.84rem;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+        }
+
+        .hero-title {
+            font-size: clamp(2rem, 4vw, 3.2rem);
+            line-height: 1.08;
+            font-weight: 800;
+            max-width: 650px;
+        }
+
+        .hero-copy {
+            font-size: 1.05rem;
+            color: rgba(255, 255, 255, 0.9);
+            max-width: 570px;
+        }
+
+        .hero-search {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 999px;
+            padding: 0.6rem;
+            max-width: 560px;
+        }
+
+        .hero-search input {
+            border: none;
+            outline: none;
+            width: 100%;
+            padding: 0.7rem 0.95rem;
+            background: transparent;
+            color: var(--text);
+        }
+
+        .hero-search .btn {
+            padding-inline: 1.2rem;
+        }
+
+        .hero-stats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.9rem;
+            margin-top: 0.4rem;
+        }
+
+        .stat-chip {
+            background: rgba(255, 255, 255, 0.16);
+            padding: 0.65rem 0.85rem;
+            border-radius: 999px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .hero-preview {
+            display: grid;
+            gap: 1rem;
+            align-content: center;
+        }
+
+        .preview-card,
+        .mini-card {
+            background: rgba(255, 255, 255, 0.16);
+            border: 1px solid rgba(255, 255, 255, 0.24);
+            border-radius: 24px;
+            padding: 1.1rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .preview-card h3 {
+            margin-bottom: 0.6rem;
+            font-size: 1.05rem;
+        }
+
+        .preview-card ul {
+            list-style: none;
+            display: grid;
+            gap: 0.55rem;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .mini-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .section {
+            padding: 1.25rem 0 1.5rem;
+        }
+
+        .section-heading {
+            display: flex;
+            align-items: end;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .section-heading h2 {
+            font-size: 1.35rem;
+            font-weight: 800;
+        }
+
+        .section-heading a {
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        .promo-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 1rem;
         }
 
         .promo-card {
-            width: 180px;
-            height: 120px;
-            padding: 14px;
-            border-radius: 16px;
-            background: radial-gradient(circle at top left, #0052d4, #001f66 60%, #000b26 100%);
-            color: #ffffff;
-            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
-            border: 1px dashed rgba(255, 255, 255, 0.35);
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+            border-radius: 24px;
+            padding: 1.25rem;
+            min-height: 180px;
+            color: #fff;
+            box-shadow: var(--shadow);
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
         }
 
-        .promo-card .badge {
-            background-color: rgba(255, 255, 255, 0.14);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 999px;
-            padding: 4px 10px;
-            font-size: 0.68rem;
-            font-weight: 700;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
+        .promo-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 22px 48px rgba(15, 23, 42, 0.14);
         }
 
-        .promo-card .offer-title {
-            font-size: 0.75rem;
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-            color: #93c5fd;
-            margin-bottom: 4px;
+        .promo-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.18), transparent);
+            pointer-events: none;
         }
 
-        .promo-card .discount {
-            font-size: 1.5rem;
-            font-weight: 900;
-            line-height: 1;
-            margin-bottom: 4px;
+        .promo-card h3 {
+            position: relative;
+            font-size: 1.05rem;
+            margin-bottom: 0.4rem;
         }
 
-        .promo-card .offer-details {
-            font-size: 0.75rem;
-            color: rgba(255, 255, 255, 0.85);
-            line-height: 1.3;
+        .promo-card p {
+            position: relative;
+            font-size: 0.95rem;
+            opacity: 0.95;
         }
 
-        .see-more-card {
-            display: inline-flex;
-            width: 180px;
-            height: 120px;
-            border-radius: 16px;
-            background-color: #cbd5e1;
-            color: #1e293b;
-            justify-content: center;
-            align-items: center;
-            font-weight: 700;
-            text-decoration: none;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-            margin-right: 12px;
-            scroll-snap-align: start;
-            border: 1px solid rgba(148, 163, 184, 0.45);
-        }
-
-        .promo-img-placeholder {
-            width: 180px;
-            height: 120px;
-            border-radius: 16px;
-            object-fit: cover;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-            background-color: #cbd5e1; /* Visual placeholder background */
+        .promo-card strong {
+            position: relative;
             display: block;
+            font-size: 1.8rem;
+            margin: 0.65rem 0;
         }
 
-        /* --- CATEGORIES ROW --- */
-        .categories-wrapper {
-            display: flex;
-            overflow-x: auto;
-            gap: 12px;
-            padding: 0 16px;
-            margin-bottom: 24px;
-            scroll-snap-type: x mandatory;
+        .promo-card.primary {
+            background: linear-gradient(135deg, var(--primary), #1d4ed8);
         }
 
-        .categories-wrapper::-webkit-scrollbar {
-            display: none;
+        .promo-card.secondary {
+            background: linear-gradient(135deg, var(--secondary), #db2777);
         }
 
-        .category-item {
+        .promo-card.tertiary {
+            background: linear-gradient(135deg, #0f766e, #0ea5a4);
+        }
+
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 1rem;
+        }
+
+        .category-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 22px;
+            padding: 1.15rem;
+            text-align: center;
+            box-shadow: var(--shadow);
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        .category-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 22px 48px rgba(15, 23, 42, 0.12);
+        }
+
+        .category-icon {
             display: inline-flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
-            min-width: 85px;
-            padding: 10px 0;
-            cursor: pointer;
-            background: none;
-            border: none;
-            scroll-snap-align: start;
-        }
-
-        .category-item.see-more {
-            min-width: 100px;
-            border-radius: 18px;
-            border: 1px dashed #93c5fd;
-            background-color: #eff6ff;
-            color: #2563eb;
-            font-weight: 700;
-        }
-
-        .category-item.see-more span {
-            color: #2563eb;
-        }
-
-        .category-img-placeholder {
-            width: 65px;
-            height: 65px;
+            width: 54px;
+            height: 54px;
+            margin-bottom: 0.7rem;
             border-radius: 16px;
-            object-fit: cover;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.04);
-            margin-bottom: 6px;
-            background-color: #e2e8f0;
-            display: block;
+            background: linear-gradient(135deg, rgba(0, 119, 200, 0.12), rgba(255, 107, 53, 0.14));
+            font-size: 1.35rem;
         }
 
-        .category-item span {
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: #475569;
+        .category-card h3 {
+            font-size: 1rem;
+            margin-bottom: 0.24rem;
         }
 
-        /* --- RESTAURANT LIST LISTINGS --- */
-        .section-heading {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: #0f172a;
-            padding: 0 16px;
-            margin-bottom: 14px;
+        .category-card p {
+            font-size: 0.9rem;
+            color: var(--muted);
         }
 
-        .restaurant-list {
-            padding: 0 16px;
+        .restaurant-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 1rem;
         }
 
         .restaurant-card {
-            background-color: #ffffff;
-            border-radius: 20px;
-            padding: 16px;
-            display: flex;
-            align-items: center;
-            margin-bottom: 14px;
-            box-shadow: 0 4px 15px rgba(15, 23, 42, 0.03);
-            border: 1px solid rgba(15, 23, 42, 0.04);
-            cursor: pointer;
-            transition: transform 0.2s;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
         }
 
         .restaurant-card:hover {
-            transform: translateY(-2px);
+            transform: translateY(-4px);
+            box-shadow: 0 22px 48px rgba(15, 23, 42, 0.12);
         }
 
-        .restaurant-logo-img {
-            width: 85px;
-            height: 85px;
-            border-radius: 12px;
-            object-fit: contain;
-            margin-right: 16px;
-            flex-shrink: 0;
-            border: 1px solid #e2e8f0;
-            background-color: #f8fafc;
+        .restaurant-image {
+            height: 170px;
+            background: linear-gradient(135deg, rgba(0, 119, 200, 0.14), rgba(255, 107, 53, 0.16));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
         }
 
-        .restaurant-details {
-            flex: 1;
+        .restaurant-body {
+            padding: 1rem;
+        }
+
+        .restaurant-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.4rem;
+            margin-bottom: 0.5rem;
         }
 
         .restaurant-name {
-            font-size: 1rem;
+            font-size: 1.05rem;
+            font-weight: 800;
+        }
+
+        .restaurant-rating {
+            color: var(--secondary);
             font-weight: 700;
-            color: #0f172a;
-            margin-bottom: 4px;
         }
 
-        .restaurant-cuisine {
-            font-size: 0.85rem;
-            color: #64748b;
-            margin-bottom: 6px;
-        }
-
-        .restaurant-stats {
+        .restaurant-info {
             display: flex;
             flex-wrap: wrap;
-            gap: 8px;
-            font-size: 0.8rem;
-            font-weight: 500;
-            color: #475569;
-            align-items: center;
-        }
-
-        .stat-rating {
-            color: #ea580c;
-            font-weight: 700;
-        }
-
-        .stat-tag {
-            background-color: #f0fdf4;
-            color: #16a34a;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-weight: 600;
-        }
-
-        /* --- FIXED BOTTOM NAVIGATION BAR --- */
-        .bottom-nav-bar {
-            position: absolute;
-            bottom: 0;
-            width: 100%;
-            height: 68px;
-            background-color: #ffffff;
-            border-top: 1px solid #e2e8f0;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            z-index: 10;
-        }
-
-        .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            background: none;
-            border: none;
-            color: #94a3b8;
-            cursor: pointer;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-decoration: none;
-            flex: 1;
-            justify-content: center;
-        }
-
-        .nav-item.active {
-            color: #0077c8;
-        }
-
-        .nav-icon {
-            font-size: 1.4rem;
-            margin-bottom: 2px;
-        }
-
-        /* --- AUTH REQUIRED GUEST MODAL POP-UP --- */
-        .modal-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(15, 23, 42, 0.4);
-            backdrop-filter: blur(4px);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
-        }
-
-        .modal-overlay.open {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .auth-modal-card {
-            width: 85%;
-            background-color: #ffffff;
-            border-radius: 24px;
-            padding: 28px 20px;
-            text-align: center;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
-            transform: scale(0.9);
-            transition: transform 0.3s ease;
-        }
-
-        .modal-overlay.open .auth-modal-card {
-            transform: translate(0) scale(1);
-        }
-
-        .modal-icon {
-            font-size: 3rem;
-            margin-bottom: 12px;
-        }
-
-        .modal-title {
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: #0f172a;
-            margin-bottom: 8px;
-        }
-
-        .modal-text {
+            gap: 0.5rem;
+            color: var(--muted);
             font-size: 0.9rem;
-            color: #64748b;
-            margin-bottom: 24px;
-            line-height: 1.4;
+            margin-bottom: 0.9rem;
         }
 
-        .modal-actions {
+        .restaurant-actions {
             display: flex;
-            flex-direction: column;
-            gap: 10px;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.6rem;
         }
 
-        .btn-modal-primary {
-            width: 100%;
-            padding: 12px;
-            background: linear-gradient(135deg, #0077c8 0%, #005fa0 100%);
-            color: #ffffff;
-            border: none;
-            border-radius: 12px;
-            font-size: 0.95rem;
-            font-weight: 600;
-            cursor: pointer;
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.35rem 0.65rem;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            background: #f1f5f9;
+            color: var(--primary);
         }
 
-        .btn-modal-secondary {
-            width: 100%;
-            padding: 12px;
-            background-color: #f1f5f9;
-            color: #475569;
-            border: none;
-            border-radius: 12px;
-            font-size: 0.95rem;
-            font-weight: 600;
-            cursor: pointer;
+        .featured-grid {
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 1rem;
         }
 
-        .btn-modal-close {
-            background: none;
-            border: none;
+        .panel-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 1.2rem;
+            box-shadow: var(--shadow);
+        }
+
+        .dish-list {
+            display: grid;
+            gap: 0.7rem;
+            margin-top: 0.8rem;
+        }
+
+        .dish-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.7rem 0.9rem;
+            border-radius: 16px;
+            background: #f8fafc;
+        }
+
+        .review-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 1rem;
+        }
+
+        .review-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 22px;
+            padding: 1.1rem;
+            box-shadow: var(--shadow);
+        }
+
+        .review-card p {
+            color: var(--muted);
+            margin-bottom: 0.7rem;
+        }
+
+        .reviewer {
+            font-weight: 700;
+        }
+
+        .download-card,
+        .newsletter-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 1.4rem 1.5rem;
+            border-radius: 28px;
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            color: #fff;
+            box-shadow: var(--shadow);
+        }
+
+        .site-footer {
+            margin-top: 2rem;
+            padding: 2rem 0 2.5rem;
+            background: #0f172a;
+            color: #cbd5e1;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 1.2rem;
+        }
+
+        .footer-grid h3 {
+            color: #fff;
+            margin-bottom: 0.7rem;
+        }
+
+        .footer-grid ul {
+            list-style: none;
+            display: grid;
+            gap: 0.45rem;
+        }
+
+        .social-row {
+            display: flex;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+            margin-top: 0.6rem;
+        }
+
+        .social-row a {
+            width: 38px;
+            height: 38px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+        }
+
+        .footer-bottom {
+            border-top: 1px solid rgba(255,255,255,0.12);
+            margin-top: 1.3rem;
+            padding-top: 1rem;
+            font-size: 0.92rem;
             color: #94a3b8;
-            font-size: 0.85rem;
-            margin-top: 8px;
-            cursor: pointer;
-            text-decoration: underline;
+        }
+
+        @media (max-width: 960px) {
+            .navbar {
+                flex-wrap: wrap;
+            }
+
+            .nav-links {
+                order: 3;
+                width: 100%;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+
+            .hero-card,
+            .featured-grid,
+            .download-card,
+            .newsletter-card {
+                grid-template-columns: 1fr;
+            }
+
+            .promo-grid,
+            .restaurant-grid,
+            .review-grid,
+            .footer-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .categories-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                width: min(100% - 1.2rem, 1280px);
+            }
+
+            .nav-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .search-pill {
+                min-width: 0;
+                flex: 1;
+            }
+
+            .hero-card {
+                padding: 1.2rem;
+            }
+
+            .hero-search {
+                flex-direction: column;
+                border-radius: 18px;
+            }
+
+            .promo-grid,
+            .categories-grid,
+            .restaurant-grid,
+            .review-grid,
+            .footer-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .download-card,
+            .newsletter-card {
+                align-items: flex-start;
+                flex-direction: column;
+            }
         }
     </style>
 </head>
 <body>
+    <header class="site-header">
+        <div class="container navbar">
+            <a class="brand" href="home_screen.html">
+                <span class="brand-mark">DM</span>
+                <span>DirkMhob</span>
+            </a>
 
-    <div class="phone-frame">
-        
-        <!-- HEADER SEARCH -->
-        <header class="header-section">
-            <div class="search-container">
-                <span class="search-icon">🔍</span>
-                <input type="text" placeholder="Search Food or Restaurants...">
-                <button class="notification-btn" id="notificationButton" onclick="handleNotificationClick(event)">🔔<span id="notif-dot" class="notif-dot"></span></button>
+            <nav class="nav-links" aria-label="Main navigation">
+                <a href="home_screen.html">Home</a>
+                <a href="#restaurants">Restaurants</a>
+                <a href="#categories">Categories</a>
+                <a href="#promotions">Promotions</a>
+                <a href="#about">About Us</a>
+                <a href="#contact">Contact</a>
+            </nav>
+
+            <div class="nav-actions">
+                <label class="search-pill" aria-label="Search">
+                    <span>🔎</span>
+                    <input type="text" placeholder="Search restaurants, food, cuisines...">
+                </label>
+                <button class="notification-btn" id="notificationButton" onclick="handleNotificationClick(event)" aria-label="Notifications">🔔<span id="notif-dot" class="notif-dot"></span></button>
+                <a class="btn btn-secondary" href="login.html">Login</a>
+                <a class="btn btn-primary" href="signup.html">Sign Up</a>
             </div>
-        </header>
-
-        <!-- MAIN SCROLLABLE BODY -->
-        <div class="scrollable-content">
-            
-            <!-- PROMOTION BANNERS -->
-            <div class="promo-scroll-wrapper">
-                <a href="#" class="promo-card-link" onclick="triggerAuthCheck()">
-                    <img src="promo1.jpg" alt="DirkMhob Promo" class="promo-img-placeholder">
-                </a>
-                <a href="#" class="promo-card-link" onclick="triggerAuthCheck()">
-                    <img src="texas_discount.png" alt="Texas Chicken Promo" class="promo-img-placeholder">
-                </a>
-                <a href="#" class="promo-card-link" onclick="triggerAuthCheck()">
-                    <img src="data:image/svg+xml;utf8,<svg xmlns='http://w3.org' width='180' height='120' viewBox='0 0 180 120'><rect width='100%' height='100%' fill='%23b91c1c'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23ffffff' font-family='sans-serif' font-size='14'>Domino Promo (180x120)</text></svg>" alt="Domino's Promo" class="promo-img-placeholder">
-                </a>
-                <a href="#" class="see-more-card" onclick="triggerAuthCheck()">See more</a>
-            </div>
-
-            <!-- CATEGORIES SELECTION FEED -->
-            <div class="categories-wrapper">
-                <button class="category-item" onclick="window.location.href='asian_dish.html'">
-                    <!-- REPLACE WITH YOUR IMAGE PATH (e.g. src="asian.png") -->
-                    <img src="asian_dishes.jpg" alt="Asian Cuisine" class="category-img-placeholder">
-                    <span>Asian</span>
-                </button>
-                <button class="category-item" onclick="window.location.href='khmer_dish.html'">
-                    <!-- REPLACE WITH YOUR IMAGE PATH -->
-                    <img src="khmer_dishes.jpg" alt="Khmer Cuisine" class="category-img-placeholder">
-                    <span>Khmer</span>
-                </button>
-                <button class="category-item" onclick="window.location.href='coffee_dish.html'">
-                    <!-- REPLACE WITH YOUR IMAGE PATH -->
-                    <img src="coffee_dishes.jpg" alt="Coffee" class="category-img-placeholder">
-                    <span>Coffee</span>
-                </button>
-                <button class="category-item" onclick="window.location.href='pastry_dish.html'">
-                    <!-- REPLACE WITH YOUR IMAGE PATH -->
-                    <img src="pastry_dishes.jpg" alt="Pastry" class="category-img-placeholder">
-                    <span>Pastry</span>
-                </button>                <button class="category-item see-more" onclick="triggerAuthCheck()">
-                    <span>See more</span>
-                </button>            </div>
-
-            <!-- RESTAURANTS FEED LIST -->
-            <h3 class="section-heading">Restaurants near you</h3>
-            
-            <div class="restaurant-list">
-                <!-- Restaurant Item 1 -->
-                <div class="restaurant-card" onclick="window.location.href='res_brown.html'">
-                    <!-- REPLACE WITH YOUR IMAGE PATH (e.g. src="brown_logo.png") -->
-                    <img src="brown_logo.jpg" alt="Brown Logo" class="restaurant-logo-img">
-                    <div class="restaurant-details">
-                        <div class="restaurant-name">Brown - TK Avenue</div>
-                        <div class="restaurant-cuisine">Bakery • Coffee</div>
-                        <div class="restaurant-stats">
-                            <span class="stat-rating">⭐ 4.6 (250+)</span>
-                            <span class="stat-tag">Free Delivery</span>
-                            <span>⏱️ 20-30 min • 2.0 km</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Restaurant Item 2 -->
-                <div class="restaurant-card" onclick="window.location.href='res_texas.html'">
-                    <!-- REPLACE WITH YOUR IMAGE PATH -->
-                    <img src="texas_logo.jpg" alt="Texas Chicken Logo" class="restaurant-logo-img">
-                    <div class="restaurant-details">
-                        <div class="restaurant-name">Texas Chicken</div>
-                        <div class="restaurant-cuisine">Fast Food • Fried Chicken</div>
-                        <div class="restaurant-stats">
-                            <span class="stat-rating">⭐ 4.5 (120)</span>
-                            <span class="stat-tag">Free Delivery</span>
-                            <span>⏱️ 15-25 min • 1.2 km</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Restaurant Item 3 -->
-                <div class="restaurant-card" onclick="window.location.href='res_kfc.html'">
-                    <!-- REPLACE WITH YOUR IMAGE PATH -->
-                    <img src="kfc_logo.png" alt="KFC Logo" class="restaurant-logo-img">
-                    <div class="restaurant-details">
-                        <div class="restaurant-name">KFC - TK Avenue</div>
-                        <div class="restaurant-cuisine">Fast Food • Fried Chicken</div>
-                        <div class="restaurant-stats">
-                            <span class="stat-rating">⭐ 4.4 (700+)</span>
-                            <span>⏱️ 10-20 min • 1.5 km</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
         </div>
+    </header>
 
-        <!-- FIXED BOTTOM FOOTER NAVIGATION -->
-        <nav class="bottom-nav-bar">
-            <a href="home_screen.html" class="nav-item active">
-                <span class="nav-icon">🏠</span>
-                <span>Home</span>
-            </a>
-            <a href="cart_screen.html" class="nav-item">
-                <span class="nav-icon">🛒</span>
-                <span>Cart</span>
-            </a>
-            <a href="search_screen.html" class="nav-item">
-                <span class="nav-icon">🔍</span>
-                <span>Search</span>
-            </a>
-            <a href="profile_screen.html" class="nav-item">
-                <span class="nav-icon">👤</span>
-                <span>Profile</span>
-            </a>
-        </nav>
+    <main>
+        <section class="hero-section">
+            <div class="container hero-card">
+                <div class="hero-content">
+                    <span class="eyebrow">Fast delivery • Fresh meals • Trusted riders</span>
+                    <h1 class="hero-title">Food Delivered To Your Doorstep</h1>
+                    <p class="hero-copy">Order from your favorite restaurants anytime, anywhere with fast delivery and mouthwatering meals.</p>
+                    <form class="hero-search" action="search_screen.html">
+                        <input type="text" placeholder="Search restaurants, food, cuisines...">
+                        <button class="btn btn-primary" type="submit">Order Now</button>
+                    </form>
+                    <div class="hero-stats">
+                        <span class="stat-chip">⚡ 25 min average delivery</span>
+                        <span class="stat-chip">⭐ 4.8 rated restaurants</span>
+                        <span class="stat-chip">📍 20+ neighborhoods</span>
+                    </div>
+                </div>
 
-        <!-- --- POPUP DIALOGUE BOX FOR GUESTS --- -->
-        <!-- <div class="modal-overlay" id="authModal">
-            <div class="auth-modal-card">
-                <div class="modal-icon">🔐</div>
-                <h4 class="modal-title">Account Required</h4>
-                <p class="modal-text">To view menu details, manage your profile, or purchase delicious meals, please sign in or create an account.</p>
-                <div class="modal-actions">
-                    <button class="btn-modal-primary" onclick="navigateTo('login.html')">Sign In</button>
-                    <button class="btn-modal-secondary" onclick="navigateTo('signup.html')">Create Account</button>
-                    <button class="btn-modal-close" onclick="closeAuthModal()">Continue as Guest</button>
+                <div class="hero-preview">
+                    <div class="preview-card">
+                        <h3>Popular right now</h3>
+                        <ul>
+                            <li>🍗 Crispy Chicken Combo</li>
+                            <li>🍜 Signature Khmer Noodles</li>
+                            <li>☕ Fresh Coffee & Pastries</li>
+                        </ul>
+                    </div>
+                    <div class="mini-card">
+                        <span>Free delivery over $12</span>
+                        <strong>New</strong>
+                    </div>
                 </div>
             </div>
-        </div> -->
+        </section>
 
-    </div>
+        <section class="section" id="promotions">
+            <div class="container">
+                <div class="section-heading">
+                    <h2>Special promotions</h2>
+                    <a href="search_screen.html">View all offers</a>
+                </div>
+                <div class="promo-grid">
+                    <article class="promo-card primary">
+                        <h3>Weekend Deal</h3>
+                        <strong>50% OFF</strong>
+                        <p>Enjoy exclusive discounts on selected restaurants and combos.</p>
+                    </article>
+                    <article class="promo-card secondary">
+                        <h3>Lunch Rush</h3>
+                        <strong>Free Delivery</strong>
+                        <p>Order before 2 PM and get free delivery on your first three orders.</p>
+                    </article>
+                    <article class="promo-card tertiary">
+                        <h3>Member Rewards</h3>
+                        <strong>Points Boost</strong>
+                        <p>Collect rewards and unlock more savings with every order.</p>
+                    </article>
+                </div>
+            </div>
+        </section>
 
+        <section class="section" id="categories">
+            <div class="container">
+                <div class="section-heading">
+                    <h2>Browse by category</h2>
+                    <a href="search_screen.html">See more</a>
+                </div>
+                <div class="categories-grid">
+                    <a class="category-card" href="asian_dish.html">
+                        <div class="category-icon">🥢</div>
+                        <h3>Asian</h3>
+                        <p>Bold flavors and comfort meals</p>
+                    </a>
+                    <a class="category-card" href="khmer_dish.html">
+                        <div class="category-icon">🍜</div>
+                        <h3>Khmer</h3>
+                        <p>Traditional favorites made fresh</p>
+                    </a>
+                    <a class="category-card" href="coffee_dish.html">
+                        <div class="category-icon">☕</div>
+                        <h3>Coffee</h3>
+                        <p>Warm brews and sweet treats</p>
+                    </a>
+                    <a class="category-card" href="pastry_dish.html">
+                        <div class="category-icon">🥐</div>
+                        <h3>Pastry</h3>
+                        <p>Freshly baked delights</p>
+                    </a>
+                    <a class="category-card" href="home_screen.html">
+                        <div class="category-icon">🍔</div>
+                        <h3>Fast Food</h3>
+                        <p>Quick bites for busy days</p>
+                    </a>
+                    <a class="category-card" href="home_screen.html">
+                        <div class="category-icon">🍕</div>
+                        <h3>Pizza</h3>
+                        <p>Hot and cheesy favorites</p>
+                    </a>
+                    <a class="category-card" href="home_screen.html">
+                        <div class="category-icon">🍟</div>
+                        <h3>Burgers</h3>
+                        <p>Classic comfort food</p>
+                    </a>
+                    <a class="category-card" href="home_screen.html">
+                        <div class="category-icon">🍰</div>
+                        <h3>Desserts</h3>
+                        <p>Sweet endings to every order</p>
+                    </a>
+                </div>
+            </div>
+        </section>
 
+        <section class="section" id="restaurants">
+            <div class="container">
+                <div class="section-heading">
+                    <h2>Restaurants near you</h2>
+                    <a href="search_screen.html">View all</a>
+                </div>
+                <div class="restaurant-grid">
+                    <article class="restaurant-card">
+                        <div class="restaurant-image">☕</div>
+                        <div class="restaurant-body">
+                            <div class="restaurant-meta">
+                                <div class="restaurant-name">Brown - TK Avenue</div>
+                                <div class="restaurant-rating">★ 4.6</div>
+                            </div>
+                            <div class="restaurant-info">
+                                <span>Bakery • Coffee</span>
+                                <span>•</span>
+                                <span>20-30 min</span>
+                                <span>•</span>
+                                <span>2.0 km</span>
+                            </div>
+                            <div class="restaurant-actions">
+                                <span class="chip">Free delivery</span>
+                                <a class="btn btn-primary" href="res_brown.html">Order Now</a>
+                            </div>
+                        </div>
+                    </article>
 
-    <!-- --- APP ROUTING LOGIC --- -->
+                    <article class="restaurant-card">
+                        <div class="restaurant-image">🍗</div>
+                        <div class="restaurant-body">
+                            <div class="restaurant-meta">
+                                <div class="restaurant-name">Texas Chicken</div>
+                                <div class="restaurant-rating">★ 4.5</div>
+                            </div>
+                            <div class="restaurant-info">
+                                <span>Fast Food • Chicken</span>
+                                <span>•</span>
+                                <span>15-25 min</span>
+                                <span>•</span>
+                                <span>1.2 km</span>
+                            </div>
+                            <div class="restaurant-actions">
+                                <span class="chip">Best seller</span>
+                                <a class="btn btn-primary" href="res_texas.html">Order Now</a>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="restaurant-card">
+                        <div class="restaurant-image">🍗</div>
+                        <div class="restaurant-body">
+                            <div class="restaurant-meta">
+                                <div class="restaurant-name">KFC - TK Avenue</div>
+                                <div class="restaurant-rating">★ 4.4</div>
+                            </div>
+                            <div class="restaurant-info">
+                                <span>Fast Food • Fried Chicken</span>
+                                <span>•</span>
+                                <span>10-20 min</span>
+                                <span>•</span>
+                                <span>1.5 km</span>
+                            </div>
+                            <div class="restaurant-actions">
+                                <span class="chip">Quick pickup</span>
+                                <a class="btn btn-primary" href="res_kfc.html">Order Now</a>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section class="section" id="about">
+            <div class="container featured-grid">
+                <article class="panel-card">
+                    <div class="section-heading">
+                        <h2>Featured restaurants</h2>
+                        <a href="#restaurants">Explore</a>
+                    </div>
+                    <p style="color: var(--muted);">Discover top-rated kitchens with exclusive deals, faster delivery, and trusted service.</p>
+                    <div class="dish-list">
+                        <div class="dish-item">
+                            <span>Chef's Daily Special</span>
+                            <strong>From $9.99</strong>
+                        </div>
+                        <div class="dish-item">
+                            <span>Signature Dessert Box</span>
+                            <strong>From $6.50</strong>
+                        </div>
+                        <div class="dish-item">
+                            <span>Lunch Combo</span>
+                            <strong>From $11.00</strong>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="panel-card">
+                    <div class="section-heading">
+                        <h2>Popular dishes</h2>
+                        <a href="search_screen.html">Browse</a>
+                    </div>
+                    <div class="dish-list">
+                        <div class="dish-item">
+                            <span>Spicy Chicken Wrap</span>
+                            <strong>$7.90</strong>
+                        </div>
+                        <div class="dish-item">
+                            <span>Khmer Rice Bowl</span>
+                            <strong>$8.50</strong>
+                        </div>
+                        <div class="dish-item">
+                            <span>Iced Latte</span>
+                            <strong>$4.20</strong>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="container">
+                <div class="section-heading">
+                    <h2>What customers are saying</h2>
+                    <a href="#contact">Share feedback</a>
+                </div>
+                <div class="review-grid">
+                    <article class="review-card">
+                        <p>“Super quick and the food arrived hot. The experience feels premium from start to finish.”</p>
+                        <div class="reviewer">Mina S.</div>
+                    </article>
+                    <article class="review-card">
+                        <p>“I love how easy it is to find restaurants and track my order. Great service!”</p>
+                        <div class="reviewer">Rithy K.</div>
+                    </article>
+                    <article class="review-card">
+                        <p>“Beautiful app experience and very reliable delivery partners. Highly recommend.”</p>
+                        <div class="reviewer">Sophia T.</div>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section class="section" id="contact">
+            <div class="container download-card">
+                <div>
+                    <div class="eyebrow">Download the app</div>
+                    <h2 style="font-size: 1.4rem; margin-top: 0.4rem;">Order on the go with the DirkMhob mobile app</h2>
+                </div>
+                <a class="btn btn-primary" href="login.html">Get the app</a>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="container newsletter-card">
+                <div>
+                    <div class="eyebrow">Stay updated</div>
+                    <h2 style="font-size: 1.3rem; margin-top: 0.4rem;">Join our newsletter for fresh deals and offers</h2>
+                </div>
+                <a class="btn btn-primary" href="signup.html">Subscribe</a>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container footer-grid">
+            <div>
+                <h3>Company</h3>
+                <ul>
+                    <li>About DirkMhob</li>
+                    <li>Careers</li>
+                    <li>Press</li>
+                </ul>
+            </div>
+            <div>
+                <h3>Quick Links</h3>
+                <ul>
+                    <li><a href="home_screen.html">Home</a></li>
+                    <li><a href="#restaurants">Restaurants</a></li>
+                    <li><a href="#promotions">Promotions</a></li>
+                </ul>
+            </div>
+            <div>
+                <h3>Categories</h3>
+                <ul>
+                    <li><a href="asian_dish.html">Asian</a></li>
+                    <li><a href="khmer_dish.html">Khmer</a></li>
+                    <li><a href="coffee_dish.html">Coffee</a></li>
+                </ul>
+            </div>
+            <div>
+                <h3>Contact</h3>
+                <ul>
+                    <li>hello@dirkmhob.com</li>
+                    <li>+855 12 345 678</li>
+                    <li>Phnom Penh, Cambodia</li>
+                </ul>
+                <div class="social-row">
+                    <a href="#" aria-label="Instagram">📸</a>
+                    <a href="#" aria-label="Facebook">👍</a>
+                    <a href="#" aria-label="Twitter">𝕏</a>
+                </div>
+            </div>
+        </div>
+        <div class="container footer-bottom">
+            <p>© 2026 DirkMhob. All rights reserved.</p>
+        </div>
+    </footer>
+
     <script>
         function getDeliveryNotification() {
             const notificationStr = localStorage.getItem('deliveryNotification');

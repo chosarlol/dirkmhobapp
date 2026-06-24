@@ -1,596 +1,71 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DirkMhob - KFC TK Avenue</title>
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-        }
-
-        body, html {
-            min-height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: #f4f6f9;
-        }
-
-        /* --- THE CHOSEN PHONE FRAME --- */
-        .phone-frame {
-            width: 100%;
-            max-width: 412px;
-            height: 100vh;
-            position: relative;
-            background-color: #ffffff;
-            overflow: hidden;
-            border-radius: 32px;
-            border: 1px solid rgba(15, 23, 42, 0.08);
-            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.15);
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* --- SEARCH TOP BAR --- */
-        .header-section {
-            background-color: #ffffff;
-            padding: 24px 20px 12px 20px;
-        }
-
-        .search-container {
-            display: flex;
-            align-items: center;
-            background-color: #ffffff;
-            border-radius: 50px;
-            padding: 10px 16px;
-            box-shadow: 0 6px 20px rgba(0, 119, 200, 0.1);
-            border: 1px solid rgba(0, 119, 200, 0.03);
-        }
-
-        .search-icon {
-            color: #94a3b8;
-            margin-right: 10px;
-            font-size: 1.1rem;
-        }
-
-        .search-container input {
-            border: none;
-            outline: none;
-            width: 100%;
-            font-size: 0.95rem;
-            color: #334155;
-        }
-
-        /* --- SCROLLABLE CONTAINER --- */
-        .scrollable-content {
-            flex: 1;
-            overflow-y: auto;
-            padding: 12px 16px 140px 16px; /* Increased bottom padding so cards are never blocked by floating cart */
-        }
-
-        .scrollable-content::-webkit-scrollbar { display: none; }
-
-        /* --- BRAND PROFILE BANNER CARD --- */
-        .brand-profile-card {
-            background-color: #ffffff;
-            border-radius: 24px;
-            padding: 16px;
-            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
-            border: 1px solid rgba(15, 23, 42, 0.04);
-            display: flex;
-            align-items: center;
-            position: relative;
-            margin-bottom: 20px;
-        }
-
-        .brand-logo-frame {
-            width: 100px;
-            height: 100px;
-            position: relative;
-            margin-right: 16px;
-            flex-shrink: 0;
-        }
-
-        .brand-logo-img { width: 100%; height: 100%; object-fit: contain; }
-
-        .badge-discount-bubble {
-            position: absolute;
-            bottom: -6px;
-            right: -6px;
-            width: 48px;
-            height: 48px;
-            object-fit: contain;
-        }
-
-        .brand-meta-info { flex: 1; }
-        .brand-title { font-size: 1.2rem; font-weight: 800; color: #000000; margin-bottom: 4px; }
-        .meta-row { display: flex; align-items: center; font-size: 0.85rem; font-weight: 600; color: #000000; margin-bottom: 4px; gap: 4px; }
-        .star-rating { color: #f59e0b; }
-        .review-count { color: #64748b; font-weight: 500; }
-        .meta-label-free { color: #ea580c; font-weight: 700; }
-
-        /* --- SECTION ROW HEADERS --- */
-        .section-heading {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: #000000;
-            margin: 16px 0 12px 4px;
-        }
-
-        /* --- TODAY'S OFFER HORIZONTAL SLIDER --- */
-        .offers-horizontal-scroller {
-            overflow-x: auto;
-            white-space: nowrap;
-            padding-bottom: 4px;
-            margin-bottom: 16px;
-        }
-        .offers-horizontal-scroller::-webkit-scrollbar { display: none; }
-
-        .offer-card {
-            display: inline-flex;
-            width: 310px;
-            background-color: #ffffff;
-            border-radius: 20px;
-            padding: 12px;
-            box-shadow: 0 4px 15px rgba(15, 23, 42, 0.04);
-            border: 1px solid #f1f5f9;
-            margin-right: 12px;
-            white-space: normal;
-            align-items: center;
-        }
-
-        .offer-thumb-img {
-            width: 85px;
-            height: 85px;
-            object-fit: cover;
-            border-radius: 12px;
-            margin-right: 12px;
-            flex-shrink: 0;
-        }
-
-        .offer-details { flex: 1; }
-        .offer-name { font-size: 0.95rem; font-weight: 700; color: #000000; margin-bottom: 2px; text-transform: uppercase; }
-        .offer-desc { font-size: 0.75rem; color: #94a3b8; line-height: 1.3; margin-bottom: 6px; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        
-        .price-action-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .item-price { font-size: 1.05rem; font-weight: 700; color: #000000; }
-
-        /* --- FOR YOU TWO COLUMN GRID --- */
-        .menu-items-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-        }
-
-        .grid-product-card {
-            background-color: #ffffff;
-            border-radius: 20px;
-            padding: 10px;
-            box-shadow: 0 4px 15px rgba(15, 23, 42, 0.04);
-            border: 1px solid #f1f5f9;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .product-preview-img {
-            width: 100%;
-            height: 110px;
-            object-fit: cover;
-            border-radius: 14px;
-            margin-bottom: 8px;
-        }
-
-        .product-name { font-size: 0.9rem; font-weight: 700; color: #000000; margin-bottom: 2px; }
-        .product-desc { font-size: 0.72rem; color: #94a3b8; line-height: 1.3; margin-bottom: 8px; flex: 1; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-clamp: 2; overflow: hidden; }
-
-        /* --- PREMIUM STEPPER CONTROLS --- */
-        .stepper-widget {
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            min-height: 32px;
-        }
-
-        /* Redesigned Premium Plus Button */
-        .btn-initial-add {
-            background-color: #0077c8;
-            border: none;
-            color: #ffffff;
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            font-size: 1.2rem;
-            font-weight: bold;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 3px 8px rgba(0, 119, 200, 0.3);
-            transition: all 0.2s ease;
-        }
-        .btn-initial-add:hover { background-color: #005fa0; transform: scale(1.05); }
-
-        /* Inline Custom - 1 + Container */
-        .counter-control-wrapper {
-            display: flex;
-            align-items: center;
-            background-color: #f1f5f9;
-            border-radius: 30px;
-            padding: 2px 4px;
-            border: 1px solid #e2e8f0;
-        }
-
-        .btn-step-action {
-            background-color: #ffffff;
-            border: 1px solid #cbd5e1;
-            width: 24px;
-            height: 24px;
-            font-size: 1rem;
-            font-weight: 700;
-            color: #0077c8;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-
-        .counter-number-display {
-            font-size: 0.95rem;
-            font-weight: 700;
-            color: #000000;
-            min-width: 24px;
-            text-align: center;
-        }
-
-        /* --- FLOATING UPGRADE CART BAR (MATCHES YOUR IMAGE) --- */
-        .floating-cart-bar {
-            position: absolute;
-            bottom: 84px; /* Sits perfectly above the bottom tab navigation bar */
-            left: 16px;
-            right: 16px;
-            height: 52px;
-            background-color: #5ea4f3; /* Custom matched soft bright blue tone */
-            border-radius: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 20px;
-            box-shadow: 0 8px 24px rgba(94, 164, 243, 0.4);
-            z-index: 99;
-            cursor: pointer;
-            
-            /* Hidden by default, slides up smoothly on item click */
-            transform: translateY(120px);
-            opacity: 0;
-            transition: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-
-        .floating-cart-bar.active {
-            transform: translateY(0);
-            opacity: 1;
-        }
-
-        .cart-info-left {
-            color: #ffffff;
-            font-size: 1.15rem;
-            font-weight: 600;
-            letter-spacing: -0.2px;
-        }
-
-        .cart-price-right {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            color: #ffffff;
-        }
-
-        .price-usd {
-            font-size: 1.2rem;
-            font-weight: 700;
-        }
-
-        .price-khr {
-            font-size: 0.78rem;
-            font-weight: 600;
-            opacity: 0.9;
-            background-color: rgba(255, 255, 255, 0.2);
-            padding: 1px 6px;
-            border-radius: 6px;
-            margin-top: 1px;
-        }
-
-        /* --- FIXED BOTTOM NAVIGATION BAR --- */
-        .bottom-nav-bar {
-            position: absolute;
-            bottom: 0;
-            width: 100%;
-            height: 68px;
-            background-color: #ffffff;
-            border-top: 1px solid #e2e8f0;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            z-index: 10;
-        }
-
-        .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            background: none;
-            border: none;
-            color: #94a3b8;
-            font-size: 0.75rem;
-            font-weight: 600;
-            width: 25%;
-            height: 100%;
-            justify-content: center;
-            text-decoration: none;
-        }
-        .nav-item.active { color: #0077c8; }
-        .nav-icon { font-size: 1.4rem; margin-bottom: 2px; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DirkMhob | KFC</title>
+  <style>
+    :root { --primary:#0077C8; --secondary:#FF6B35; --bg:#F8FAFC; --surface:#FFFFFF; --text:#1E293B; --muted:#64748B; --border:#E2E8F0; --shadow:0 16px 45px rgba(15, 23, 42, 0.08); }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; background:var(--bg); color:var(--text); line-height:1.5; }
+    a { color:inherit; text-decoration:none; }
+    img { display:block; max-width:100%; }
+    button, input { font:inherit; }
+    .container { width:min(1220px, calc(100% - 2rem)); margin:0 auto; }
+    .site-header { position:sticky; top:0; z-index:50; backdrop-filter:blur(16px); background:rgba(248,250,252,0.95); border-bottom:1px solid rgba(226,232,240,0.8); }
+    .navbar { display:flex; justify-content:space-between; align-items:center; gap:1rem; padding:1rem 0; }
+    .brand { display:flex; align-items:center; gap:0.75rem; font-weight:800; font-size:1.05rem; }
+    .brand-mark { width:44px; height:44px; display:inline-flex; align-items:center; justify-content:center; border-radius:14px; background:linear-gradient(135deg,var(--primary),var(--secondary)); color:white; box-shadow:0 10px 25px rgba(0,119,200,0.2); }
+    .nav-links { display:flex; gap:1.1rem; align-items:center; color:var(--muted); font-weight:600; }
+    .nav-links a:hover { color:var(--primary); }
+    .nav-actions { display:flex; align-items:center; gap:0.7rem; }
+    .search-box { display:flex; align-items:center; gap:0.5rem; background:white; border:1px solid var(--border); border-radius:999px; padding:0.7rem 0.9rem; min-width:250px; }
+    .search-box input { border:none; outline:none; width:100%; background:transparent; color:var(--text); }
+    .icon-btn, .login-btn, .primary-btn { display:inline-flex; align-items:center; justify-content:center; border:none; border-radius:999px; cursor:pointer; transition:transform .2s ease, box-shadow .2s ease; }
+    .icon-btn { width:42px; height:42px; background:white; border:1px solid var(--border); box-shadow:0 6px 20px rgba(15,23,42,0.05); }
+    .login-btn { padding:0.75rem 1.1rem; background:var(--primary); color:white; font-weight:700; }
+    .primary-btn { padding:0.8rem 1rem; background:linear-gradient(135deg,var(--primary),var(--secondary)); color:white; font-weight:700; box-shadow:0 12px 30px rgba(0,119,200,0.18); }
+    .hero { padding:2rem 0 1.5rem; }
+    .hero-card { background:linear-gradient(135deg, rgba(0,119,200,0.95), rgba(255,107,53,0.95)); color:white; border-radius:30px; padding:2rem; display:grid; grid-template-columns:1.2fr .8fr; gap:1.5rem; box-shadow:var(--shadow); }
+    .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.45rem 0.8rem; border-radius:999px; background:rgba(255,255,255,0.18); font-size:0.9rem; width:max-content; margin-bottom:1rem; }
+    .hero h1 { font-size:clamp(1.8rem, 3vw, 2.7rem); margin-bottom:0.6rem; }
+    .hero p { color:rgba(255,255,255,0.9); max-width:650px; }
+    .hero-stats { display:flex; flex-wrap:wrap; gap:0.75rem; margin-top:1.2rem; }
+    .hero-stats span { background:rgba(255,255,255,0.14); padding:0.65rem 0.85rem; border-radius:999px; font-weight:600; }
+    .restaurant-spotlight { background:rgba(255,255,255,0.16); border:1px solid rgba(255,255,255,0.2); border-radius:24px; padding:1rem; display:grid; gap:0.85rem; align-content:start; }
+    .spotlight-top { display:flex; align-items:center; gap:0.8rem; }
+    .spotlight-logo { width:64px; height:64px; display:flex; align-items:center; justify-content:center; border-radius:20px; background:white; color:var(--primary); font-size:1.5rem; font-weight:800; }
+    .section { padding:1rem 0 2rem; }
+    .layout { display:grid; grid-template-columns:1.6fr .8fr; gap:1.2rem; align-items:start; }
+    .panel { background:var(--surface); border:1px solid var(--border); border-radius:24px; box-shadow:var(--shadow); }
+    .panel-header { padding:1.25rem 1.25rem 0; display:flex; justify-content:space-between; align-items:center; }
+    .panel-title { font-size:1.15rem; font-weight:800; }
+    .menu-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1rem; padding:1.25rem; }
+    .menu-card { border:1px solid var(--border); border-radius:18px; overflow:hidden; transition:transform .2s ease, box-shadow .2s ease; }
+    .menu-card:hover { transform:translateY(-3px); box-shadow:0 12px 30px rgba(15,23,42,0.1); }
+    .menu-image { height:150px; background:linear-gradient(135deg,#fff4ec,#ffe6d9); display:flex; align-items:center; justify-content:center; font-size:2.5rem; }
+    .menu-body { padding:0.95rem; display:grid; gap:0.6rem; }
+    .menu-body h3 { font-size:1rem; }
+    .menu-body p { color:var(--muted); font-size:0.92rem; }
+    .menu-meta { display:flex; justify-content:space-between; align-items:center; font-weight:700; }
+    .qty-row { display:flex; align-items:center; gap:0.5rem; }
+    .qty-btn { width:30px; height:30px; border-radius:50%; border:1px solid var(--border); background:var(--bg); cursor:pointer; font-weight:700; }
+    .cart-panel { padding:1.25rem; position:sticky; top:95px; display:grid; gap:1rem; }
+    .cart-item { display:flex; justify-content:space-between; align-items:center; padding:0.7rem 0; border-bottom:1px solid var(--border); }
+    .cart-item:last-child { border-bottom:none; }
+    .summary-row { display:flex; justify-content:space-between; padding:0.3rem 0; color:var(--muted); }
+    .summary-total { font-size:1.1rem; font-weight:800; color:var(--text); }
+    .footer { margin-top:2rem; padding:2.2rem 0; background:#0f172a; color:#cbd5e1; }
+    .footer-grid { display:grid; grid-template-columns:1.2fr 1fr 1fr 1fr; gap:1.5rem; }
+    .footer h4 { color:white; margin-bottom:0.7rem; }
+    .footer ul { list-style:none; display:grid; gap:0.5rem; color:#94a3b8; }
+    .footer a:hover { color:white; }
+    .footer-bottom { margin-top:1.2rem; padding-top:1rem; border-top:1px solid rgba(148,163,184,0.2); color:#94a3b8; }
+    @media (max-width:980px){ .layout{grid-template-columns:1fr;} .cart-panel{position:static;} .hero-card{grid-template-columns:1fr;} }
+    @media (max-width:760px){ .nav-links{display:none;} .search-box{display:none;} .menu-grid{grid-template-columns:1fr;} .footer-grid{grid-template-columns:1fr 1fr;} }
+    @media (max-width:520px){ .navbar{flex-wrap:wrap;} .footer-grid{grid-template-columns:1fr;} }
+  </style>
 </head>
 <body>
-
-    <div class="phone-frame">
-        
-        <!-- SEARCH HEADER -->
-        <header class="header-section">
-            <div class="search-container">
-                <span class="search-icon">🔍</span>
-                <input type="text" placeholder="search Food or Restaurants...">
-            </div>
-        </header>
-
-        <!-- MAIN SCROLL CONTENT AREA -->
-        <div class="scrollable-content">
-
-            <!-- VENUE HEADER CARD -->
-            <div class="brand-profile-card">
-                <div class="brand-logo-frame">
-                    <img src="kfc_logo.png" alt="KFC Logo" class="brand-logo-img">
-                </div>
-                
-                <div class="brand-meta-info">
-                    <h2 class="brand-title">KFC – TK Avenue</h2>
-                    <div class="meta-row">Fast Food • Fried Chicken</div>
-                    <div class="meta-row">
-                        <span class="star-rating">⭐ 4.5</span>
-                        <span class="review-count">(300+)</span>
-                        <span class="meta-label-free">Free Delivery</span>
-                    </div>
-                    <div class="meta-row">⏱️ 15-25 min • 1.5 km</div>
-                </div>
-            </div>
-
-            <!-- TODAY'S OFFER ROW LIST -->
-            <h3 class="section-heading">Today's Offer</h3>
-            <div class="offers-horizontal-scroller">
-                
-                <div class="offer-card">
-                    <img src="signature_box.png" alt="Signature Meal Box" class="offer-thumb-img">
-                    <div class="offer-details">
-                        <h4 class="offer-name">Signature Meal Box</h4>
-                        <p class="offer-desc">Zinger Burger +1pcs Chicken+Whipped Potato +Fries +Pepsi can</p>
-                        <div class="price-action-row">
-                            <span class="item-price">$ 10.05</span>
-                            <div class="stepper-widget" data-item-id="signature-box" data-price="10.05">
-                                <button class="btn-initial-add" onclick="initiateStepper('signature-box')">+</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-
-            <!-- FOR YOU GRID -->
-            <h3 class="section-heading">For You</h3>
-            <div class="menu-items-grid">
-                
-                <!-- Item 1 -->
-                <div class="grid-product-card">
-                    <img src="tender_set.png" alt="Crispy Tender Set" class="product-preview-img">
-                    <h4 class="product-name">[Combo 3] Crispy Tender Set</h4>
-                    <p class="product-desc">x1 Crispy Tender A La Carte x1 Fun Fries x1 Pepsi (R)</p>
-                    <div class="price-action-row">
-                        <span class="item-price">$ 3.50</span>
-                        <div class="stepper-widget" data-item-id="crispy-tender" data-price="3.50">
-                            <button class="btn-initial-add" onclick="initiateStepper('crispy-tender')">+</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Item 2 -->
-                <div class="grid-product-card">
-                    <img src="zinger.jpg" alt="Cheezy Burger" class="product-preview-img">
-                    <h4 class="product-name">Cheezy Burger</h4>
-                    <p class="product-desc">A cheesy, juicy burger with a crispy meat patty</p>
-                    <div class="price-action-row">
-                        <span class="item-price">$ 5.55</span>
-                        <div class="stepper-widget" data-item-id="cheezy-burger" data-price="5.55">
-                            <button class="btn-initial-add" onclick="initiateStepper('cheezy-burger')">+</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Item 3 -->
-                <div class="grid-product-card">
-                    <img src="chicken_bites.jpg" alt="Chicken Bites" class="product-preview-img">
-                    <h4 class="product-name">Chicken Bites</h4>
-                    <p class="product-desc">Tender, crispy chicken pieces (For Reference only)</p>
-                    <div class="price-action-row">
-                        <span class="item-price">$ 3.55</span>
-                        <div class="stepper-widget" data-item-id="chicken-bites" data-price="3.55">
-                            <button class="btn-initial-add" onclick="initiateStepper('chicken-bites')">+</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Item 4 -->
-                <div class="grid-product-card">
-                    <img src="family_set.jpg" alt="Family Set" class="product-preview-img">
-                    <h4 class="product-name">Family Set</h4>
-                    <p class="product-desc">9pcs + Fries +1 Pepsi 1.5L + Whipped potato</p>
-                    <div class="price-action-row">
-                        <span class="item-price">$ 28.20</span>
-                        <div class="stepper-widget" data-item-id="family-set" data-price="28.20">
-                            <button class="btn-initial-add" onclick="initiateStepper('family-set')">+</button>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-
-        </div>
-
-        <!-- --- DYNAMIC FLOATING CART BAR (MATCHES YOUR ATTACHMENT) --- -->
-        <div class="floating-cart-bar" id="floatingCart" onclick="window.location.href='cart_screen.html'">
-            <div class="cart-info-left" id="cartItemsText">Cart . 1 Items</div>
-            <div class="cart-price-right">
-                <span class="price-usd" id="cartTotalUSD">$9.49</span>
-                <span class="price-khr" id="cartTotalKHR">38,055៛</span>
-            </div>
-        </div>
-
-        <!-- FIXED BOTTOM NAVIGATION BAR -->
-        <nav class="bottom-nav-bar">
-            <a href="home_screen.html" class="nav-item active">
-                <span class="nav-icon">🏠</span>
-                <span>Home</span>
-            </a>
-            <a href="cart_screen.html" class="nav-item">
-                <span class="nav-icon">🛒</span>
-                <span>Cart</span>
-            </a>
-            <a href="search_screen.html" class="nav-item">
-                <span class="nav-icon">🔍</span>
-                <span>Search</span>
-            </a>
-            <a href="profile_screen.html" class="nav-item">
-                <span class="nav-icon">👤</span>
-                <span>Profile</span>
-            </a>
-        </nav>
-
-    </div>
-
-    <!-- --- APP CALCULATION ENGINE --- -->
-    <script>
-        // Shopping state tracking object
-        const cartState = {};
-        const KHR_RATE = 4010;
-
-        function initiateStepper(itemId) {
-            cartState[itemId] = 1;
-            renderStepperControl(itemId);
-            calculateAndUpdateCart();
-        }
-
-        function changeQuantity(itemId, changeValue) {
-            cartState[itemId] += changeValue;
-            
-            if (cartState[itemId] <= 0) {
-                delete cartState[itemId];
-                resetToPlusButton(itemId);
-            } else {
-                const countDisplay = document.querySelector(`[data-item-id="${itemId}"] .counter-number-display`);
-                if (countDisplay) {
-                    countDisplay.textContent = cartState[itemId];
-                }
-            }
-            calculateAndUpdateCart();
-        }
-
-        function renderStepperControl(itemId) {
-            const container = document.querySelector(`[data-item-id="${itemId}"]`);
-            if (!container) return;
-
-            container.innerHTML = `
-                <div class="counter-control-wrapper">
-                    <button class="btn-step-action" onclick="changeQuantity('${itemId}', -1)">−</button>
-                    <span class="counter-number-display">1</span>
-                    <button class="btn-step-action" onclick="changeQuantity('${itemId}', 1)">+</button>
-                </div>
-            `;
-        }
-
-        function resetToPlusButton(itemId) {
-            const container = document.querySelector(`[data-item-id="${itemId}"]`);
-            if (!container) return;
-            container.innerHTML = `<button class="btn-initial-add" onclick="initiateStepper('${itemId}')">+</button>`;
-        }
-
-        /* --- CALCULATION AND CURRENCY EXCHANGE ENGINE --- */
-        function calculateAndUpdateCart() {
-            let totalItems = 0;
-            let totalUSD = 0;
-            let cartItems = [];
-
-            // Loop through selected state values and check assigned data attributes
-            for (const itemId in cartState) {
-                const quantity = cartState[itemId];
-                const itemWidget = document.querySelector(`[data-item-id="${itemId}"]`);
-                const price = parseFloat(itemWidget.getAttribute('data-price'));
-                
-                // Get item name from the nearest product card
-                let itemName = '';
-                const productCard = itemWidget.closest('.grid-product-card, .offer-card');
-                if (productCard) {
-                    const nameElement = productCard.querySelector('.product-name, .offer-name');
-                    itemName = nameElement ? nameElement.textContent : itemId;
-                }
-                
-                totalItems += quantity;
-                totalUSD += (price * quantity);
-                
-                cartItems.push({
-                    id: itemId,
-                    name: itemName,
-                    price: price,
-                    quantity: quantity
-                });
-            }
-
-            // Save cart to localStorage
-            localStorage.setItem('cartItems', JSON.stringify(cartItems));
-            localStorage.setItem('cartTotal', JSON.stringify({
-                totalItems: totalItems,
-                totalUSD: totalUSD
-            }));
-
-            const cartBar = document.getElementById('floatingCart');
-            
-            if (totalItems > 0) {
-                // Calculate exchange value into Khmer Riel (៛)
-                let totalKHR = totalUSD * KHR_RATE;
-
-                // Format numbers with nice comma formatting rules
-                let formattedUSD = totalUSD.toFixed(2);
-                let formattedKHR = Math.round(totalKHR).toLocaleString('en-US') + "៛";
-
-                // Update text elements across layout labels
-                document.getElementById('cartItemsText').textContent = `Cart . ${totalItems} Items`;
-                document.getElementById('cartTotalUSD').textContent = `$${formattedUSD}`;
-                document.getElementById('cartTotalKHR').textContent = formattedKHR;
-
-                // Display the floating box safely
-                cartBar.classList.add('active');
-            } else {
-                // Collapse bar if all values hit zero
-                cartBar.classList.remove('active');
-            }
-        }
-    </script>
-</body>
-</html>
+  <header class="site-header"><div class="container navbar"><a class="brand" href="home_screen.html"><span class="brand-mark">DM</span><span>DirkMhob</span></a><nav class="nav-links" aria-label="Main navigation"><a href="home_screen.html">Home</a><a href="search_screen.html">Restaurants</a><a href="asian_dish.html">Categories</a><a href="home_screen.html">Promotions</a><a href="home_screen.html">Contact</a></nav><div class="nav-actions"><label class="search-box"><span>🔍</span><input placeholder="Search dishes" /></label><a class="icon-btn" href="cart_screen.html" aria-label="Cart">🛒</a><a class="login-btn" href="login.html">Login</a></div></div></header>
+  <main class="container"><section class="hero"><div class="hero-card"><div><div class="hero-badge">🍗 Fried Chicken</div><h1>KFC - TK Avenue</h1><p>Classic fried chicken, comfort meals, and speedy delivery for every craving.</p><div class="hero-stats"><span>⭐ 4.5 (300+ reviews)</span><span>⏱ 15–25 min</span><span>🚚 Free delivery</span><span>🍗 Fast food</span></div></div><div class="restaurant-spotlight"><div class="spotlight-top"><div class="spotlight-logo">K</div><div><strong>KFC</strong><div style="color:rgba(255,255,255,.9);">Open now • 10:00 AM – 11:00 PM</div></div></div><div>Popular picks: Zinger Burger, Bucket Meal, Fries</div><div>Best for: lunch, family meals, quick dinner</div></div></div></section><section class="section"><div class="layout"><div class="panel"><div class="panel-header"><h2 class="panel-title">Best Sellers</h2><span style="color:var(--muted); font-weight:600;">Popular right now</span></div><div class="menu-grid"><article class="menu-card"><div class="menu-image">🍗</div><div class="menu-body"><h3>Original Bucket</h3><p>6 pieces of crispy chicken with fries and a drink.</p><div class="menu-meta"><span>$12.50</span><div class="qty-row" data-price="12.50"><button class="qty-btn" data-action="decrease">−</button><span class="qty-value">0</span><button class="qty-btn" data-action="increase">+</button></div></div></div></article><article class="menu-card"><div class="menu-image">🍔</div><div class="menu-body"><h3>Zinger Burger</h3><p>Spicy chicken filet with lettuce and sauce.</p><div class="menu-meta"><span>$6.90</span><div class="qty-row" data-price="6.90"><button class="qty-btn" data-action="decrease">−</button><span class="qty-value">0</span><button class="qty-btn" data-action="increase">+</button></div></div></div></article><article class="menu-card"><div class="menu-image">🍟</div><div class="menu-body"><h3>Large Fries</h3><p>Golden fries with a crunchy finish.</p><div class="menu-meta"><span>$3.20</span><div class="qty-row" data-price="3.20"><button class="qty-btn" data-action="decrease">−</button><span class="qty-value">0</span><button class="qty-btn" data-action="increase">+</button></div></div></div></article><article class="menu-card"><div class="menu-image">🥤</div><div class="menu-body"><h3>Cola Combo</h3><p>Signature drink with your meal combo.</p><div class="menu-meta"><span>$2.80</span><div class="qty-row" data-price="2.80"><button class="qty-btn" data-action="decrease">−</button><span class="qty-value">0</span><button class="qty-btn" data-action="increase">+</button></div></div></div></article></div></div><aside class="panel cart-panel"><div class="panel-header" style="padding:0;"><h2 class="panel-title">Your order</h2><span style="color:var(--muted); font-weight:600;">Fast delivery</span></div><div id="cart-items"><div class="cart-item"><span>Your cart is empty</span><strong>$0.00</strong></div></div><div><div class="summary-row"><span>Subtotal</span><span id="subtotal">$0.00</span></div><div class="summary-row"><span>Delivery fee</span><span>$2.00</span></div><div class="summary-row"><span>Service fee</span><span>$1.00</span></div><div class="summary-row summary-total"><span>Total</span><span id="total">$0.00</span></div></div><a class="primary-btn" href="check_out.html">Checkout</a></aside></div></section></main><footer class="footer"><div class="container footer-grid"><div><h4>DirkMhob</h4><p>Fast delivery, healthier choices, and beautifully curated meals from your favorite local spots.</p></div><div><h4>Quick links</h4><ul><li><a href="home_screen.html">Home</a></li><li><a href="search_screen.html">Restaurants</a></li><li><a href="asian_dish.html">Categories</a></li><li><a href="home_screen.html">Promotions</a></li></ul></div><div><h4>Support</h4><ul><li><a href="home_screen.html">Help Center</a></li><li><a href="home_screen.html">Contact Us</a></li><li><a href="home_screen.html">Terms</a></li><li><a href="home_screen.html">Privacy Policy</a></li></ul></div><div><h4>Follow</h4><ul><li>Instagram</li><li>Facebook</li><li>Twitter</li></ul></div></div><div class="container footer-bottom">© 2026 DirkMhob. Crafted for modern food delivery.</div></footer><script>const cartItems=document.getElementById('cart-items');const subtotalEl=document.getElementById('subtotal');const totalEl=document.getElementById('total');const rows=document.querySelectorAll('.qty-row');rows.forEach(row=>{const qtyEl=row.querySelector('.qty-value');row.querySelectorAll('.qty-btn').forEach(btn=>{btn.addEventListener('click',()=>{const action=btn.dataset.action;const current=parseInt(qtyEl.textContent,10);const next=action==='increase'?current+1:Math.max(0,current-1);qtyEl.textContent=next;updateCart();});});});function updateCart(){const items=[];rows.forEach(row=>{const qty=parseInt(row.querySelector('.qty-value').textContent,10);if(qty>0){const name=row.closest('.menu-card').querySelector('h3').textContent;const price=parseFloat(row.dataset.price);items.push({name,qty,price});}});if(!items.length){cartItems.innerHTML='<div class="cart-item"><span>Your cart is empty</span><strong>$0.00</strong></div>';subtotalEl.textContent='$0.00';totalEl.textContent='$0.00';return;}const subtotal=items.reduce((sum,item)=>sum+item.qty*item.price,0);cartItems.innerHTML=items.map(item=>`<div class="cart-item"><span>${item.qty}× ${item.name}</span><strong>$${(item.qty*item.price).toFixed(2)}</strong></div>`).join('');subtotalEl.textContent=`$${subtotal.toFixed(2)}`;totalEl.textContent=`$${(subtotal+2+1).toFixed(2)}`;}</script></body></html>

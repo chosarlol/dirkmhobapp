@@ -3,466 +3,505 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DirkMhob - Order Tracking</title>
+    <title>Live Tracking — DirkMhob</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        :root {
+            --primary: #0077C8;
+            --primary-dark: #005fa0;
+            --primary-light: #e8f4fd;
+            --secondary: #FF6B35;
+            --bg: #F8FAFC;
+            --text: #1E293B;
+            --muted: #64748B;
+            --white: #FFFFFF;
+            --border: #E2E8F0;
+            --success: #22c55e;
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+            --shadow: 0 4px 24px rgba(0,0,0,0.12);
+            --radius: 16px;
+            --radius-sm: 8px;
+            --radius-lg: 24px;
+            --transition: 0.2s ease;
         }
 
-        body, html {
-            min-height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: #f4f6f9;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
-        .phone-frame {
-            width: 100%;
-            max-width: 412px;
-            height: 100vh;
-            position: relative;
-            background-color: #ffffff;
-            overflow: hidden;
-            border-radius: 32px;
-            border: 1px solid rgba(15, 23, 42, 0.08);
-            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.15);
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* --- MAP SECTION (top 55%) --- */
-        .map-section {
-            width: 100%;
-            height: 58%;
-            position: relative;
-            background: linear-gradient(160deg, #7aad96 0%, #6a9fbf 25%, #8db8d8 50%, #4a8aa8 75%, #5a9060 100%);
-            overflow: hidden;
-            flex-shrink: 0;
-        }
-
-        .map-overlay {
-            position: absolute;
-            inset: 0;
-            background-image:
-                repeating-linear-gradient(0deg, rgba(255,255,255,0.04) 0px, rgba(255,255,255,0.04) 1px, transparent 1px, transparent 35px),
-                repeating-linear-gradient(90deg, rgba(255,255,255,0.04) 0px, rgba(255,255,255,0.04) 1px, transparent 1px, transparent 35px);
-        }
-
-        /* Simulated map roads and blocks */
-        .road-h {
-            position: absolute;
-            height: 14px;
-            background: rgba(255,255,255,0.35);
-            border-radius: 2px;
-        }
-        .road-v {
-            position: absolute;
-            width: 14px;
-            background: rgba(255,255,255,0.35);
-            border-radius: 2px;
-        }
-        .map-block {
-            position: absolute;
-            border-radius: 6px;
-            opacity: 0.55;
-        }
-
-        /* Route line */
-        .route-line {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
+        html, body {
             height: 100%;
-            pointer-events: none;
-        }
-
-        /* Home pin */
-        .home-pin {
-            position: absolute;
-            bottom: 28%;
-            left: 38%;
-            transform: translate(-50%, 50%);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .home-pin-circle {
-            width: 32px;
-            height: 32px;
-            background-color: #1a7de8;
-            border-radius: 50%;
-            border: 3px solid #ffffff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.9rem;
-            box-shadow: 0 3px 10px rgba(26,125,232,0.5);
-        }
-
-        /* Rider pin */
-        .rider-pin {
-            position: absolute;
-            top: 38%;
-            left: 52%;
-            transform: translate(-50%, -50%);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .rider-pin-circle {
-            width: 36px;
-            height: 36px;
-            background-color: #1a7de8;
-            border-radius: 50%;
-            border: 3px solid #ffffff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1rem;
-            box-shadow: 0 3px 10px rgba(26,125,232,0.5);
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { box-shadow: 0 3px 10px rgba(26,125,232,0.5); }
-            50% { box-shadow: 0 3px 20px rgba(26,125,232,0.9), 0 0 0 8px rgba(26,125,232,0.15); }
-        }
-
-        /* Red boundary highlight */
-        .area-highlight {
-            position: absolute;
-            top: 15%;
-            left: 18%;
-            width: 55%;
-            height: 50%;
-            border: 3px solid #e8002d;
-            border-radius: 40% 30% 50% 20% / 30% 50% 30% 60%;
-            opacity: 0.7;
-            pointer-events: none;
-        }
-
-        /* X and Help buttons */
-        .map-btn-close {
-            position: absolute;
-            top: 16px;
-            left: 16px;
-            width: 36px;
-            height: 36px;
-            background: #ffffff;
-            border: none;
-            border-radius: 50%;
-            font-size: 1rem;
-            font-weight: 700;
-            color: #334155;
-            cursor: pointer;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .map-btn-help {
-            position: absolute;
-            top: 16px;
-            right: 16px;
-            background: #ffffff;
-            border: none;
-            border-radius: 20px;
-            padding: 8px 16px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: #334155;
-            cursor: pointer;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-        }
-
-        /* --- BOTTOM PANEL --- */
-        .bottom-panel {
-            flex: 1;
-            background-color: #ffffff;
-            padding: 20px 20px 0 20px;
-            display: flex;
-            flex-direction: column;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg); color: var(--text);
             overflow: hidden;
         }
 
-        .status-heading {
-            font-size: 1.4rem;
-            font-weight: 800;
-            color: #000000;
-            margin-bottom: 4px;
-        }
-
-        .status-sub {
-            font-size: 0.9rem;
-            color: #94a3b8;
-            margin-bottom: 20px;
-        }
-
-        /* --- PROGRESS STEPS --- */
-        .progress-section {
-            margin-bottom: 16px;
-        }
-
-        .steps-row {
+        /* ── LAYOUT SHELL ── */
+        .tracking-shell {
             display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 8px;
+            flex-direction: column;
+            height: 100vh;
         }
 
-        .step-circle {
-            width: 38px;
-            height: 38px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1rem;
-            flex-shrink: 0;
-            position: relative;
-            z-index: 2;
+        /* ── NAVBAR ── */
+        .navbar {
+            background: var(--white); border-bottom: 1px solid var(--border);
+            box-shadow: var(--shadow-sm); flex-shrink: 0; z-index: 200;
         }
-
-        .step-circle.done {
-            background-color: #1a7de8;
-            box-shadow: 0 3px 10px rgba(26,125,232,0.4);
+        .nav-inner {
+            max-width: 100%; padding: 0 24px;
+            height: 60px; display: flex; align-items: center; gap: 16px;
         }
-
-        .step-circle.active {
-            background-color: #1a7de8;
-            box-shadow: 0 3px 10px rgba(26,125,232,0.4);
-            animation: pulse 2s infinite;
+        .nav-brand {
+            display: flex; align-items: center; gap: 8px;
+            font-size: 18px; font-weight: 800; color: var(--primary); text-decoration: none;
         }
-
-        .step-circle.pending {
-            background-color: #e2e8f0;
+        .brand-icon {
+            width: 30px; height: 30px; background: var(--primary);
+            border-radius: 6px;
+            display: flex; align-items: center; justify-content: center; font-size: 14px;
         }
+        .live-pill {
+            display: flex; align-items: center; gap: 6px;
+            background: #fef2f2; color: #dc2626;
+            font-size: 12px; font-weight: 700;
+            padding: 4px 12px; border-radius: 20px;
+        }
+        .live-dot {
+            width: 7px; height: 7px; border-radius: 50%; background: #dc2626;
+            animation: blink 1s infinite;
+        }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+        .nav-actions { margin-left: auto; display: flex; gap: 8px; }
+        .nav-btn {
+            display: flex; align-items: center; gap: 6px;
+            background: none; border: 1.5px solid var(--border);
+            color: var(--muted); font-size: 13px; font-weight: 600;
+            cursor: pointer; padding: 7px 14px; border-radius: var(--radius-sm);
+            transition: all var(--transition);
+        }
+        .nav-btn:hover { border-color: var(--primary); color: var(--primary); }
+        .nav-btn.home { background: var(--primary); color: white; border-color: var(--primary); }
+        .nav-btn.home:hover { background: var(--primary-dark); }
 
-        .step-line {
+        /* ── MAP + SIDEBAR ── */
+        .content-row {
             flex: 1;
-            height: 3px;
-            margin: 0 4px;
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            overflow: hidden;
         }
 
-        .step-line.done { background-color: #1a7de8; }
-        .step-line.pending { background-color: #e2e8f0; }
+        /* ── MAP AREA ── */
+        .map-area { position: relative; overflow: hidden; }
 
-        .progress-hint {
-            font-size: 0.8rem;
-            color: #94a3b8;
-            text-align: center;
+        #tracking-map {
+            width: 100%; height: 100%;
         }
 
-        /* --- DIVIDER --- */
-        .divider {
-            height: 1px;
-            background-color: #f1f5f9;
-            margin: 14px 0;
+        /* fallback map */
+        .map-fallback {
+            width: 100%; height: 100%;
+            background: linear-gradient(145deg, #7aad96 0%, #6a9fbf 30%, #8db8d8 60%, #4a8aa8 100%);
+            position: relative; overflow: hidden;
         }
-
-        /* --- RIDER INFO --- */
-        .rider-info {
-            display: flex;
-            align-items: center;
-            gap: 12px;
+        .fallback-grid {
+            position: absolute; inset: 0;
+            background-image:
+                repeating-linear-gradient(0deg,  rgba(255,255,255,0.05) 0,rgba(255,255,255,0.05) 1px,transparent 1px,transparent 50px),
+                repeating-linear-gradient(90deg, rgba(255,255,255,0.05) 0,rgba(255,255,255,0.05) 1px,transparent 1px,transparent 50px);
         }
+        .fallback-road-h { position:absolute; height:18px; background:rgba(255,255,255,0.35); left:0; right:0; border-radius:2px; }
+        .fallback-road-v { position:absolute; width:18px; background:rgba(255,255,255,0.35); top:0; bottom:0; border-radius:2px; }
+        .fallback-bld    { position:absolute; border-radius:6px; opacity:0.5; }
+        .fallback-notice {
+            position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%);
+            background: rgba(255,255,255,0.95); border-radius: var(--radius);
+            padding: 14px 20px; text-align: center;
+            box-shadow: var(--shadow); font-size: 13px; width: 320px;
+            color: var(--text);
+        }
+        .fallback-notice strong { color: var(--primary); display: block; margin-bottom: 4px; }
 
-        .rider-avatar {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #1a7de8, #5ea4f3);
-            display: flex;
-            align-items: center;
+        /* driver marker (animated in fallback) */
+        .fallback-driver {
+            position: absolute;
+            width: 44px; height: 44px; border-radius: 50%;
+            background: var(--primary); border: 3px solid white;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px; box-shadow: var(--shadow);
+            transform: translate(-50%, -50%);
+            animation: driverPulse 2s infinite;
+            transition: left 1.5s ease, top 1.5s ease;
+        }
+        @keyframes driverPulse {
+            0%,100% { box-shadow: var(--shadow), 0 0 0 0 rgba(0,119,200,0.4); }
+            50%      { box-shadow: var(--shadow), 0 0 0 14px rgba(0,119,200,0); }
+        }
+        .fallback-restaurant-pin,
+        .fallback-customer-pin {
+            position: absolute;
+            display: flex; flex-direction: column; align-items: center;
+            transform: translate(-50%, -100%);
+        }
+        .pin-bubble {
+            padding: 6px 12px; border-radius: 20px;
+            font-size: 12px; font-weight: 700; color: white;
+            display: flex; align-items: center; gap: 5px; white-space: nowrap;
+        }
+        .pin-bubble.restaurant { background: var(--secondary); }
+        .pin-bubble.customer   { background: var(--primary); }
+        .pin-tail { width:0; height:0; border-left:6px solid transparent; border-right:6px solid transparent; }
+        .pin-tail.restaurant { border-top: 8px solid var(--secondary); }
+        .pin-tail.customer   { border-top: 8px solid var(--primary); }
+        .route-svg { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+
+        /* map overlay buttons */
+        .map-overlay-btn {
+            position: absolute; background: var(--white);
+            border: none; border-radius: var(--radius-sm);
+            box-shadow: var(--shadow);
+            font-size: 14px; font-weight: 600; cursor: pointer;
+            transition: all var(--transition);
+            display: flex; align-items: center; gap: 6px;
+            padding: 9px 16px; color: var(--text);
+        }
+        .map-overlay-btn:hover { background: var(--bg); }
+        .map-overlay-btn.close-btn { top: 12px; left: 12px; }
+        .map-overlay-btn.help-btn  { top: 12px; right: 12px; }
+
+        /* floating tracking card */
+        .floating-card {
+            position: absolute; bottom: 20px; left: 20px; right: 20px;
+            max-width: 420px;
+            background: var(--white); border-radius: var(--radius-lg);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+            padding: 18px 20px;
+            display: flex; align-items: center; gap: 16px;
+            z-index: 50;
+        }
+        .float-eta-ring {
+            width: 68px; height: 68px; border-radius: 50%;
+            background: conic-gradient(var(--primary) 60%, var(--border) 0%);
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; position: relative;
+        }
+        .float-eta-inner {
+            width: 54px; height: 54px; border-radius: 50%;
+            background: var(--white);
+            display: flex; flex-direction: column; align-items: center;
             justify-content: center;
-            font-size: 1.3rem;
-            flex-shrink: 0;
-            border: 2px solid #e2e8f0;
         }
-
-        .rider-text { flex: 1; }
-        .rider-role { font-size: 0.78rem; color: #94a3b8; font-weight: 500; }
-        .rider-name { font-size: 1rem; font-weight: 700; color: #000000; }
-
-        .rider-actions {
-            display: flex;
-            gap: 10px;
+        .float-eta-num  { font-size: 16px; font-weight: 800; color: var(--primary); line-height: 1; }
+        .float-eta-unit { font-size: 10px; color: var(--muted); font-weight: 500; }
+        .float-info { flex: 1; min-width: 0; }
+        .float-status { font-size: 16px; font-weight: 800; color: var(--text); margin-bottom: 2px; }
+        .float-sub    { font-size: 13px; color: var(--muted); }
+        .float-order  { font-size: 11px; font-weight: 600; color: var(--primary); margin-top: 4px; }
+        .float-driver { display: flex; align-items: center; gap: 8px; }
+        .float-avatar {
+            width: 40px; height: 40px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), #5ea4f3);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px; border: 2px solid var(--border);
         }
+        .float-driver-name { font-size: 13px; font-weight: 600; }
+        .float-driver-sub  { font-size: 11px; color: var(--muted); }
 
+        /* ── SIDEBAR ── */
+        .sidebar {
+            background: var(--white); border-left: 1px solid var(--border);
+            display: flex; flex-direction: column; overflow-y: auto;
+        }
+        .sidebar::-webkit-scrollbar { width: 6px; }
+        .sidebar::-webkit-scrollbar-track { background: var(--bg); }
+        .sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+        .sidebar-section { padding: 20px; border-bottom: 1px solid var(--border); }
+        .sidebar-section:last-child { border-bottom: none; }
+        .sidebar-hd { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 14px; }
+
+        /* driver card */
+        .driver-card {
+            display: flex; align-items: center; gap: 14px;
+            background: var(--bg); border-radius: var(--radius);
+            padding: 16px; margin-bottom: 14px;
+        }
+        .driver-avatar {
+            width: 58px; height: 58px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), #5ea4f3);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 26px; border: 3px solid var(--white);
+            box-shadow: var(--shadow-sm); flex-shrink: 0;
+        }
+        .driver-info { flex: 1; }
+        .driver-role { font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+        .driver-name { font-size: 17px; font-weight: 800; color: var(--text); margin: 2px 0; }
+        .driver-rating { display: flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 600; color: #f59e0b; }
+        .driver-vehicle { font-size: 12px; color: var(--muted); margin-top: 3px; }
+
+        .action-btns { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
         .action-btn {
-            width: 42px;
-            height: 42px;
-            border-radius: 50%;
-            border: 1.5px solid #e2e8f0;
-            background: #ffffff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.1rem;
-            cursor: pointer;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.06);
-            transition: background 0.15s;
+            display: flex; flex-direction: column; align-items: center; gap: 5px;
+            padding: 12px 8px; border-radius: var(--radius);
+            border: 1.5px solid var(--border); background: var(--white);
+            cursor: pointer; transition: all var(--transition);
+            font-size: 11px; font-weight: 600; color: var(--text);
         }
-        .action-btn:hover { background: #f8fafc; }
+        .action-btn:hover { border-color: var(--primary); background: var(--primary-light); color: var(--primary); }
+        .action-btn .btn-icon { font-size: 20px; }
+        .action-btn.primary { background: var(--primary); color: white; border-color: var(--primary); }
+        .action-btn.primary:hover { background: var(--primary-dark); }
 
-        /* --- ORDER DETAIL BUTTON --- */
-        .order-detail-btn {
-            margin: 14px 0 20px 0;
-            width: 100%;
-            background-color: #1a7de8;
-            color: #ffffff;
-            border: none;
-            border-radius: 16px;
-            padding: 16px;
-            font-size: 1rem;
-            font-weight: 700;
-            cursor: pointer;
-            box-shadow: 0 6px 20px rgba(26, 125, 232, 0.35);
-            transition: background 0.2s, transform 0.1s;
+        /* restaurant info */
+        .res-info-row { display: flex; align-items: center; gap: 12px; }
+        .res-logo-sm {
+            width: 44px; height: 44px; border-radius: var(--radius-sm);
+            background: #e51b24; display: flex; align-items: center; justify-content: center;
+            color: white; font-weight: 900; font-size: 11px; flex-shrink: 0;
         }
-        .order-detail-btn:hover { background-color: #1565c0; }
-        .order-detail-btn:active { transform: scale(0.98); }
+        .res-name { font-size: 14px; font-weight: 700; }
+        .res-sub  { font-size: 12px; color: var(--muted); margin-top: 2px; }
 
-        .tracking-toast {
+        /* progress steps */
+        .progress-steps { display: flex; flex-direction: column; gap: 0; }
+        .prog-step { display: flex; gap: 14px; align-items: flex-start; position: relative; }
+        .prog-step:not(:last-child) { padding-bottom: 18px; }
+        .prog-step:not(:last-child)::after {
+            content: ''; position: absolute;
+            left: 15px; top: 32px; width: 2px;
+            bottom: 0; background: var(--border);
+        }
+        .prog-step.done:not(:last-child)::after { background: var(--success); }
+        .prog-icon {
+            width: 32px; height: 32px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 13px; flex-shrink: 0; position: relative; z-index: 1;
+        }
+        .prog-icon.done    { background: var(--success); color: white; }
+        .prog-icon.active  { background: var(--primary); color: white; animation: stepPulse 2s infinite; }
+        .prog-icon.pending { background: var(--bg); color: var(--muted); border: 2px solid var(--border); }
+        @keyframes stepPulse {
+            0%,100% { box-shadow: 0 0 0 4px rgba(0,119,200,0.2); }
+            50%      { box-shadow: 0 0 0 8px rgba(0,119,200,0.05); }
+        }
+        .prog-text { padding-top: 5px; }
+        .prog-label { font-size: 13px; font-weight: 700; color: var(--text); }
+        .prog-label.pending { color: var(--muted); }
+        .prog-sub   { font-size: 12px; color: var(--muted); margin-top: 1px; }
+
+        /* bottom buttons */
+        .sidebar-cta { padding: 16px 20px; }
+        .cta-btn {
+            display: block; width: 100%; padding: 14px;
+            background: var(--primary); color: white; border: none;
+            border-radius: var(--radius); font-size: 14px; font-weight: 700;
+            cursor: pointer; transition: all var(--transition); margin-bottom: 10px;
+            box-shadow: 0 4px 14px rgba(0,119,200,0.3);
+        }
+        .cta-btn:hover { background: var(--primary-dark); transform: translateY(-1px); }
+        .cta-btn.delivered { display: none; background: var(--success); }
+        .cta-btn.delivered:hover { background: #16a34a; }
+
+        /* delivery toast */
+        .delivery-toast {
             display: none;
             position: absolute;
-            bottom: 110px;
-            left: 20px;
-            right: 20px;
-            background-color: #1e88e5;
-            color: #ffffff;
-            padding: 14px 16px;
-            border-radius: 18px;
-            box-shadow: 0 10px 24px rgba(30, 136, 229, 0.3);
-            z-index: 12;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
+            top: 12px; left: 50%; transform: translateX(-50%);
+            background: var(--success); color: white;
+            padding: 12px 20px; border-radius: var(--radius);
+            box-shadow: var(--shadow); z-index: 100;
+            align-items: center; gap: 12px; white-space: nowrap;
+            font-size: 14px; font-weight: 600;
+        }
+        .toast-close {
+            background: rgba(255,255,255,0.25); border: none; color: white;
+            border-radius: 20px; padding: 5px 12px; font-weight: 700; cursor: pointer;
+            font-size: 13px;
         }
 
-        .tracking-toast button {
-            background: rgba(255,255,255,0.15);
-            border: 1px solid rgba(255,255,255,0.3);
-            color: #ffffff;
-            border-radius: 14px;
-            padding: 10px 14px;
-            cursor: pointer;
-            font-weight: 700;
+        /* ── RESPONSIVE ── */
+        @media (max-width: 900px) {
+            html, body { overflow: auto; }
+            .tracking-shell { height: auto; overflow: visible; }
+            .content-row { grid-template-columns: 1fr; height: auto; overflow: visible; }
+            .map-area { height: 55vh; }
+            .sidebar { height: auto; overflow: visible; }
+            .floating-card { position: static; margin: 16px; }
+        }
+        @media (max-width: 600px) {
+            .nav-inner { padding: 0 12px; }
+            .action-btns { grid-template-columns: 1fr 1fr; }
         }
     </style>
 </head>
 <body>
 
-<div class="phone-frame">
+<div class="tracking-shell">
 
-    <!-- MAP SECTION -->
-    <div class="map-section">
-        <div class="map-overlay"></div>
-
-        <!-- Roads -->
-        <div class="road-h" style="width:100%;top:30%;"></div>
-        <div class="road-h" style="width:100%;top:55%;"></div>
-        <div class="road-h" style="width:100%;top:72%;"></div>
-        <div class="road-v" style="height:100%;left:25%;"></div>
-        <div class="road-v" style="height:100%;left:55%;"></div>
-        <div class="road-v" style="height:100%;right:20%;"></div>
-
-        <!-- Map blocks (buildings) -->
-        <div class="map-block" style="width:70px;height:50px;background:#8aacbf;top:5%;left:5%;"></div>
-        <div class="map-block" style="width:50px;height:40px;background:#7a9cb0;top:5%;left:30%;"></div>
-        <div class="map-block" style="width:90px;height:55px;background:#90b0c4;top:5%;right:5%;"></div>
-        <div class="map-block" style="width:60px;height:45px;background:#6a9ab4;top:38%;left:5%;"></div>
-        <div class="map-block" style="width:80px;height:50px;background:#85a8bc;top:60%;left:30%;"></div>
-        <div class="map-block" style="width:65px;height:42px;background:#7aa0b8;top:60%;right:5%;"></div>
-        <div class="map-block" style="width:55px;height:38px;background:#80aa9a;top:38%;right:5%;"></div>
-
-        <!-- Route SVG -->
-        <svg class="route-line" viewBox="0 0 412 240" preserveAspectRatio="none">
-            <path d="M 210 90 Q 180 130 155 165" stroke="#1a7de8" stroke-width="5" fill="none" stroke-linecap="round" stroke-dasharray="8 4" opacity="0.9"/>
-        </svg>
-
-        <!-- Area highlight -->
-        <div class="area-highlight"></div>
-
-        <!-- Home pin -->
-        <div class="home-pin">
-            <div class="home-pin-circle">🏠</div>
-        </div>
-
-        <!-- Rider pin -->
-        <div class="rider-pin">
-            <div class="rider-pin-circle">🛵</div>
-        </div>
-
-        <!-- Buttons -->
-        <button class="map-btn-close" onclick="window.location.href='home_screen.html'">✕</button>
-        <button class="map-btn-help">Help</button>
-    </div>
-
-    <!-- BOTTOM PANEL -->
-    <div class="bottom-panel">
-
-        <div class="status-heading">Heading your way</div>
-        <div class="status-sub">arriving soon</div>
-
-        <!-- Progress Steps -->
-        <div class="progress-section">
-            <div class="steps-row">
-                <!-- Step 1: Order placed -->
-                <div class="step-circle done">🧾</div>
-                <div class="step-line done"></div>
-                <!-- Step 2: Confirmed -->
-                <div class="step-circle done">✅</div>
-                <div class="step-line done"></div>
-                <!-- Step 3: Preparing (active) -->
-                <div class="step-circle active">🍽️</div>
-                <div class="step-line pending"></div>
-                <!-- Step 4: On the way -->
-                <div class="step-circle pending">🛵</div>
-                <div class="step-line pending"></div>
-                <!-- Step 5: Delivered -->
-                <div class="step-circle pending">😊</div>
+    <!-- ── NAVBAR ── -->
+    <nav class="navbar">
+        <div class="nav-inner">
+            <a href="home_screen.html" class="nav-brand">
+                <div class="brand-icon">🍔</div>
+                DirkMhob
+            </a>
+            <div class="live-pill">
+                <div class="live-dot"></div>
+                LIVE
             </div>
-            <p class="progress-hint">Give Seang a moment drop off your order.</p>
-        </div>
-
-        <div class="divider"></div>
-
-        <!-- Rider Info -->
-        <div class="rider-info">
-            <div class="rider-avatar">👨</div>
-            <div class="rider-text">
-                <div class="rider-role">Deliverer</div>
-                <div class="rider-name">Seang Cha</div>
+            <div class="nav-actions">
+                <button class="nav-btn" onclick="openOrderDetail()">📋 Order Detail</button>
+                <button class="nav-btn home" onclick="window.location.href='home_screen.html'">🏠 Home</button>
             </div>
-            <div class="rider-actions">
-                <button class="action-btn">💬</button>
-                <button class="action-btn">📞</button>
+        </div>
+    </nav>
+
+    <!-- ── MAP + SIDEBAR ── -->
+    <div class="content-row">
+
+        <!-- MAP -->
+        <div class="map-area">
+            <!-- Google Map renders here -->
+            <div id="tracking-map"></div>
+
+            <!-- Map overlay buttons -->
+            <button class="map-overlay-btn close-btn" onclick="window.location.href='home_screen.html'">✕ Close</button>
+            <button class="map-overlay-btn help-btn">❓ Help</button>
+
+            <!-- Delivery toast -->
+            <div class="delivery-toast" id="delivery-toast">
+                <span>🎉 Your order has been delivered!</span>
+                <button class="toast-close" onclick="goToDelivered()">View</button>
+            </div>
+
+            <!-- Floating tracking card -->
+            <div class="floating-card">
+                <div class="float-eta-ring">
+                    <div class="float-eta-inner">
+                        <div class="float-eta-num" id="eta-display">15</div>
+                        <div class="float-eta-unit">min</div>
+                    </div>
+                </div>
+                <div class="float-info">
+                    <div class="float-status">Heading Your Way</div>
+                    <div class="float-sub">Seang is on the way to you</div>
+                    <div class="float-order">Order #CKDCKD-6767</div>
+                </div>
+                <div class="float-driver">
+                    <div>
+                        <div class="float-avatar">👨</div>
+                    </div>
+                    <div>
+                        <div class="float-driver-name">Seang Cha</div>
+                        <div class="float-driver-sub">⭐ 4.9</div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Order Detail Button -->
-        <button class="order-detail-btn" onclick="openOrderDetail()">Order Detail</button>
-        <button id="delivery-button" class="order-detail-btn" style="display:none; margin-top:12px;" onclick="goToDelivered()">Your food has been delivered</button>
-        <div class="tracking-toast" id="delivery-toast">
-            <span>Your order has been delivered.</span>
-            <button onclick="goToDelivered()">View</button>
-        </div>
+        <!-- SIDEBAR -->
+        <div class="sidebar">
 
+            <!-- Driver Section -->
+            <div class="sidebar-section">
+                <div class="sidebar-hd">Your Delivery Driver</div>
+                <div class="driver-card">
+                    <div class="driver-avatar">👨</div>
+                    <div class="driver-info">
+                        <div class="driver-role">Deliverer</div>
+                        <div class="driver-name">Seang Cha</div>
+                        <div class="driver-rating">★ 4.9 <span style="color:var(--muted);font-weight:400">(243 trips)</span></div>
+                        <div class="driver-vehicle">🛵 Honda Wave · KH 1234 AB</div>
+                    </div>
+                </div>
+
+                <div class="action-btns">
+                    <button class="action-btn primary" onclick="alert('Calling driver...')">
+                        <span class="btn-icon">📞</span>
+                        Call
+                    </button>
+                    <button class="action-btn" onclick="window.location.href='chat_screen.html'">
+                        <span class="btn-icon">💬</span>
+                        Chat
+                    </button>
+                    <button class="action-btn" onclick="alert('Connecting to support...')">
+                        <span class="btn-icon">🆘</span>
+                        Support
+                    </button>
+                </div>
+            </div>
+
+            <!-- Restaurant Section -->
+            <div class="sidebar-section">
+                <div class="sidebar-hd">Restaurant</div>
+                <div class="res-info-row">
+                    <div class="res-logo-sm">KFC</div>
+                    <div>
+                        <div class="res-name">KFC — TK Avenue</div>
+                        <div class="res-sub">📞 023 456 789 · ⭐ 4.7</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Progress -->
+            <div class="sidebar-section">
+                <div class="sidebar-hd">Order Progress</div>
+                <div class="progress-steps">
+                    <div class="prog-step done">
+                        <div class="prog-icon done">✓</div>
+                        <div class="prog-text">
+                            <div class="prog-label">Order Confirmed</div>
+                            <div class="prog-sub">Payment received</div>
+                        </div>
+                    </div>
+                    <div class="prog-step done">
+                        <div class="prog-icon done">✓</div>
+                        <div class="prog-text">
+                            <div class="prog-label">Preparing Food</div>
+                            <div class="prog-sub">KFC is making your order</div>
+                        </div>
+                    </div>
+                    <div class="prog-step done">
+                        <div class="prog-icon done">✓</div>
+                        <div class="prog-text">
+                            <div class="prog-label">Picked Up</div>
+                            <div class="prog-sub">Driver collected your food</div>
+                        </div>
+                    </div>
+                    <div class="prog-step active">
+                        <div class="prog-icon active">🛵</div>
+                        <div class="prog-text">
+                            <div class="prog-label">On The Way</div>
+                            <div class="prog-sub">ETA ~<span id="eta-sidebar">15</span> minutes</div>
+                        </div>
+                    </div>
+                    <div class="prog-step">
+                        <div class="prog-icon pending">🎉</div>
+                        <div class="prog-text">
+                            <div class="prog-label pending">Delivered</div>
+                            <div class="prog-sub">Enjoy your meal!</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CTA Buttons -->
+            <div class="sidebar-cta">
+                <button class="cta-btn" onclick="openOrderDetail()">📋 View Order Details</button>
+                <button class="cta-btn delivered" id="delivery-button" onclick="goToDelivered()">
+                    🎉 Your Food Has Been Delivered!
+                </button>
+            </div>
+
+        </div>
     </div>
 
 </div>
 
+<!-- Load maps config first -->
+<script src="maps-config.js"></script>
 <script>
+    /* ── EXISTING FUNCTIONALITY ─────────────────────────────── */
     function openOrderDetail() {
         window.location.href = 'order_comfirm.html';
     }
@@ -490,16 +529,282 @@
         return raw ? JSON.parse(raw) : null;
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
-        setTimeout(function() {
-            const btn = document.getElementById('delivery-button');
+    /* ── ETA UPDATE ─────────────────────────────────────────── */
+    function updateETA(minutes) {
+        const m = Math.max(0, Math.round(minutes));
+        const etaDisplay  = document.getElementById('eta-display');
+        const etaSidebar  = document.getElementById('eta-sidebar');
+        if (etaDisplay) etaDisplay.textContent = m;
+        if (etaSidebar) etaSidebar.textContent  = m;
+
+        // update conic gradient
+        const ring = document.querySelector('.float-eta-ring');
+        if (ring) {
+            const pct = Math.min(100, (m / 20) * 100); // base 20 minutes
+            ring.style.background = `conic-gradient(var(--primary) ${100 - pct}%, var(--border) 0%)`;
+        }
+
+        if (m <= 0) {
+            // Show delivery
+            const btn   = document.getElementById('delivery-button');
             const toast = document.getElementById('delivery-toast');
-            if (btn) {
-                btn.style.display = 'block';
+            if (btn)   { btn.style.display = 'block'; }
+            if (toast) { toast.style.display = 'flex'; }
+            setDeliveryNotification();
+        }
+    }
+
+    /* ── GOOGLE MAPS INTEGRATION ────────────────────────────── */
+    let map, driverMarker, directionsRenderer;
+    let routePoints = [];
+    let driverIndex = 0;
+    let animationTimer = null;
+    let initialETA = 15; // minutes
+
+    window.initMap = function () {
+        const cfg = (typeof MAPS_CONFIG !== 'undefined') ? MAPS_CONFIG : {};
+        const restaurant = cfg.restaurant || { lat: 11.5656, lng: 104.9282 };
+        const customer   = cfg.customer   || { lat: 11.5450, lng: 104.9100 };
+        const driverStart= cfg.driver     || { lat: 11.5580, lng: 104.9205 };
+
+        map = new google.maps.Map(document.getElementById('tracking-map'), {
+            center: { lat: (restaurant.lat + customer.lat) / 2, lng: (restaurant.lng + customer.lng) / 2 },
+            zoom: 14,
+            mapTypeControl: false,
+            streetViewControl: false,
+            fullscreenControl: false,
+            styles: [
+                { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+                { featureType: 'transit', stylers: [{ visibility: 'off' }] },
+                { featureType: 'road', elementType: 'labels.icon', stylers: [{ visibility: 'off' }] }
+            ]
+        });
+
+        // Restaurant marker
+        new google.maps.Marker({
+            position: restaurant, map,
+            label: { text: '🍴', fontSize: '20px' },
+            title: 'KFC TK Avenue (Pickup)',
+            icon: {
+                path: google.maps.SymbolPath.CIRCLE,
+                scale: 18,
+                fillColor: '#FF6B35', fillOpacity: 1,
+                strokeColor: '#FFFFFF', strokeWeight: 3
             }
-            if (toast) {
-                toast.style.display = 'flex';
+        });
+
+        // Customer marker
+        new google.maps.Marker({
+            position: customer, map,
+            label: { text: '🏠', fontSize: '18px' },
+            title: 'Your Location (Delivery)',
+            icon: {
+                path: google.maps.SymbolPath.CIRCLE,
+                scale: 18,
+                fillColor: '#0077C8', fillOpacity: 1,
+                strokeColor: '#FFFFFF', strokeWeight: 3
             }
+        });
+
+        // Driver marker (animated)
+        driverMarker = new google.maps.Marker({
+            position: driverStart, map,
+            label: { text: '🛵', fontSize: '18px' },
+            title: 'Seang Cha (Your Driver)',
+            zIndex: 10,
+            icon: {
+                path: google.maps.SymbolPath.CIRCLE,
+                scale: 20,
+                fillColor: '#1E293B', fillOpacity: 1,
+                strokeColor: '#FFFFFF', strokeWeight: 3
+            }
+        });
+
+        // Directions service to draw route
+        const directionsService = new google.maps.DirectionsService();
+        directionsRenderer = new google.maps.DirectionsRenderer({
+            suppressMarkers: true,
+            polylineOptions: {
+                strokeColor: '#0077C8',
+                strokeWeight: 5,
+                strokeOpacity: 0.85
+            }
+        });
+        directionsRenderer.setMap(map);
+
+        directionsService.route({
+            origin: restaurant,
+            destination: customer,
+            travelMode: google.maps.TravelMode.DRIVING
+        }, function (result, status) {
+            if (status === google.maps.DirectionsStatus.OK) {
+                directionsRenderer.setDirections(result);
+                routePoints = result.routes[0].overview_path;
+
+                // Find nearest point on route to driver's start position
+                driverIndex = findNearestPointIndex(driverStart, routePoints);
+                driverMarker.setPosition(routePoints[driverIndex]);
+
+                // Update initial ETA based on route duration
+                const legDuration = result.routes[0].legs[0].duration.value; // seconds
+                initialETA = Math.ceil(legDuration / 60);
+                updateETA(initialETA);
+
+                startDriverAnimation();
+            } else {
+                console.warn('Directions failed:', status);
+                startFallbackAnimation();
+            }
+        });
+    };
+
+    function findNearestPointIndex(point, path) {
+        let minDist = Infinity, idx = 0;
+        path.forEach((p, i) => {
+            const d = google.maps.geometry.spherical.computeDistanceBetween(
+                new google.maps.LatLng(point.lat, point.lng), p
+            );
+            if (d < minDist) { minDist = d; idx = i; }
+        });
+        return idx;
+    }
+
+    function startDriverAnimation() {
+        if (!routePoints.length) return;
+        const totalPoints   = routePoints.length;
+        const remainingPts  = totalPoints - driverIndex;
+        const etaSeconds    = initialETA * 60;
+        // Speed: how many seconds per route-point step
+        const stepMs = Math.max(800, Math.min(3000, (etaSeconds * 1000) / remainingPts));
+
+        animationTimer = setInterval(function () {
+            driverIndex++;
+            if (driverIndex >= routePoints.length) {
+                clearInterval(animationTimer);
+                updateETA(0);
+                return;
+            }
+            driverMarker.setPosition(routePoints[driverIndex]);
+
+            // Smooth map pan to keep driver in view
+            if (driverIndex % 5 === 0) {
+                map.panTo(routePoints[driverIndex]);
+            }
+
+            // ETA = remaining fraction × initial ETA
+            const fraction = (routePoints.length - driverIndex) / routePoints.length;
+            updateETA(initialETA * fraction);
+        }, stepMs);
+    }
+
+    /* ── FALLBACK for when Maps API is not loaded ──────────── */
+    function showMapFallback(reason) {
+        const mapEl = document.getElementById('tracking-map');
+        mapEl.innerHTML = `
+            <div class="map-fallback">
+                <div class="fallback-grid"></div>
+
+                <!-- Roads -->
+                <div class="fallback-road-h" style="top:30%"></div>
+                <div class="fallback-road-h" style="top:55%"></div>
+                <div class="fallback-road-h" style="top:75%"></div>
+                <div class="fallback-road-v" style="left:25%"></div>
+                <div class="fallback-road-v" style="left:55%"></div>
+                <div class="fallback-road-v" style="right:18%"></div>
+
+                <!-- Buildings -->
+                <div class="fallback-bld" style="width:70px;height:50px;background:#8aacbf;top:6%;left:3%"></div>
+                <div class="fallback-bld" style="width:55px;height:40px;background:#7a9cb0;top:6%;left:29%"></div>
+                <div class="fallback-bld" style="width:90px;height:58px;background:#b0c8d8;top:6%;right:4%"></div>
+                <div class="fallback-bld" style="width:65px;height:44px;background:#6a9ab4;top:38%;left:3%"></div>
+                <div class="fallback-bld" style="width:80px;height:48px;background:#85a8bc;top:60%;left:29%"></div>
+                <div class="fallback-bld" style="width:75px;height:50px;background:#90b0c0;top:38%;right:4%"></div>
+                <div class="fallback-bld" style="width:55px;height:36px;background:#80aa9a;top:80%;left:3%"></div>
+
+                <!-- Route SVG -->
+                <svg class="route-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+                    <path d="M 82 12 Q 70 30 62 45 Q 50 60 38 72 Q 28 80 18 88"
+                          stroke="#0077C8" stroke-width="1.5" fill="none"
+                          stroke-linecap="round" stroke-dasharray="4 2" opacity="0.8"/>
+                    <path d="M 82 12 Q 70 30 62 45 Q 50 60 38 72 Q 28 80 18 88"
+                          stroke="#0077C8" stroke-width="5" fill="none" opacity="0.12" stroke-linecap="round"/>
+                </svg>
+
+                <!-- Restaurant pin -->
+                <div class="fallback-restaurant-pin" style="left:82%;top:12%">
+                    <div class="pin-bubble restaurant">🍴 KFC TK Ave</div>
+                    <div class="pin-tail restaurant"></div>
+                </div>
+
+                <!-- Customer pin -->
+                <div class="fallback-customer-pin" style="left:18%;top:88%">
+                    <div class="pin-bubble customer">🏠 Your Location</div>
+                    <div class="pin-tail customer"></div>
+                </div>
+
+                <!-- Driver pin (animated) -->
+                <div class="fallback-driver" id="fallback-driver" style="left:62%;top:45%">🛵</div>
+
+                ${reason ? `
+                <div class="fallback-notice">
+                    <strong>🗺️ Map Preview Mode</strong>
+                    To enable live Google Maps tracking, add your API key to <code>maps-config.js</code>.
+                </div>` : ''}
+            </div>
+        `;
+        startFallbackAnimation();
+    }
+
+    function startFallbackAnimation() {
+        // Animate driver along a CSS path
+        const driver = document.getElementById('fallback-driver');
+        if (!driver) return;
+        const waypoints = [
+            { left: 82, top: 12 }, { left: 70, top: 30 }, { left: 62, top: 45 },
+            { left: 50, top: 60 }, { left: 38, top: 72 }, { left: 28, top: 80 },
+            { left: 18, top: 88 }
+        ];
+        let wi = 0;
+        let eta = 15;
+        const timer = setInterval(() => {
+            wi++;
+            if (wi >= waypoints.length) {
+                clearInterval(timer);
+                updateETA(0);
+                return;
+            }
+            driver.style.left = waypoints[wi].left + '%';
+            driver.style.top  = waypoints[wi].top  + '%';
+            eta -= 2.5;
+            updateETA(eta);
+        }, 3000);
+    }
+
+    /* ── BOOTSTRAP ──────────────────────────────────────────── */
+    function loadGoogleMaps() {
+        const cfg = (typeof MAPS_CONFIG !== 'undefined') ? MAPS_CONFIG : {};
+        if (!cfg.apiKey || cfg.apiKey === 'YOUR_GOOGLE_MAPS_API_KEY_HERE') {
+            showMapFallback(true);
+            return;
+        }
+
+        const script  = document.createElement('script');
+        script.src    = `https://maps.googleapis.com/maps/api/js?key=${cfg.apiKey}&libraries=geometry&callback=initMap`;
+        script.async  = true;
+        script.defer  = true;
+        script.onerror = () => showMapFallback(true);
+        document.head.appendChild(script);
+    }
+
+    /* ── DELIVERY TIMEOUT (30 seconds, keeping original logic) ── */
+    document.addEventListener('DOMContentLoaded', function () {
+        loadGoogleMaps();
+
+        setTimeout(function () {
+            const btn   = document.getElementById('delivery-button');
+            const toast = document.getElementById('delivery-toast');
+            if (btn)   { btn.style.display = 'block'; }
+            if (toast) { toast.style.display = 'flex'; }
             setDeliveryNotification();
         }, 30000);
     });

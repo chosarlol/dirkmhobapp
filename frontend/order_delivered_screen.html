@@ -3,344 +3,476 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DirkMhob - Order Delivered</title>
+    <title>Order Delivered — DirkMhob</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        :root {
+            --primary: #0077C8;
+            --primary-dark: #005fa0;
+            --primary-light: #e8f4fd;
+            --secondary: #FF6B35;
+            --bg: #F8FAFC;
+            --text: #1E293B;
+            --muted: #64748B;
+            --white: #FFFFFF;
+            --border: #E2E8F0;
+            --success: #22c55e;
+            --success-bg: #f0fdf4;
+            --gold: #f59e0b;
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.06);
+            --shadow: 0 4px 24px rgba(0,119,200,0.10);
+            --radius: 16px;
+            --radius-sm: 8px;
+            --radius-lg: 24px;
+            --transition: 0.2s ease;
         }
 
-        body, html {
-            min-height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: #f4f6f9;
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg); color: var(--text); min-height: 100vh;
         }
 
-        .phone-frame {
-            width: 100%;
-            max-width: 412px;
-            height: 100vh;
-            position: relative;
-            background-color: #ffffff;
-            overflow: hidden;
-            border-radius: 32px;
-            border: 1px solid rgba(15, 23, 42, 0.08);
-            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.15);
-            display: flex;
-            flex-direction: column;
+        /* ── NAVBAR ── */
+        .navbar {
+            position: sticky; top: 0; z-index: 100;
+            background: var(--white); border-bottom: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+        }
+        .nav-inner {
+            max-width: 1400px; margin: 0 auto; padding: 0 32px;
+            height: 64px; display: flex; align-items: center; gap: 16px;
+        }
+        .nav-brand {
+            display: flex; align-items: center; gap: 8px;
+            font-size: 20px; font-weight: 800; color: var(--primary); text-decoration: none;
+        }
+        .brand-icon {
+            width: 32px; height: 32px; background: var(--primary);
+            border-radius: var(--radius-sm);
+            display: flex; align-items: center; justify-content: center; font-size: 16px;
+        }
+        .close-nav-btn {
+            margin-left: auto;
+            background: none; border: 1.5px solid var(--border);
+            color: var(--muted); font-size: 14px; font-weight: 500;
+            cursor: pointer; padding: 8px 16px; border-radius: var(--radius-sm);
+            transition: all var(--transition); display: flex; align-items: center; gap: 6px;
+        }
+        .close-nav-btn:hover { border-color: var(--primary); color: var(--primary); }
+
+        /* ── HERO BANNER ── */
+        .hero {
+            background: linear-gradient(135deg, var(--success) 0%, #16a34a 100%);
+            color: white; padding: 48px 32px; text-align: center;
+        }
+        .hero-inner { max-width: 640px; margin: 0 auto; }
+        .hero-icon {
+            width: 90px; height: 90px; border-radius: 50%;
+            background: rgba(255,255,255,0.2); border: 3px solid rgba(255,255,255,0.4);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 40px; margin: 0 auto 20px;
+            animation: bounceIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        @keyframes bounceIn {
+            0%  { transform: scale(0); opacity: 0; }
+            70% { transform: scale(1.1); }
+            100%{ transform: scale(1);  opacity: 1; }
+        }
+        .hero h1 { font-size: 32px; font-weight: 800; margin-bottom: 8px; }
+        .hero p  { font-size: 16px; opacity: 0.9; }
+
+        /* order details strip */
+        .order-strip {
+            display: flex; align-items: center; justify-content: center;
+            flex-wrap: wrap; gap: 12px;
+            margin-top: 28px; background: rgba(255,255,255,0.15);
+            border-radius: var(--radius); padding: 16px 24px;
+        }
+        .strip-item { text-align: center; }
+        .strip-lbl  { font-size: 11px; opacity: 0.8; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+        .strip-val  { font-size: 15px; font-weight: 800; margin-top: 2px; }
+        .strip-divider { width: 1px; height: 36px; background: rgba(255,255,255,0.3); }
+
+        /* ── PAGE GRID ── */
+        .page-wrapper {
+            max-width: 1400px; margin: 0 auto; padding: 40px 32px;
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 32px; align-items: start;
         }
 
-        .scrollable-content {
-            flex: 1;
-            overflow-y: auto;
-            padding: 24px 20px 120px 20px;
+        /* ── SECTION HEADING ── */
+        .section-hd { font-size: 18px; font-weight: 800; margin-bottom: 20px; }
+
+        /* ── CARD BASE ── */
+        .card {
+            background: var(--white); border-radius: var(--radius-lg);
+            box-shadow: var(--shadow); border: 1px solid var(--border);
+            overflow: hidden; margin-bottom: 24px;
         }
-        .scrollable-content::-webkit-scrollbar { display: none; }
+        .card-head { padding: 16px 24px; border-bottom: 1px solid var(--border); }
+        .card-head h3 { font-size: 15px; font-weight: 700; }
+        .card-body { padding: 20px 24px; }
 
-        /* --- CLOSE BUTTON --- */
-        .close-btn {
-            background: none;
-            border: none;
-            font-size: 1.3rem;
-            color: #334155;
-            cursor: pointer;
-            margin-bottom: 12px;
-            padding: 4px;
-            display: inline-block;
+        /* ── DRIVER CARD ── */
+        .driver-row {
+            display: flex; align-items: center; gap: 16px;
+            padding: 20px 24px;
         }
-
-        /* --- ENJOY HEADING --- */
-        .enjoy-heading {
-            font-size: 1.5rem;
-            font-weight: 800;
-            color: #000000;
-            margin-bottom: 20px;
+        .driver-avatar {
+            width: 64px; height: 64px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), #5ea4f3);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 28px; border: 3px solid var(--border);
+            box-shadow: var(--shadow-sm); flex-shrink: 0;
         }
-
-        /* --- RESTAURANT CARD --- */
-        .restaurant-card {
-            background-color: #ffffff;
-            border-radius: 16px;
-            padding: 14px 16px;
-            display: flex;
-            align-items: center;
-            box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06);
-            border: 1px solid #f1f5f9;
-            margin-bottom: 16px;
-            position: relative;
+        .driver-info { flex: 1; }
+        .driver-role { font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+        .driver-name { font-size: 19px; font-weight: 800; margin: 3px 0; }
+        .driver-rating { color: var(--gold); font-size: 14px; font-weight: 600; }
+        .driver-btns { display: flex; gap: 10px; }
+        .driver-btn {
+            display: flex; align-items: center; gap: 6px;
+            padding: 10px 16px; border-radius: var(--radius-sm);
+            border: 1.5px solid var(--border); background: var(--white);
+            font-size: 13px; font-weight: 600; cursor: pointer;
+            transition: all var(--transition); color: var(--text);
         }
+        .driver-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+        .driver-btn.call { background: var(--primary); color: white; border-color: var(--primary); }
+        .driver-btn.call:hover { background: var(--primary-dark); }
 
-        .res-logo {
-            width: 52px;
-            height: 52px;
-            border-radius: 12px;
-            background: linear-gradient(135deg, #f59e0b, #e8002d);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.65rem;
-            font-weight: 900;
-            color: #ffffff;
-            margin-right: 12px;
-            flex-shrink: 0;
-            letter-spacing: -0.5px;
-        }
+        /* ── RATING SECTION ── */
+        .rating-card .card-head { background: var(--primary); }
+        .rating-card .card-head h3 { color: white; font-size: 16px; }
 
-        .res-info { flex: 1; }
-        .res-name { font-size: 0.95rem; font-weight: 700; color: #000000; margin-bottom: 2px; }
-
-        .order-id-badge {
-            background-color: #1a7de8;
-            color: #ffffff;
-            font-size: 0.65rem;
-            font-weight: 700;
-            padding: 2px 8px;
-            border-radius: 20px;
-            margin-left: 6px;
-        }
-
-        .total-paid { font-size: 0.8rem; color: #94a3b8; margin-bottom: 2px; }
-        .order-status { font-size: 1rem; font-weight: 800; color: #000000; }
-
-        .food-preview {
-            width: 70px;
-            height: 60px;
-            border-radius: 10px;
-            background: linear-gradient(135deg, #fde68a, #fbbf24);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.8rem;
-            flex-shrink: 0;
-        }
-
-        /* --- DIVIDER --- */
-        .divider {
-            height: 1px;
-            background-color: #f1f5f9;
-            margin: 14px 0;
-        }
-
-        /* --- INFO ROWS --- */
-        .info-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-        }
-
-        .info-label {
-            font-size: 0.9rem;
-            color: #94a3b8;
-            font-weight: 500;
-        }
-
-        .info-value {
-            font-size: 0.9rem;
-            color: #334155;
-            font-weight: 600;
-        }
-
-        /* --- RIDER CARD --- */
-        .rider-card {
-            background-color: #ffffff;
-            border-radius: 16px;
-            padding: 14px 16px;
-            display: flex;
-            align-items: center;
-            box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06);
-            border: 1px solid #f1f5f9;
-            margin: 14px 0;
-        }
-
-        .rider-avatar {
-            width: 46px;
-            height: 46px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #1a7de8, #5ea4f3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-            margin-right: 12px;
-            flex-shrink: 0;
-            border: 2px solid #e2e8f0;
-        }
-
-        .rider-text { flex: 1; }
-        .rider-role { font-size: 0.75rem; color: #94a3b8; }
-        .rider-name { font-size: 0.95rem; font-weight: 700; color: #000000; }
-
-        .rider-actions { display: flex; gap: 10px; }
-        .action-btn {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            border: 1.5px solid #e2e8f0;
-            background: #ffffff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1rem;
-            cursor: pointer;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.06);
-            transition: background 0.15s;
-        }
-        .action-btn:hover { background: #f8fafc; }
-
-        /* --- REVIEW SECTION --- */
-        .review-section {
-            background-color: #ffffff;
-            border-radius: 16px;
-            padding: 18px 16px;
-            box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06);
-            border: 1px solid #f1f5f9;
-        }
-
-        .review-heading {
-            font-size: 1rem;
-            font-weight: 700;
-            color: #000000;
-            margin-bottom: 14px;
-        }
-
-        /* Stars */
-        .stars-row {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 16px;
-        }
-
+        .stars-row { display: flex; gap: 10px; margin-bottom: 20px; justify-content: center; }
         .star {
-            font-size: 1.8rem;
-            cursor: pointer;
-            color: #e2e8f0;
-            transition: color 0.15s, transform 0.1s;
+            font-size: 40px; cursor: pointer; color: #e2e8f0;
+            transition: all 0.15s ease; line-height: 1;
         }
-        .star.selected { color: #f59e0b; }
-        .star:hover { transform: scale(1.15); }
+        .star.selected { color: var(--gold); }
+        .star:hover    { transform: scale(1.2); }
 
-        /* Textarea */
-        .review-input {
-            width: 100%;
-            min-height: 100px;
-            border: 1.5px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 12px 14px;
-            font-size: 0.9rem;
-            color: #334155;
-            resize: none;
-            outline: none;
-            background-color: #f8fafc;
-            transition: border 0.2s;
+        .rating-labels {
+            display: flex; justify-content: space-between;
+            font-size: 11px; color: var(--muted); margin-top: -12px; margin-bottom: 20px;
+            padding: 0 4px;
         }
-        .review-input:focus { border-color: #1a7de8; background-color: #ffffff; }
+
+        .review-input {
+            width: 100%; min-height: 110px;
+            border: 1.5px solid var(--border); border-radius: var(--radius);
+            padding: 14px 16px; font-size: 14px; color: var(--text);
+            resize: none; outline: none; background: var(--bg);
+            font-family: inherit; transition: border var(--transition);
+            line-height: 1.6;
+        }
+        .review-input:focus { border-color: var(--primary); background: var(--white); }
         .review-input::placeholder { color: #cbd5e1; }
 
-        /* --- BOTTOM SUBMIT BUTTON --- */
-        .bottom-bar {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background-color: #ffffff;
-            padding: 16px 20px 28px 20px;
-            box-shadow: 0 -4px 20px rgba(15, 23, 42, 0.08);
+        .submit-btn {
+            display: block; width: 100%; padding: 15px;
+            background: var(--primary); color: white; border: none;
+            border-radius: var(--radius); font-size: 15px; font-weight: 700;
+            cursor: pointer; margin-top: 16px; transition: all var(--transition);
+            box-shadow: 0 6px 20px rgba(0,119,200,0.35);
+        }
+        .submit-btn:hover { background: var(--primary-dark); transform: translateY(-2px); }
+        .submit-btn:active { transform: translateY(0); }
+        .submit-btn:disabled { background: var(--muted); box-shadow: none; cursor: not-allowed; transform: none; }
+
+        /* ── RECOMMENDATIONS (sidebar) ── */
+        .rec-section { margin-bottom: 24px; }
+
+        .rec-grid { display: flex; flex-direction: column; gap: 12px; }
+        .rec-item {
+            display: flex; align-items: center; gap: 14px;
+            padding: 14px 16px;
+            background: var(--white); border-radius: var(--radius);
+            border: 1px solid var(--border); box-shadow: var(--shadow-sm);
+            cursor: pointer; transition: all var(--transition);
+        }
+        .rec-item:hover { box-shadow: var(--shadow); border-color: #bcd9f0; transform: translateY(-1px); }
+        .rec-img {
+            width: 56px; height: 56px; border-radius: var(--radius-sm);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 26px; background: var(--bg);
+            border: 1px solid var(--border); flex-shrink: 0;
+        }
+        .rec-info { flex: 1; }
+        .rec-name { font-size: 14px; font-weight: 700; margin-bottom: 3px; }
+        .rec-meta { font-size: 12px; color: var(--muted); }
+        .rec-right { text-align: right; }
+        .rec-rating { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+        .rec-tag {
+            font-size: 11px; font-weight: 600;
+            background: var(--primary-light); color: var(--primary);
+            padding: 3px 10px; border-radius: 20px;
         }
 
-        .submit-btn {
-            width: 100%;
-            background-color: #1a7de8;
-            color: #ffffff;
-            border: none;
-            border-radius: 16px;
-            padding: 16px;
-            font-size: 1rem;
-            font-weight: 700;
-            cursor: pointer;
-            box-shadow: 0 6px 20px rgba(26, 125, 232, 0.35);
-            transition: background 0.2s, transform 0.1s;
+        /* dish grid */
+        .dishes-hd { font-size: 18px; font-weight: 800; margin: 0 0 16px; }
+        .dish-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .dish-card {
+            background: var(--white); border-radius: var(--radius);
+            border: 1px solid var(--border); box-shadow: var(--shadow-sm);
+            overflow: hidden; cursor: pointer; transition: all var(--transition);
         }
-        .submit-btn:hover { background-color: #1565c0; }
-        .submit-btn:active { transform: scale(0.98); }
+        .dish-card:hover { box-shadow: var(--shadow); transform: translateY(-2px); }
+        .dish-thumb {
+            width: 100%; height: 80px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 36px; background: var(--bg);
+            border-bottom: 1px solid var(--border);
+        }
+        .dish-info { padding: 10px 12px; }
+        .dish-name { font-size: 12px; font-weight: 700; margin-bottom: 2px; }
+        .dish-price { font-size: 13px; font-weight: 800; color: var(--primary); }
+
+        /* ── HOME BUTTON STRIP ── */
+        .home-strip {
+            background: var(--white); border-top: 1px solid var(--border);
+            position: sticky; bottom: 0; z-index: 50;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.07);
+            padding: 14px 32px;
+        }
+        .home-strip-inner { max-width: 1400px; margin: 0 auto; display: flex; align-items: center; gap: 16px; }
+        .home-strip-text { flex: 1; }
+        .home-strip-text strong { display: block; font-size: 15px; font-weight: 700; }
+        .home-strip-text span   { font-size: 13px; color: var(--muted); }
+        .go-home-btn {
+            background: var(--primary); color: white; border: none;
+            border-radius: var(--radius); padding: 13px 28px;
+            font-size: 14px; font-weight: 700; cursor: pointer;
+            transition: all var(--transition); white-space: nowrap;
+        }
+        .go-home-btn:hover { background: var(--primary-dark); transform: translateY(-1px); }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 1100px) { .page-wrapper { grid-template-columns: 1fr 320px; padding: 24px; } }
+        @media (max-width: 820px)  {
+            .page-wrapper { grid-template-columns: 1fr; padding: 16px; }
+            .hero { padding: 32px 16px; }
+            .hero h1 { font-size: 24px; }
+            .nav-inner { padding: 0 16px; }
+            .driver-row { flex-wrap: wrap; }
+            .driver-btns { width: 100%; }
+            .dish-grid { grid-template-columns: 1fr 1fr 1fr 1fr; }
+        }
+        @media (max-width: 500px) {
+            .dish-grid { grid-template-columns: 1fr 1fr; }
+            .order-strip { gap: 8px; }
+        }
     </style>
 </head>
 <body>
 
-<div class="phone-frame">
+<!-- ── NAVBAR ── -->
+<nav class="navbar">
+    <div class="nav-inner">
+        <a href="home_screen.html" class="nav-brand">
+            <div class="brand-icon">🍔</div>
+            DirkMhob
+        </a>
+        <button class="close-nav-btn" onclick="history.back()">✕ Close</button>
+    </div>
+</nav>
 
-    <div class="scrollable-content">
+<!-- ── HERO BANNER ── -->
+<div class="hero">
+    <div class="hero-inner">
+        <div class="hero-icon">🎉</div>
+        <h1>Enjoy Your Meal!</h1>
+        <p>Your order has been successfully delivered. Bon appétit!</p>
 
-        <!-- Close -->
-        <button class="close-btn" onclick="history.back()">✕</button>
+        <div class="order-strip">
+            <div class="strip-item">
+                <div class="strip-lbl">Restaurant</div>
+                <div class="strip-val">Texas Chicken</div>
+            </div>
+            <div class="strip-divider"></div>
+            <div class="strip-item">
+                <div class="strip-lbl">Order ID</div>
+                <div class="strip-val">#CKDCKD-6767</div>
+            </div>
+            <div class="strip-divider"></div>
+            <div class="strip-item">
+                <div class="strip-lbl">Delivered At</div>
+                <div class="strip-val">09:45 PM</div>
+            </div>
+            <div class="strip-divider"></div>
+            <div class="strip-item">
+                <div class="strip-lbl">Total Paid</div>
+                <div class="strip-val">$ 10.12</div>
+            </div>
+        </div>
+    </div>
+</div>
 
-        <!-- Heading -->
-        <h1 class="enjoy-heading">Enjoy your meal!</h1>
+<!-- ── MAIN GRID ── -->
+<main class="page-wrapper">
 
-        <!-- Restaurant Card -->
-        <div class="restaurant-card">
-            <div class="res-logo">TEXAS</div>
-            <div class="res-info">
-                <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:4px;">
-                    <span class="res-name">Texas Chicken-TK Avenue</span>
-                    <span class="order-id-badge">CKDCKD-6767</span>
+    <!-- LEFT: DRIVER + RATING -->
+    <div>
+        <div class="section-hd">Delivery Summary</div>
+
+        <!-- Driver card -->
+        <div class="card">
+            <div class="card-head"><h3>Your Delivery Driver</h3></div>
+            <div class="driver-row">
+                <div class="driver-avatar">👨</div>
+                <div class="driver-info">
+                    <div class="driver-role">Deliverer</div>
+                    <div class="driver-name">Seang Cha</div>
+                    <div class="driver-rating">★ 4.9 · 243 completed trips</div>
                 </div>
-                <div class="total-paid">Total Paid $10.12</div>
-                <div class="order-status">Order Delivered</div>
-            </div>
-            <div class="food-preview">🍗</div>
-        </div>
-
-        <!-- Address & Delivered at -->
-        <div style="padding: 0 4px;">
-            <div class="info-row">
-                <span class="info-label">Address</span>
-                <span class="info-value">Portola Drive</span>
-            </div>
-            <div class="divider"></div>
-            <div class="info-row">
-                <span class="info-label">Delivered at</span>
-                <span class="info-value">09:45 PM</span>
+                <div class="driver-btns">
+                    <button class="driver-btn call" onclick="alert('Calling Seang Cha...')">
+                        📞 Call
+                    </button>
+                    <button class="driver-btn" onclick="window.location.href='chat_screen.html'">
+                        💬 Chat
+                    </button>
+                </div>
             </div>
         </div>
 
-        <!-- Rider Card -->
-        <div class="rider-card">
-            <div class="rider-avatar">👨</div>
-            <div class="rider-text">
-                <div class="rider-role">Deliverer</div>
-                <div class="rider-name">Seang Cha</div>
-            </div>
-            <div class="rider-actions">
-                <button class="action-btn">💬</button>
-                <button class="action-btn">📞</button>
+        <!-- Rating card -->
+        <div class="card rating-card">
+            <div class="card-head"><h3>How was your experience?</h3></div>
+            <div class="card-body">
+                <div class="stars-row">
+                    <span class="star" onclick="selectStar(1)">☆</span>
+                    <span class="star" onclick="selectStar(2)">☆</span>
+                    <span class="star" onclick="selectStar(3)">☆</span>
+                    <span class="star" onclick="selectStar(4)">☆</span>
+                    <span class="star" onclick="selectStar(5)">☆</span>
+                </div>
+                <div class="rating-labels">
+                    <span>Terrible</span>
+                    <span>Poor</span>
+                    <span>OK</span>
+                    <span>Good</span>
+                    <span>Excellent</span>
+                </div>
+                <textarea class="review-input" id="review-text"
+                    placeholder="Share your thoughts about the food, delivery speed, driver friendliness..."></textarea>
+                <button class="submit-btn" id="submit-btn" onclick="submitReview()">
+                    Submit Review
+                </button>
             </div>
         </div>
-
-        <!-- Review Section -->
-        <div class="review-section">
-            <div class="review-heading">How was your experience?</div>
-            <div class="stars-row">
-                <span class="star" onclick="selectStar(1)">☆</span>
-                <span class="star" onclick="selectStar(2)">☆</span>
-                <span class="star" onclick="selectStar(3)">☆</span>
-                <span class="star" onclick="selectStar(4)">☆</span>
-                <span class="star" onclick="selectStar(5)">☆</span>
-            </div>
-            <textarea class="review-input" placeholder="Share your thoughts..."></textarea>
-        </div>
-
     </div>
 
-    <!-- Submit Button -->
-    <div class="bottom-bar">
-        <button class="submit-btn" onclick="submitReview()">Submit</button>
+    <!-- RIGHT: RECOMMENDATIONS -->
+    <div>
+        <div class="section-hd">You Might Also Like</div>
+
+        <div class="rec-section">
+            <div class="rec-grid">
+                <div class="rec-item">
+                    <div class="rec-img">🍗</div>
+                    <div class="rec-info">
+                        <div class="rec-name">KFC — TK Avenue</div>
+                        <div class="rec-meta">🕐 15–20 min · ⭐ 4.7</div>
+                    </div>
+                    <div class="rec-right">
+                        <div class="rec-rating">⭐ 4.7</div>
+                        <div class="rec-tag">Popular</div>
+                    </div>
+                </div>
+
+                <div class="rec-item">
+                    <div class="rec-img">🌮</div>
+                    <div class="rec-info">
+                        <div class="rec-name">Texas Chicken</div>
+                        <div class="rec-meta">🕐 10–15 min · ⭐ 4.8</div>
+                    </div>
+                    <div class="rec-right">
+                        <div class="rec-rating">⭐ 4.8</div>
+                        <div class="rec-tag">Near You</div>
+                    </div>
+                </div>
+
+                <div class="rec-item">
+                    <div class="rec-img">☕</div>
+                    <div class="rec-info">
+                        <div class="rec-name">Brown Coffee</div>
+                        <div class="rec-meta">🕐 10 min · ⭐ 4.9</div>
+                    </div>
+                    <div class="rec-right">
+                        <div class="rec-rating">⭐ 4.9</div>
+                        <div class="rec-tag">Trending</div>
+                    </div>
+                </div>
+
+                <div class="rec-item">
+                    <div class="rec-img">🍚</div>
+                    <div class="rec-info">
+                        <div class="rec-name">Khmer Kitchen</div>
+                        <div class="rec-meta">🕐 20–25 min · ⭐ 4.7</div>
+                    </div>
+                    <div class="rec-right">
+                        <div class="rec-rating">⭐ 4.7</div>
+                        <div class="rec-tag">Local</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Popular dishes -->
+        <div>
+            <div class="dishes-hd">Popular Dishes</div>
+            <div class="dish-grid">
+                <div class="dish-card">
+                    <div class="dish-thumb">🍗</div>
+                    <div class="dish-info">
+                        <div class="dish-name">Zinger Burger</div>
+                        <div class="dish-price">$ 4.50</div>
+                    </div>
+                </div>
+                <div class="dish-card">
+                    <div class="dish-thumb">🍟</div>
+                    <div class="dish-info">
+                        <div class="dish-name">Crispy Fries</div>
+                        <div class="dish-price">$ 2.50</div>
+                    </div>
+                </div>
+                <div class="dish-card">
+                    <div class="dish-thumb">☕</div>
+                    <div class="dish-info">
+                        <div class="dish-name">Iced Mocha</div>
+                        <div class="dish-price">$ 3.00</div>
+                    </div>
+                </div>
+                <div class="dish-card">
+                    <div class="dish-thumb">🌯</div>
+                    <div class="dish-info">
+                        <div class="dish-name">Crunch Wrap</div>
+                        <div class="dish-price">$ 5.00</div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
+</main>
+
+<!-- ── HOME STRIP ── -->
+<div class="home-strip">
+    <div class="home-strip-inner">
+        <div class="home-strip-text">
+            <strong>Thanks for ordering with DirkMhob!</strong>
+            <span>We hope you enjoyed your meal. Order again anytime.</span>
+        </div>
+        <button class="go-home-btn" onclick="window.location.href='home_screen.html'">
+            🏠 Back to Home
+        </button>
+    </div>
 </div>
 
 <script>
@@ -361,14 +493,21 @@
     }
 
     function submitReview() {
-        const comment = document.querySelector('.review-input').value;
+        const comment = document.getElementById('review-text').value;
         if (selectedRating === 0) {
-            alert('Please select a star rating!');
+            alert('Please select a star rating before submitting!');
             return;
         }
-        alert(`Thank you for your review! ⭐ ${selectedRating}/5`);
+        const btn = document.getElementById('submit-btn');
+        btn.disabled = true;
+        btn.textContent = 'Submitting…';
+        setTimeout(() => {
+            btn.textContent = '✓ Review Submitted — Thank You!';
+            btn.style.background = 'var(--success)';
+        }, 1000);
     }
-    document.addEventListener('DOMContentLoaded', function() {
+
+    document.addEventListener('DOMContentLoaded', function () {
         localStorage.removeItem('deliveryNotification');
         const currentOrderStr = localStorage.getItem('currentOrder');
         if (currentOrderStr) {
@@ -380,6 +519,5 @@
         }
     });
 </script>
-
 </body>
 </html>

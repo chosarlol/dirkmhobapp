@@ -68,4 +68,66 @@
 </head>
 <body>
   <header class="site-header"><div class="container navbar"><a class="brand" href="home_screen.html"><span class="brand-mark">DM</span><span>DirkMhob</span></a><nav class="nav-links" aria-label="Main navigation"><a href="home_screen.html">Home</a><a href="search_screen.html">Restaurants</a><a href="asian_dish.html">Categories</a><a href="home_screen.html">Promotions</a><a href="home_screen.html">Contact</a></nav><div class="nav-actions"><label class="search-box"><span>🔍</span><input placeholder="Search dishes" /></label><a class="icon-btn" href="cart_screen.html" aria-label="Cart">🛒</a><a class="login-btn" href="login.html">Login</a></div></div></header>
-  <main class="container"><section class="hero"><div class="hero-card"><div><div class="hero-badge">🍗 Fried Chicken</div><h1>KFC - TK Avenue</h1><p>Classic fried chicken, comfort meals, and speedy delivery for every craving.</p><div class="hero-stats"><span>⭐ 4.5 (300+ reviews)</span><span>⏱ 15–25 min</span><span>🚚 Free delivery</span><span>🍗 Fast food</span></div></div><div class="restaurant-spotlight"><div class="spotlight-top"><div class="spotlight-logo">K</div><div><strong>KFC</strong><div style="color:rgba(255,255,255,.9);">Open now • 10:00 AM – 11:00 PM</div></div></div><div>Popular picks: Zinger Burger, Bucket Meal, Fries</div><div>Best for: lunch, family meals, quick dinner</div></div></div></section><section class="section"><div class="layout"><div class="panel"><div class="panel-header"><h2 class="panel-title">Best Sellers</h2><span style="color:var(--muted); font-weight:600;">Popular right now</span></div><div class="menu-grid"><article class="menu-card"><div class="menu-image">🍗</div><div class="menu-body"><h3>Original Bucket</h3><p>6 pieces of crispy chicken with fries and a drink.</p><div class="menu-meta"><span>$12.50</span><div class="qty-row" data-price="12.50"><button class="qty-btn" data-action="decrease">−</button><span class="qty-value">0</span><button class="qty-btn" data-action="increase">+</button></div></div></div></article><article class="menu-card"><div class="menu-image">🍔</div><div class="menu-body"><h3>Zinger Burger</h3><p>Spicy chicken filet with lettuce and sauce.</p><div class="menu-meta"><span>$6.90</span><div class="qty-row" data-price="6.90"><button class="qty-btn" data-action="decrease">−</button><span class="qty-value">0</span><button class="qty-btn" data-action="increase">+</button></div></div></div></article><article class="menu-card"><div class="menu-image">🍟</div><div class="menu-body"><h3>Large Fries</h3><p>Golden fries with a crunchy finish.</p><div class="menu-meta"><span>$3.20</span><div class="qty-row" data-price="3.20"><button class="qty-btn" data-action="decrease">−</button><span class="qty-value">0</span><button class="qty-btn" data-action="increase">+</button></div></div></div></article><article class="menu-card"><div class="menu-image">🥤</div><div class="menu-body"><h3>Cola Combo</h3><p>Signature drink with your meal combo.</p><div class="menu-meta"><span>$2.80</span><div class="qty-row" data-price="2.80"><button class="qty-btn" data-action="decrease">−</button><span class="qty-value">0</span><button class="qty-btn" data-action="increase">+</button></div></div></div></article></div></div><aside class="panel cart-panel"><div class="panel-header" style="padding:0;"><h2 class="panel-title">Your order</h2><span style="color:var(--muted); font-weight:600;">Fast delivery</span></div><div id="cart-items"><div class="cart-item"><span>Your cart is empty</span><strong>$0.00</strong></div></div><div><div class="summary-row"><span>Subtotal</span><span id="subtotal">$0.00</span></div><div class="summary-row"><span>Delivery fee</span><span>$2.00</span></div><div class="summary-row"><span>Service fee</span><span>$1.00</span></div><div class="summary-row summary-total"><span>Total</span><span id="total">$0.00</span></div></div><a class="primary-btn" href="check_out.html">Checkout</a></aside></div></section></main><footer class="footer"><div class="container footer-grid"><div><h4>DirkMhob</h4><p>Fast delivery, healthier choices, and beautifully curated meals from your favorite local spots.</p></div><div><h4>Quick links</h4><ul><li><a href="home_screen.html">Home</a></li><li><a href="search_screen.html">Restaurants</a></li><li><a href="asian_dish.html">Categories</a></li><li><a href="home_screen.html">Promotions</a></li></ul></div><div><h4>Support</h4><ul><li><a href="home_screen.html">Help Center</a></li><li><a href="home_screen.html">Contact Us</a></li><li><a href="home_screen.html">Terms</a></li><li><a href="home_screen.html">Privacy Policy</a></li></ul></div><div><h4>Follow</h4><ul><li>Instagram</li><li>Facebook</li><li>Twitter</li></ul></div></div><div class="container footer-bottom">© 2026 DirkMhob. Crafted for modern food delivery.</div></footer><script>const cartItems=document.getElementById('cart-items');const subtotalEl=document.getElementById('subtotal');const totalEl=document.getElementById('total');const rows=document.querySelectorAll('.qty-row');rows.forEach(row=>{const qtyEl=row.querySelector('.qty-value');row.querySelectorAll('.qty-btn').forEach(btn=>{btn.addEventListener('click',()=>{const action=btn.dataset.action;const current=parseInt(qtyEl.textContent,10);const next=action==='increase'?current+1:Math.max(0,current-1);qtyEl.textContent=next;updateCart();});});});function updateCart(){const items=[];rows.forEach(row=>{const qty=parseInt(row.querySelector('.qty-value').textContent,10);if(qty>0){const name=row.closest('.menu-card').querySelector('h3').textContent;const price=parseFloat(row.dataset.price);items.push({name,qty,price});}});if(!items.length){cartItems.innerHTML='<div class="cart-item"><span>Your cart is empty</span><strong>$0.00</strong></div>';subtotalEl.textContent='$0.00';totalEl.textContent='$0.00';return;}const subtotal=items.reduce((sum,item)=>sum+item.qty*item.price,0);cartItems.innerHTML=items.map(item=>`<div class="cart-item"><span>${item.qty}× ${item.name}</span><strong>$${(item.qty*item.price).toFixed(2)}</strong></div>`).join('');subtotalEl.textContent=`$${subtotal.toFixed(2)}`;totalEl.textContent=`$${(subtotal+2+1).toFixed(2)}`;}</script></body></html>
+  <main class="container"><section class="hero"><div class="hero-card"><div><div class="hero-badge">🍗 Fried Chicken</div><h1>KFC - TK Avenue</h1><p>Classic fried chicken, comfort meals, and speedy delivery for every craving.</p><div class="hero-stats"><span>⭐ 4.5 (300+ reviews)</span><span>⏱ 15–25 min</span><span>🚚 Free delivery</span><span>🍗 Fast food</span></div></div><div class="restaurant-spotlight"><div class="spotlight-top"><div class="spotlight-logo">K</div><div><strong>KFC</strong><div style="color:rgba(255,255,255,.9);">Open now • 10:00 AM – 11:00 PM</div></div></div><div>Popular picks: Zinger Burger, Bucket Meal, Fries</div><div>Best for: lunch, family meals, quick dinner</div></div></div></section><section class="section"><div class="layout"><div class="panel"><div class="panel-header"><h2 class="panel-title">Best Sellers</h2><span style="color:var(--muted); font-weight:600;">Popular right now</span></div><div class="menu-grid"><article class="menu-card"><div class="menu-image">🍗</div><div class="menu-body"><h3>Original Bucket</h3><p>6 pieces of crispy chicken with fries and a drink.</p><div class="menu-meta"><span>$12.50</span><div class="qty-row" data-price="12.50"><button class="qty-btn" data-action="decrease">−</button><span class="qty-value">0</span><button class="qty-btn" data-action="increase">+</button></div></div></div></article><article class="menu-card"><div class="menu-image">🍔</div><div class="menu-body"><h3>Zinger Burger</h3><p>Spicy chicken filet with lettuce and sauce.</p><div class="menu-meta"><span>$6.90</span><div class="qty-row" data-price="6.90"><button class="qty-btn" data-action="decrease">−</button><span class="qty-value">0</span><button class="qty-btn" data-action="increase">+</button></div></div></div></article><article class="menu-card"><div class="menu-image">🍟</div><div class="menu-body"><h3>Large Fries</h3><p>Golden fries with a crunchy finish.</p><div class="menu-meta"><span>$3.20</span><div class="qty-row" data-price="3.20"><button class="qty-btn" data-action="decrease">−</button><span class="qty-value">0</span><button class="qty-btn" data-action="increase">+</button></div></div></div></article><article class="menu-card"><div class="menu-image">🥤</div><div class="menu-body"><h3>Cola Combo</h3><p>Signature drink with your meal combo.</p><div class="menu-meta"><span>$2.80</span><div class="qty-row" data-price="2.80"><button class="qty-btn" data-action="decrease">−</button><span class="qty-value">0</span><button class="qty-btn" data-action="increase">+</button></div></div></div></article></div></div><aside class="panel cart-panel"><div class="panel-header" style="padding:0;"><h2 class="panel-title">Your order</h2><span style="color:var(--muted); font-weight:600;">Fast delivery</span></div><div id="cart-items"><div class="cart-item"><span>Your cart is empty</span><strong>$0.00</strong></div></div><div><div class="summary-row"><span>Subtotal</span><span id="subtotal">$0.00</span></div><div class="summary-row"><span>Delivery fee</span><span>$2.00</span></div><div class="summary-row"><span>Service fee</span><span>$1.00</span></div><div class="summary-row summary-total"><span>Total</span><span id="total">$0.00</span></div></div><a class="primary-btn" href="check_out.html">Checkout</a></aside></div></section></main><footer class="footer"><div class="container footer-grid"><div><h4>DirkMhob</h4><p>Fast delivery, healthier choices, and beautifully curated meals from your favorite local spots.</p></div><div><h4>Quick links</h4><ul><li><a href="home_screen.html">Home</a></li><li><a href="search_screen.html">Restaurants</a></li><li><a href="asian_dish.html">Categories</a></li><li><a href="home_screen.html">Promotions</a></li></ul></div><div><h4>Support</h4><ul><li><a href="home_screen.html">Help Center</a></li><li><a href="home_screen.html">Contact Us</a></li><li><a href="home_screen.html">Terms</a></li><li><a href="home_screen.html">Privacy Policy</a></li></ul></div><div><h4>Follow</h4><ul><li>Instagram</li><li>Facebook</li><li>Twitter</li></ul></div></div><div class="container footer-bottom">© 2026 DirkMhob. Crafted for modern food delivery.</div></footer><script src="cart.js"></script>
+<script>
+  var RES_ID   = 'kfc';
+  var RES_NAME = 'KFC — TK Avenue';
+
+  function renderCartPanel() {
+    var cart        = DirkCart.getCart();
+    var cartItemsEl = document.getElementById('cart-items');
+    var subtotalEl  = document.getElementById('subtotal');
+    var totalEl     = document.getElementById('total');
+    if (!cart.length) {
+      cartItemsEl.innerHTML  = '<div class="cart-item"><span>Your cart is empty</span><strong>$0.00</strong></div>';
+      subtotalEl.textContent = '$0.00';
+      totalEl.textContent    = '$0.00';
+      return;
+    }
+    var subtotal = DirkCart.calculateSubtotal(cart);
+    cartItemsEl.innerHTML = cart.map(function(item) {
+      return '<div class="cart-item"><span>' + item.quantity + '× ' + item.name +
+        ' <small style="color:var(--muted);font-weight:400">(' + item.restaurantName + ')</small></span>' +
+        '<strong>$' + (item.quantity * item.price).toFixed(2) + '</strong></div>';
+    }).join('');
+    subtotalEl.textContent = '$' + subtotal.toFixed(2);
+    totalEl.textContent    = '$' + (subtotal + 3).toFixed(2);
+  }
+
+  document.querySelectorAll('.qty-row').forEach(function(row) {
+    var qtyEl = row.querySelector('.qty-value');
+    row.querySelectorAll('.qty-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var name    = row.closest('.menu-card').querySelector('h3').textContent.trim();
+        var price   = parseFloat(row.dataset.price);
+        var emoji   = row.closest('.menu-card').querySelector('.menu-image').textContent.trim();
+        var action  = btn.dataset.action;
+        var current = parseInt(qtyEl.textContent, 10);
+        if (action === 'increase') {
+          var next = current + 1;
+          qtyEl.textContent = next;
+          if (current === 0) {
+            DirkCart.addToCart({ restaurantId: RES_ID, restaurantName: RES_NAME, name: name, price: price, quantity: 1, emoji: emoji });
+          } else {
+            DirkCart.updateQuantity(RES_ID, name, next);
+          }
+        } else {
+          var next = Math.max(0, current - 1);
+          qtyEl.textContent = next;
+          DirkCart.updateQuantity(RES_ID, name, next);
+        }
+        renderCartPanel();
+      });
+    });
+  });
+
+  document.addEventListener('DOMContentLoaded', function() {
+    var cart = DirkCart.getCart();
+    document.querySelectorAll('.qty-row').forEach(function(row) {
+      var name  = row.closest('.menu-card').querySelector('h3').textContent.trim();
+      var saved = cart.find(function(i) { return i.restaurantId === RES_ID && i.name === name; });
+      if (saved) row.querySelector('.qty-value').textContent = saved.quantity;
+    });
+    renderCartPanel();
+  });
+</script></body></html>

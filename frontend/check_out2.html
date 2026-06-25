@@ -3,486 +3,571 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DirkMhob - Checkout</title>
+    <title>Delivery Details — DirkMhob</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        :root {
+            --primary: #0077C8;
+            --primary-dark: #005fa0;
+            --primary-light: #e8f4fd;
+            --secondary: #FF6B35;
+            --bg: #F8FAFC;
+            --text: #1E293B;
+            --muted: #64748B;
+            --white: #FFFFFF;
+            --border: #E2E8F0;
+            --success: #22c55e;
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.06);
+            --shadow: 0 4px 24px rgba(0,119,200,0.10);
+            --shadow-lg: 0 8px 40px rgba(0,119,200,0.18);
+            --radius: 16px;
+            --radius-sm: 8px;
+            --radius-lg: 24px;
+            --transition: 0.2s ease;
         }
 
-        body, html {
-            min-height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: #f4f6f9;
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
         }
 
-        .phone-frame {
-            width: 100%;
-            max-width: 412px;
-            height: 100vh;
-            position: relative;
-            background-color: #f4f6f9;
-            overflow: hidden;
-            border-radius: 32px;
-            border: 1px solid rgba(15, 23, 42, 0.08);
-            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.15);
-            display: flex;
-            flex-direction: column;
+        /* ── NAVBAR ── */
+        .navbar {
+            position: sticky; top: 0; z-index: 100;
+            background: var(--white);
+            border-bottom: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
         }
-
-        /* --- TOP HEADER BAR --- */
-        .top-header {
-            background-color: #1e88e5;
-            padding: 20px 16px 16px 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
+        .nav-inner {
+            max-width: 1400px; margin: 0 auto; padding: 0 32px;
+            height: 64px; display: flex; align-items: center; gap: 20px;
         }
-
         .back-btn {
-            position: absolute;
-            left: 16px;
-            background: none;
-            border: none;
-            color: #ffffff;
-            font-size: 1.4rem;
-            cursor: pointer;
-            padding: 4px;
+            display: flex; align-items: center; gap: 6px;
+            background: none; border: none; color: var(--muted);
+            font-size: 14px; font-weight: 500; cursor: pointer;
+            padding: 8px 12px; border-radius: var(--radius-sm);
+            transition: all var(--transition); white-space: nowrap;
+        }
+        .back-btn:hover { background: var(--bg); color: var(--text); }
+        .nav-brand {
+            display: flex; align-items: center; gap: 8px;
+            font-size: 20px; font-weight: 800; color: var(--primary); text-decoration: none;
+        }
+        .brand-icon {
+            width: 32px; height: 32px; background: var(--primary);
+            border-radius: var(--radius-sm);
+            display: flex; align-items: center; justify-content: center; font-size: 16px;
+        }
+        .breadcrumb {
+            display: flex; align-items: center; gap: 6px;
+            margin-left: auto; font-size: 13px;
+        }
+        .bc-step { padding: 5px 14px; border-radius: 20px; font-weight: 500; white-space: nowrap; }
+        .bc-step.done   { background: var(--primary-light); color: var(--primary); }
+        .bc-step.active { background: var(--primary); color: var(--white); font-weight: 600; }
+        .bc-step.next   { color: var(--muted); }
+        .bc-arrow { color: var(--border); font-size: 18px; }
+
+        /* ── MAIN GRID ── */
+        .page-wrapper {
+            max-width: 1400px; margin: 0 auto; padding: 32px;
+            display: grid;
+            grid-template-columns: 1fr 440px;
+            gap: 32px;
+            align-items: start;
         }
 
-        .header-title {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: #ffffff;
-        }
+        /* ── MAP COLUMN ── */
+        .map-column h1 { font-size: 22px; font-weight: 800; margin-bottom: 20px; }
 
-        /* --- SCROLLABLE CONTENT --- */
-        .scrollable-content {
-            flex: 1;
-            overflow-y: auto;
-            padding: 0 0 100px 0;
-        }
-        .scrollable-content::-webkit-scrollbar { display: none; }
-
-        /* --- MAP SECTION --- */
-        .map-section {
-            width: 100%;
-            height: 180px;
-            position: relative;
-            background: linear-gradient(135deg, #8db8d8 0%, #6a9fbf 30%, #4a8aa8 60%, #7aad96 100%);
+        .map-container {
+            border-radius: var(--radius-lg);
             overflow: hidden;
+            position: relative;
+            height: 480px;
+            background: linear-gradient(145deg, #7aad96 0%, #6a9fbf 25%, #8db8d8 55%, #4a8aa8 80%, #5a9060 100%);
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
         }
 
-        .map-overlay {
-            position: absolute;
-            inset: 0;
+        /* grid overlay */
+        .map-grid {
+            position: absolute; inset: 0;
             background-image:
-                repeating-linear-gradient(0deg, rgba(255,255,255,0.05) 0px, rgba(255,255,255,0.05) 1px, transparent 1px, transparent 40px),
-                repeating-linear-gradient(90deg, rgba(255,255,255,0.05) 0px, rgba(255,255,255,0.05) 1px, transparent 1px, transparent 40px);
+                repeating-linear-gradient(0deg,  rgba(255,255,255,0.05) 0,rgba(255,255,255,0.05) 1px, transparent 1px, transparent 44px),
+                repeating-linear-gradient(90deg, rgba(255,255,255,0.05) 0,rgba(255,255,255,0.05) 1px, transparent 1px, transparent 44px);
         }
 
-        /* Simulated map blocks */
-        .map-block {
+        /* roads */
+        .road-h {
+            position: absolute; height: 16px;
+            background: rgba(255,255,255,0.32);
+            border-radius: 2px; left: 0; right: 0;
+        }
+        .road-v {
+            position: absolute; width: 16px;
+            background: rgba(255,255,255,0.32);
+            border-radius: 2px; top: 0; bottom: 0;
+        }
+
+        /* buildings */
+        .bld {
+            position: absolute; border-radius: 5px; opacity: 0.55;
+        }
+
+        /* route SVG */
+        .route-svg {
+            position: absolute; inset: 0; width: 100%; height: 100%;
+            pointer-events: none;
+        }
+
+        /* marker pins */
+        .map-marker {
             position: absolute;
-            border-radius: 4px;
-            opacity: 0.6;
+            display: flex; flex-direction: column; align-items: center;
+            transform: translate(-50%, -100%);
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.25));
+            cursor: default;
         }
+        .marker-bubble {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px; font-weight: 700;
+            display: flex; align-items: center; gap: 6px;
+            white-space: nowrap;
+        }
+        .marker-bubble.restaurant { background: var(--secondary); color: white; }
+        .marker-bubble.customer   { background: var(--primary);   color: white; }
+        .marker-tail {
+            width: 0; height: 0;
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+        }
+        .marker-tail.restaurant { border-top: 8px solid var(--secondary); }
+        .marker-tail.customer   { border-top: 8px solid var(--primary); }
 
-        .map-pin {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -70%);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+        /* map controls */
+        .map-controls {
+            position: absolute; right: 12px; top: 12px;
+            display: flex; flex-direction: column; gap: 4px;
         }
-
-        .pin-icon {
-            width: 36px;
-            height: 36px;
-            background-color: #1e88e5;
-            border-radius: 50% 50% 50% 0;
-            transform: rotate(-45deg);
-            box-shadow: 0 4px 12px rgba(30, 136, 229, 0.5);
-            border: 3px solid #ffffff;
+        .map-ctl-btn {
+            width: 36px; height: 36px; background: white;
+            border: none; border-radius: var(--radius-sm);
+            font-size: 16px; font-weight: 700; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: var(--shadow-sm);
+            transition: background var(--transition);
         }
-
-        .pin-dot {
-            width: 8px;
-            height: 8px;
-            background-color: rgba(30, 136, 229, 0.3);
-            border-radius: 50%;
-            margin-top: 4px;
-        }
+        .map-ctl-btn:hover { background: var(--bg); }
 
         .edit-pin-btn {
-            position: absolute;
-            top: 12px;
-            right: 12px;
-            background-color: #ffffff;
-            border: none;
-            border-radius: 20px;
-            padding: 6px 14px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: #334155;
+            position: absolute; top: 12px; left: 12px;
+            background: white; border: none; border-radius: 20px;
+            padding: 8px 16px; font-size: 13px; font-weight: 600;
+            color: var(--text); cursor: pointer;
+            box-shadow: var(--shadow-sm);
+            transition: all var(--transition);
+        }
+        .edit-pin-btn:hover { background: var(--primary); color: white; }
+
+        /* legend */
+        .map-legend {
+            position: absolute; bottom: 12px; left: 12px;
+            background: rgba(255,255,255,0.92);
+            border-radius: var(--radius-sm);
+            padding: 10px 14px;
+            display: flex; flex-direction: column; gap: 6px;
+            box-shadow: var(--shadow-sm);
+            font-size: 12px; font-weight: 600; color: var(--text);
+        }
+        .legend-row { display: flex; align-items: center; gap: 8px; }
+        .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+        /* ── RIGHT COLUMN: DETAILS CARD ── */
+        .details-card {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            position: sticky;
+            top: 80px;
+        }
+        .card-head {
+            background: var(--primary); padding: 18px 24px; color: white;
+        }
+        .card-head h3 { font-size: 16px; font-weight: 700; }
+        .card-head p  { font-size: 12px; opacity: 0.8; margin-top: 2px; }
+
+        /* info rows */
+        .card-body { padding: 4px 0; }
+        .detail-row {
+            display: flex; align-items: center; gap: 14px;
+            padding: 14px 24px;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer; transition: background var(--transition);
+        }
+        .detail-row:last-of-type { border-bottom: none; }
+        .detail-row:hover { background: var(--bg); }
+        .detail-icon {
+            width: 42px; height: 42px; border-radius: var(--radius-sm);
+            background: var(--bg);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px; flex-shrink: 0;
+        }
+        .detail-text { flex: 1; }
+        .detail-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 3px; }
+        .detail-value { font-size: 14px; font-weight: 700; color: var(--text); }
+        .detail-arrow { color: var(--muted); font-size: 18px; }
+
+        /* payment selection */
+        .payment-section { padding: 0 24px 8px; }
+        .payment-label-hd { font-size: 13px; font-weight: 700; color: var(--muted); margin: 14px 0 10px; text-transform: uppercase; letter-spacing: 0.05em; }
+        .payment-opt {
+            display: flex; align-items: center; gap: 14px;
+            padding: 12px 16px;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius);
+            margin-bottom: 8px;
             cursor: pointer;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            transition: all var(--transition);
         }
-
-        /* --- INFO CARDS SECTION --- */
-        .cards-section {
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .info-card {
-            background-color: #ffffff;
-            border-radius: 16px;
-            padding: 16px;
-            display: flex;
-            align-items: center;
-            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
-            cursor: pointer;
-            transition: background 0.15s;
-        }
-        .info-card:hover { background-color: #f8fafc; }
-
-        .card-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 12px;
-            background-color: #f1f5f9;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-            margin-right: 14px;
+        .payment-opt:hover { border-color: var(--primary); background: var(--primary-light); }
+        .payment-opt.selected { border-color: var(--primary); background: var(--primary-light); }
+        .pay-logo {
+            width: 52px; height: 34px; border-radius: var(--radius-sm);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 11px; font-weight: 800; letter-spacing: -0.5px;
             flex-shrink: 0;
         }
-
-        .card-text { flex: 1; }
-        .card-label { font-size: 0.95rem; font-weight: 700; color: #000000; margin-bottom: 2px; }
-        .card-value { font-size: 0.82rem; color: #94a3b8; }
-
-        .card-arrow {
-            color: #94a3b8;
-            font-size: 1rem;
+        .khqr-logo { background: #e8002d; color: white; }
+        .wing-logo  { background: #1a3a6b; color: #f59e0b; }
+        .card-logo  { background: var(--bg); color: var(--muted); font-size: 18px; border: 1px solid var(--border); }
+        .pay-name { flex: 1; font-size: 14px; font-weight: 600; color: var(--text); }
+        .pay-sub  { font-size: 12px; color: var(--muted); margin-top: 2px; }
+        .radio-outer {
+            width: 22px; height: 22px; border-radius: 50%;
+            border: 2px solid var(--border); flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            transition: border-color var(--transition);
         }
+        .radio-outer.selected { border-color: var(--primary); }
+        .radio-inner { width: 12px; height: 12px; border-radius: 50%; background: var(--primary); }
 
-        /* --- PAYMENT SECTION --- */
-        .payment-section {
-            padding: 0 16px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
+        /* price summary */
+        .price-section { padding: 14px 24px; border-top: 1px solid var(--border); }
+        .price-row {
+            display: flex; justify-content: space-between;
+            align-items: center; margin-bottom: 10px; font-size: 14px;
         }
+        .price-label { color: var(--muted); }
+        .price-val   { font-weight: 600; }
+        .price-val.discount { color: var(--success); }
 
-        .payment-option {
-            background-color: #ffffff;
-            border-radius: 16px;
-            padding: 14px 16px;
-            display: flex;
-            align-items: center;
-            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
-            cursor: pointer;
-            transition: background 0.15s;
+        .total-bar {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 14px 24px; background: var(--bg);
+            border-top: 2px solid var(--border);
         }
-        .payment-option:hover { background-color: #f8fafc; }
+        .total-lbl { font-size: 15px; font-weight: 700; }
+        .total-amt { font-size: 24px; font-weight: 800; color: var(--primary); }
 
-        .payment-logo {
-            width: 48px;
-            height: 32px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.7rem;
-            font-weight: 800;
-            margin-right: 14px;
-            flex-shrink: 0;
-            letter-spacing: -0.5px;
-        }
-
-        .khqr-logo {
-            background-color: #e8002d;
-            color: #ffffff;
-            font-size: 0.65rem;
-        }
-
-        .wing-logo {
-            background-color: #1a3a6b;
-            color: #f59e0b;
-            font-size: 0.65rem;
-        }
-
-        .card-logo {
-            background-color: #f1f5f9;
-            color: #64748b;
-            font-size: 1.2rem;
-        }
-
-        .payment-name { flex: 1; font-size: 0.95rem; font-weight: 600; color: #000000; }
-        .payment-sub { font-size: 0.8rem; color: #94a3b8; }
-
-        /* Radio button */
-        .radio-btn {
-            width: 22px;
-            height: 22px;
-            border-radius: 50%;
-            border: 2px solid #e2e8f0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-
-        .radio-btn.selected {
-            border-color: #1e88e5;
-        }
-
-        .radio-inner {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background-color: #1e88e5;
-        }
-
-        /* --- BOTTOM TOTAL + PLACE ORDER --- */
-        .bottom-bar {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background-color: #ffffff;
-            padding: 16px 20px 28px 20px;
-            box-shadow: 0 -4px 20px rgba(15, 23, 42, 0.08);
-        }
-
-        .total-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 14px;
-        }
-
-        .total-label {
-            font-size: 1rem;
-            font-weight: 600;
-            color: #64748b;
-        }
-
-        .total-amount {
-            font-size: 1.2rem;
-            font-weight: 800;
-            color: #000000;
-        }
-
+        .cta-wrap { padding: 20px 24px; }
         .place-order-btn {
-            width: 100%;
-            background-color: #1e88e5;
-            color: #ffffff;
-            border: none;
-            border-radius: 16px;
-            padding: 16px;
-            font-size: 1rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: background 0.2s, transform 0.1s;
-            box-shadow: 0 6px 20px rgba(30, 136, 229, 0.35);
+            display: block; width: 100%; padding: 16px;
+            background: var(--secondary); color: white; border: none;
+            border-radius: var(--radius); font-size: 16px; font-weight: 700;
+            cursor: pointer; transition: all var(--transition);
+            box-shadow: 0 6px 20px rgba(255,107,53,0.35);
+            letter-spacing: 0.02em;
+        }
+        .place-order-btn:hover {
+            background: #e55a25; transform: translateY(-2px);
+            box-shadow: 0 8px 28px rgba(255,107,53,0.45);
+        }
+        .place-order-btn:active { transform: translateY(0); }
+        .secure-note {
+            display: flex; align-items: center; justify-content: center;
+            gap: 6px; margin-top: 12px; font-size: 12px; color: var(--muted);
         }
 
-        .place-order-btn:hover { background-color: #1565c0; }
-        .place-order-btn:active { transform: scale(0.98); }
+        /* ── RESPONSIVE ── */
+        @media (max-width: 1100px) {
+            .page-wrapper { grid-template-columns: 1fr 380px; padding: 24px; gap: 24px; }
+        }
+        @media (max-width: 820px) {
+            .page-wrapper { grid-template-columns: 1fr; padding: 16px; }
+            .details-card { position: static; }
+            .breadcrumb { display: none; }
+            .nav-inner { padding: 0 16px; }
+            .map-container { height: 300px; }
+        }
     </style>
 </head>
 <body>
 
-<div class="phone-frame">
+<!-- ── NAVBAR ── -->
+<nav class="navbar">
+    <div class="nav-inner">
+        <button class="back-btn" onclick="history.back()">← Back</button>
+        <a href="home_screen.html" class="nav-brand">
+            <div class="brand-icon">🍔</div>
+            DirkMhob
+        </a>
+        <div class="breadcrumb">
+            <span class="bc-step done">Cart</span>
+            <span class="bc-arrow">›</span>
+            <span class="bc-step done">Checkout</span>
+            <span class="bc-arrow">›</span>
+            <span class="bc-step active">Delivery &amp; Payment</span>
+            <span class="bc-arrow">›</span>
+            <span class="bc-step next">Confirm</span>
+        </div>
+    </div>
+</nav>
 
-    <!-- TOP HEADER -->
-    <div class="top-header">
-        <button class="back-btn" onclick="history.back()">←</button>
-        <span class="header-title">Checkout</span>
+<!-- ── MAIN GRID ── -->
+<main class="page-wrapper">
+
+    <!-- LEFT: DELIVERY MAP -->
+    <div class="map-column">
+        <h1>Delivery Details</h1>
+
+        <div class="map-container" id="delivery-map">
+            <!-- grid overlay -->
+            <div class="map-grid"></div>
+
+            <!-- horizontal roads -->
+            <div class="road-h" style="top:28%"></div>
+            <div class="road-h" style="top:52%"></div>
+            <div class="road-h" style="top:74%"></div>
+
+            <!-- vertical roads -->
+            <div class="road-v" style="left:22%"></div>
+            <div class="road-v" style="left:48%"></div>
+            <div class="road-v" style="right:18%"></div>
+
+            <!-- buildings -->
+            <div class="bld" style="width:70px;height:50px;background:#8aacbf;top:6%;left:3%;"></div>
+            <div class="bld" style="width:55px;height:40px;background:#7a9cb0;top:6%;left:27%;"></div>
+            <div class="bld" style="width:90px;height:58px;background:#b0c8d8;top:6%;right:4%;"></div>
+            <div class="bld" style="width:65px;height:44px;background:#6a9ab4;top:35%;left:3%;"></div>
+            <div class="bld" style="width:80px;height:48px;background:#85a8bc;top:35%;left:27%;"></div>
+            <div class="bld" style="width:75px;height:50px;background:#90b0c0;top:35%;right:4%;"></div>
+            <div class="bld" style="width:60px;height:40px;background:#7aad96;top:58%;left:3%;"></div>
+            <div class="bld" style="width:85px;height:52px;background:#80a8b8;top:58%;left:53%;"></div>
+            <div class="bld" style="width:65px;height:42px;background:#7aa0b8;top:58%;right:4%;"></div>
+            <div class="bld" style="width:55px;height:36px;background:#8aaab0;top:80%;left:27%;"></div>
+            <div class="bld" style="width:70px;height:44px;background:#6a9ab4;top:80%;right:4%;"></div>
+
+            <!-- route path SVG -->
+            <svg class="route-svg" viewBox="0 0 700 480" preserveAspectRatio="none">
+                <!-- dashed route -->
+                <path d="M 588 88 Q 560 170 504 200 Q 440 230 385 250 Q 310 280 260 300 Q 190 330 140 380"
+                      stroke="#FF6B35" stroke-width="4" fill="none"
+                      stroke-linecap="round" stroke-dasharray="10 6" opacity="0.9"/>
+                <!-- route glow -->
+                <path d="M 588 88 Q 560 170 504 200 Q 440 230 385 250 Q 310 280 260 300 Q 190 330 140 380"
+                      stroke="#FF6B35" stroke-width="12" fill="none" opacity="0.15" stroke-linecap="round"/>
+            </svg>
+
+            <!-- restaurant marker -->
+            <div class="map-marker" style="left:84%;top:18%">
+                <div class="marker-bubble restaurant">🍴 KFC TK Ave</div>
+                <div class="marker-tail restaurant"></div>
+            </div>
+
+            <!-- customer marker -->
+            <div class="map-marker" style="left:20%;top:79%">
+                <div class="marker-bubble customer">🏠 Your Location</div>
+                <div class="marker-tail customer"></div>
+            </div>
+
+            <!-- map controls -->
+            <div class="map-controls">
+                <button class="map-ctl-btn">+</button>
+                <button class="map-ctl-btn">−</button>
+                <button class="map-ctl-btn">⊕</button>
+            </div>
+
+            <!-- edit pin -->
+            <button class="edit-pin-btn" onclick="editPinPrompt()">✎ Edit Pin</button>
+
+            <!-- legend -->
+            <div class="map-legend">
+                <div class="legend-row">
+                    <div class="legend-dot" style="background:var(--secondary)"></div>
+                    <span>Pickup: KFC TK Avenue</span>
+                </div>
+                <div class="legend-row">
+                    <div class="legend-dot" style="background:var(--primary)"></div>
+                    <span id="legend-dest">Delivery: Portola Drive</span>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- SCROLLABLE CONTENT -->
-    <div class="scrollable-content">
-
-        <!-- MAP -->
-        <div class="map-section">
-            <div class="map-overlay"></div>
-
-            <!-- Simulated map buildings -->
-            <div class="map-block" style="width:80px;height:50px;background:#a0b8cc;top:10px;left:20px;"></div>
-            <div class="map-block" style="width:60px;height:40px;background:#8aacbf;top:80px;left:10px;"></div>
-            <div class="map-block" style="width:100px;height:60px;background:#b0c8d8;top:30px;left:120px;"></div>
-            <div class="map-block" style="width:70px;height:45px;background:#90b0c4;top:100px;left:140px;"></div>
-            <div class="map-block" style="width:90px;height:55px;background:#a8c0d0;top:20px;right:20px;"></div>
-            <div class="map-block" style="width:50px;height:35px;background:#80a8bc;top:90px;right:30px;"></div>
-            <!-- Roads -->
-            <div class="map-block" style="width:100%;height:18px;background:rgba(255,255,255,0.3);top:65px;left:0;border-radius:0;"></div>
-            <div class="map-block" style="width:18px;height:100%;background:rgba(255,255,255,0.3);left:105px;top:0;border-radius:0;"></div>
-
-            <!-- Pin -->
-            <div class="map-pin">
-                <div class="pin-icon"></div>
-                <div class="pin-dot"></div>
+    <!-- RIGHT: DETAILS CARD -->
+    <div>
+        <div class="details-card">
+            <div class="card-head">
+                <h3>Delivery &amp; Payment</h3>
+                <p>Confirm your delivery details before placing</p>
             </div>
 
-            <button class="edit-pin-btn" onclick="editPinPrompt()">Edit Pin</button>
+            <div class="card-body">
+                <div class="detail-row">
+                    <div class="detail-icon">🏠</div>
+                    <div class="detail-text">
+                        <div class="detail-label">Delivery address</div>
+                        <div class="detail-value" id="address-display">Home — Portola Drive</div>
+                    </div>
+                    <span class="detail-arrow">›</span>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-icon">📞</div>
+                    <div class="detail-text">
+                        <div class="detail-label">Contact number</div>
+                        <div class="detail-value">0123 456 789</div>
+                    </div>
+                    <span class="detail-arrow">›</span>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-icon">⏱️</div>
+                    <div class="detail-text">
+                        <div class="detail-label">Estimated delivery</div>
+                        <div class="detail-value">20–30 minutes</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Method -->
+            <div class="payment-section">
+                <div class="payment-label-hd">Payment Method</div>
+
+                <div class="payment-opt selected" id="opt-khqr" onclick="selectPayment('khqr')">
+                    <div class="pay-logo khqr-logo">KHQR</div>
+                    <div>
+                        <div class="pay-name">KHQR</div>
+                        <div class="pay-sub">Scan QR to pay</div>
+                    </div>
+                    <div class="radio-outer selected" id="radio-khqr">
+                        <div class="radio-inner"></div>
+                    </div>
+                </div>
+
+                <div class="payment-opt" id="opt-wing" onclick="selectPayment('wing')">
+                    <div class="pay-logo wing-logo">XXX</div>
+                    <div>
+                        <div class="pay-name">XXX-6747</div>
+                        <div class="pay-sub">Mobile banking</div>
+                    </div>
+                    <div class="radio-outer" id="radio-wing"></div>
+                </div>
+
+                <div class="payment-opt" id="opt-card" onclick="selectPayment('card')">
+                    <div class="pay-logo card-logo">💳</div>
+                    <div>
+                        <div class="pay-name">Add new card</div>
+                        <div class="pay-sub">Visa / Mastercard</div>
+                    </div>
+                    <div class="radio-outer" id="radio-card"></div>
+                </div>
+            </div>
+
+            <!-- Price Summary -->
+            <div class="price-section">
+                <div class="price-row">
+                    <span class="price-label">Subtotal</span>
+                    <span class="price-val" id="subtotal-value">$ 0.00</span>
+                </div>
+                <div class="price-row">
+                    <span class="price-label">Delivery fee</span>
+                    <span class="price-val" id="delivery-value">$ 2.50</span>
+                </div>
+                <div class="price-row">
+                    <span class="price-label">Discount (50% OFF)</span>
+                    <span class="price-val discount" id="discount-value">−$ 0.00</span>
+                </div>
+            </div>
+
+            <div class="total-bar">
+                <span class="total-lbl">Total</span>
+                <span class="total-amt" id="total-amount">$ 0.00</span>
+            </div>
+
+            <div class="cta-wrap">
+                <button class="place-order-btn" onclick="placeOrder()">🛵 Place Order</button>
+                <div class="secure-note">🔒 Your order is secure &amp; encrypted</div>
+            </div>
         </div>
-
-        <!-- INFO CARDS -->
-        <div class="cards-section">
-
-            <div class="info-card">
-                <div class="card-icon">🏠</div>
-                <div class="card-text">
-                    <div class="card-label">Home</div>
-                    <div class="card-value">Portola Drive</div>
-                </div>
-                <span class="card-arrow">›</span>
-            </div>
-
-            <div class="info-card">
-                <div class="card-icon">📞</div>
-                <div class="card-text">
-                    <div class="card-label">Phone</div>
-                    <div class="card-value">0123456789</div>
-                </div>
-                <span class="card-arrow">›</span>
-            </div>
-
-            <div class="info-card">
-                <div class="card-icon">⏱️</div>
-                <div class="card-text">
-                    <div class="card-label">Delivery time</div>
-                    <div class="card-value">20-30 mins</div>
-                </div>
-                <span class="card-arrow">›</span>
-            </div>
-
-        </div>
-
-        <!-- PAYMENT OPTIONS -->
-        <div class="payment-section">
-
-            <!-- KHQR -->
-            <div class="payment-option" onclick="selectPayment('khqr')">
-                <div class="payment-logo khqr-logo">KHQR</div>
-                <div class="payment-name">KHQR</div>
-                <div class="radio-btn selected" id="radio-khqr">
-                    <div class="radio-inner"></div>
-                </div>
-            </div>
-
-            <!-- Wing -->
-            <div class="payment-option" onclick="selectPayment('wing')">
-                <div class="payment-logo wing-logo">XXX</div>
-                <div class="payment-name">XXX-6747</div>
-                <div class="radio-btn" id="radio-wing"></div>
-            </div>
-
-            <!-- Add new card -->
-            <div class="payment-option" onclick="selectPayment('card')">
-                <div class="payment-logo card-logo">💳</div>
-                <div class="payment-name">Add new card</div>
-                <div class="radio-btn" id="radio-card"></div>
-            </div>
-
-        </div>
-
     </div>
 
-    <!-- BOTTOM BAR -->
-    <div class="bottom-bar">
-        <div class="summary-block">
-            <div class="summary-row">
-                <span>Subtotal</span>
-                <span id="subtotal-value">$ 0.00</span>
-            </div>
-            <div class="summary-row">
-                <span>Delivery Fee</span>
-                <span id="delivery-value">$ 2.50</span>
-            </div>
-            <div class="summary-row discount">
-                <span>Discount</span>
-                <span id="discount-value">-$ 0.00</span>
-            </div>
-        </div>
-        <div class="total-row">
-            <span class="total-label">Total</span>
-            <span class="total-amount">$ 0.00</span>
-        </div>
-        <button class="place-order-btn" onclick="placeOrder()">Place Order</button>
-    </div>
+</main>
 
-</div>
-
+<script src="cart.js"></script>
 <script>
-    let selectedPayment = 'khqr';
-    let currentPin = 'Portola Drive';
+    var selectedPayment = 'khqr';
+    var currentPin = 'Portola Drive';
 
     function selectPayment(method) {
-        ['khqr', 'wing', 'card'].forEach(m => {
-            const radio = document.getElementById('radio-' + m);
+        ['khqr', 'wing', 'card'].forEach(function(m) {
+            var radio = document.getElementById('radio-' + m);
+            var opt   = document.getElementById('opt-' + m);
             radio.classList.remove('selected');
             radio.innerHTML = '';
+            opt.classList.remove('selected');
         });
-
         selectedPayment = method;
-        const selected = document.getElementById('radio-' + method);
-        selected.classList.add('selected');
-        selected.innerHTML = '<div class="radio-inner"></div>';
+        var radio = document.getElementById('radio-' + method);
+        var opt   = document.getElementById('opt-' + method);
+        radio.classList.add('selected');
+        radio.innerHTML = '<div class="radio-inner"></div>';
+        opt.classList.add('selected');
     }
 
     function loadCheckoutInfo() {
-        const checkoutStr = localStorage.getItem('checkoutInfo');
-        if (!checkoutStr) return;
-        const checkout = JSON.parse(checkoutStr);
-        const subtotal = checkout.total.totalUSD || 0;
-        const delivery = 2.5;
-        const discount = Math.min(7.62, subtotal);
-        const total = subtotal + delivery - discount;
+        var cart     = DirkCart.getCart();
+        var subtotal = DirkCart.calculateSubtotal(cart);
+        var delivery = DirkCart.DELIVERY_FEE;
+        var discount = DirkCart.calculateDiscount(subtotal);
+        var total    = subtotal + delivery - discount;
 
-        document.getElementById('subtotal-value').textContent = `$ ${subtotal.toFixed(2)}`;
-        document.getElementById('delivery-value').textContent = `$ ${delivery.toFixed(2)}`;
-        document.getElementById('discount-value').textContent = `-$ ${discount.toFixed(2)}`;
-        document.getElementById('total-amount').textContent = `$ ${total.toFixed(2)}`;
+        document.getElementById('subtotal-value').textContent = '$ ' + subtotal.toFixed(2);
+        document.getElementById('delivery-value').textContent = '$ ' + delivery.toFixed(2);
+        document.getElementById('discount-value').textContent = '−$ ' + discount.toFixed(2);
+        document.getElementById('total-amount').textContent   = '$ ' + total.toFixed(2);
     }
 
     function editPinPrompt() {
-        const newPin = prompt('Enter a new delivery pin or location:', currentPin);
+        var newPin = prompt('Enter a new delivery location:', currentPin);
         if (newPin && newPin.trim().length > 0) {
             currentPin = newPin.trim();
-            document.querySelector('.card-value').textContent = currentPin;
+            document.getElementById('address-display').textContent = 'Home — ' + currentPin;
+            document.getElementById('legend-dest').textContent = 'Delivery: ' + currentPin;
         }
     }
 
     function placeOrder() {
-        const checkoutStr = localStorage.getItem('checkoutInfo');
-        if (checkoutStr) {
-            localStorage.setItem('currentOrder', JSON.stringify({
-                ...JSON.parse(checkoutStr),
-                pin: currentPin,
-                paymentMethod: selectedPayment,
-                status: 'confirmed'
-            }));
-        }
+        var cart = DirkCart.getCart();
+        localStorage.setItem('currentOrder', JSON.stringify({
+            items: cart,
+            total: { totalUSD: DirkCart.calculateSubtotal(cart) },
+            pin: currentPin,
+            paymentMethod: selectedPayment,
+            status: 'confirmed'
+        }));
         window.location.href = 'order_comfirm.html';
     }
 
     document.addEventListener('DOMContentLoaded', loadCheckoutInfo);
 </script>
-
 </body>
 </html>

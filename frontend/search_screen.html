@@ -16,6 +16,11 @@
     .brand-mark { width:42px; height:42px; display:inline-flex; align-items:center; justify-content:center; border-radius:14px; color:white; background:linear-gradient(135deg,var(--primary),var(--secondary)); box-shadow:0 10px 25px rgba(0,119,200,0.25); }
     .nav-links { display:flex; gap:1rem; color:var(--muted); font-weight:600; }
     .nav-links a:hover { color:var(--primary); }
+    .nav-actions { display:flex; align-items:center; gap:0.75rem; }
+    .search-pill { display:flex; align-items:center; gap:0.6rem; background:#fff; border:1px solid var(--border); border-radius:999px; padding:0.55rem 0.9rem; min-width:240px; cursor:text; }
+    .search-pill input { border:none; outline:none; width:100%; background:transparent; color:var(--text); font:inherit; font-size:0.9rem; }
+    .notification-btn { width:38px; height:38px; border-radius:50%; border:none; background:#fff; border:1px solid var(--border); cursor:pointer; font-size:1rem; display:flex; align-items:center; justify-content:center; }
+    @media(max-width:760px){ .search-pill{ display:none; } }
     .search-hero { padding:2rem 0 1rem; }
     .search-shell { display:grid; grid-template-columns:280px 1fr; gap:1.2rem; }
     .sidebar, .content { background:var(--surface); border:1px solid var(--border); border-radius:24px; box-shadow:0 15px 35px rgba(15,23,42,0.06); }
@@ -45,9 +50,17 @@
       <a class="brand" href="home_screen.html"><span class="brand-mark">DM</span><span>DirkMhob</span></a>
       <nav class="nav-links" aria-label="Main navigation">
         <a href="home_screen.html">Home</a>
-        <a href="search_screen.html">Search</a>
-        <a href="cart_screen.html">Cart</a>
+        <a href="search_screen.html">Restaurants</a>
+        <a href="asian_dish.html">Categories</a>
+        <a href="home_screen.html#promotions">Promotions</a>
+        <a href="home_screen.html#about">About Us</a>
+        <a href="home_screen.html#contact">Contact</a>
       </nav>
+      <div class="nav-actions">
+        <label class="search-pill"><span>🔎</span><input type="text" placeholder="Search restaurants, food, cuisines..."></label>
+        <button class="notification-btn" aria-label="Notifications">🔔</button>
+        <span id="nav-auth"></span>
+      </div>
     </div>
   </header>
   <main class="container search-hero">
@@ -79,5 +92,6 @@
       </section>
     </div>
   </main>
+  <script src="auth.js"></script>
 </body>
 </html>

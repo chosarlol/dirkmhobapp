@@ -480,7 +480,7 @@
                     <div class="info-icon">🏠</div>
                     <div class="info-text">
                         <div class="info-label">Deliver to</div>
-                        <div class="info-value">Seng Kimhour — Portola Drive</div>
+                        <div class="info-value" id="delivery-name-display">Loading…</div>
                     </div>
                     <span class="info-arrow">›</span>
                 </div>
@@ -488,7 +488,7 @@
                     <div class="info-icon">🎫</div>
                     <div class="info-text">
                         <div class="info-label">Promo code</div>
-                        <div class="info-value promo">50% OFF Applied ✓</div>
+                        <div class="info-value promo" id="promo-info-display">No promo applied</div>
                     </div>
                     <span class="info-arrow">›</span>
                 </div>
@@ -512,7 +512,11 @@
                     <span class="price-val" id="delivery-value">$ 2.50</span>
                 </div>
                 <div class="price-row">
-                    <span class="price-label">Discount (50% OFF)</span>
+                    <span class="price-label">Service fee</span>
+                    <span class="price-val" id="service-value">$ 1.00</span>
+                </div>
+                <div class="price-row">
+                    <span class="price-label" id="checkout-discount-label">Discount</span>
                     <span class="price-val discount" id="discount-value">−$ 0.00</span>
                 </div>
             </div>
@@ -532,6 +536,7 @@
 </main>
 
 <script src="cart.js"></script>
+<script src="promo.js"></script>
 <script>
     /* ── Read from the single shared cart ── */
     function loadCart() {
@@ -558,15 +563,42 @@
     }
 
     function updateSummaryDisplay() {
-        var cart     = DirkCart.getCart();
-        var subtotal = DirkCart.calculateSubtotal(cart);
-        var delivery = DirkCart.DELIVERY_FEE;
-        var discount = DirkCart.calculateDiscount(subtotal);
-        var total    = subtotal + delivery - discount;
+        var cart       = DirkCart.getCart();
+        var subtotal   = DirkCart.calculateSubtotal(cart);
+        var promoCalc  = DirkPromo.calculateDiscount(subtotal, DirkCart.DELIVERY_FEE);
+        var delivery   = promoCalc.delivery;
+        var discount   = promoCalc.discount;
+        var serviceFee = 1.00;
+        var total      = subtotal + delivery + serviceFee - discount;
+
         document.getElementById('subtotal-value').textContent = '$ ' + subtotal.toFixed(2);
         document.getElementById('delivery-value').textContent = '$ ' + delivery.toFixed(2);
+        document.getElementById('service-value').textContent  = '$ ' + serviceFee.toFixed(2);
         document.getElementById('discount-value').textContent = '−$ ' + discount.toFixed(2);
         document.getElementById('total-value').textContent    = '$ ' + total.toFixed(2);
+
+        /* Update discount label row */
+        var labelEl = document.getElementById('checkout-discount-label');
+        if (labelEl) {
+            labelEl.textContent = promoCalc.label ? 'Discount (' + promoCalc.label + ')' : 'Discount';
+        }
+        /* Update promo info row */
+        var promoInfoEl = document.getElementById('promo-info-display');
+        var activePromo = DirkPromo.getActivePromo();
+        if (promoInfoEl) {
+            if (activePromo && !DirkPromo.isExpired(activePromo)) {
+                promoInfoEl.textContent = activePromo.label + ' Applied ✓';
+                promoInfoEl.style.color = '#22c55e';
+            } else {
+                promoInfoEl.textContent = 'No promo applied';
+                promoInfoEl.style.color = '';
+            }
+        }
+        console.log('[CHECKOUT] updateSummaryDisplay subtotal=$' + subtotal.toFixed(2) +
+                    ' delivery=$' + delivery.toFixed(2) +
+                    ' discount=$' + discount.toFixed(2) +
+                    ' total=$' + total.toFixed(2) +
+                    ' promo=' + (promoCalc.promoCode || 'none'));
     }
 
     function renderCheckoutItems() {
@@ -581,9 +613,11 @@
         emptyEl.style.display = 'none';
         resHdrEl.style.display = 'flex';
 
-        /* Group by restaurant for the header */
-        var firstRes = cart[0];
-        document.getElementById('res-name-display').textContent = firstRes.restaurantName || 'Your Order';
+        /* Restaurant header from localStorage (set by restaurant.html goCheckout) */
+        var restName = localStorage.getItem('cart_restaurant_name') || (cart[0] && cart[0].restaurantName) || 'Your Order';
+        var restLogo = localStorage.getItem('cart_restaurant_logo') || '🍽️';
+        document.getElementById('res-name-display').textContent = restName;
+        document.getElementById('res-logo-box').textContent     = restLogo;
 
         cart.forEach(function(item, idx) {
             var card = document.createElement('div');
@@ -649,7 +683,31 @@
         window.location.href = 'check_out2.html';
     }
 
-    document.addEventListener('DOMContentLoaded', renderCheckoutItems);
+    function loadCustomerName() {
+        var el = document.getElementById('delivery-name-display');
+        if (!el) return;
+        /* Try localStorage first (set on login/signup) */
+        try {
+            var stored = JSON.parse(localStorage.getItem('dirkmhob_user'));
+            if (stored && stored.name) {
+                el.textContent = stored.name + ' — Portola Drive';
+                return;
+            }
+        } catch(e) {}
+        /* Fall back to /api/me/ */
+        fetch('http://127.0.0.1:8000/api/me/', { credentials: 'include' })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                var name = data.name || (data.first_name ? (data.first_name + (data.last_name ? ' ' + data.last_name : '')) : '');
+                el.textContent = (name || 'Guest') + ' — Portola Drive';
+            })
+            .catch(function() { el.textContent = 'Guest — Portola Drive'; });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        renderCheckoutItems();
+        loadCustomerName();
+    });
 </script>
 </body>
 </html>

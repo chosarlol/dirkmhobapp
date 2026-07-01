@@ -16,6 +16,11 @@
     .brand-mark { width:42px; height:42px; display:inline-flex; align-items:center; justify-content:center; border-radius:14px; color:white; background:linear-gradient(135deg,var(--primary),var(--secondary)); box-shadow:0 10px 25px rgba(0,119,200,0.25); }
     .nav-links { display:flex; gap:1rem; color:var(--muted); font-weight:600; }
     .nav-links a:hover { color:var(--primary); }
+    .nav-actions { display:flex; align-items:center; gap:0.75rem; }
+    .search-pill { display:flex; align-items:center; gap:0.6rem; background:#fff; border:1px solid var(--border); border-radius:999px; padding:0.55rem 0.9rem; min-width:240px; cursor:text; }
+    .search-pill input { border:none; outline:none; width:100%; background:transparent; color:var(--text); font:inherit; font-size:0.9rem; }
+    .notification-btn { width:38px; height:38px; border-radius:50%; border:none; background:#fff; border:1px solid var(--border); cursor:pointer; font-size:1rem; display:flex; align-items:center; justify-content:center; }
+    @media(max-width:760px){ .search-pill{ display:none; } }
     .cart-page { display:grid; grid-template-columns:1.05fr 0.95fr; gap:1.2rem; padding:2rem 0 2.5rem; align-items:start; }
     .panel { background:var(--surface); border:1px solid var(--border); border-radius:24px; padding:1.25rem; box-shadow:0 15px 35px rgba(15,23,42,0.06); }
     .panel-title { margin-bottom:0.4rem; }
@@ -60,9 +65,17 @@
       <a class="brand" href="home_screen.html"><span class="brand-mark">DM</span><span>DirkMhob</span></a>
       <nav class="nav-links" aria-label="Main navigation">
         <a href="home_screen.html">Home</a>
-        <a href="search_screen.html">Search</a>
-        <a href="cart_screen.html">Cart</a>
+        <a href="search_screen.html">Restaurants</a>
+        <a href="asian_dish.html">Categories</a>
+        <a href="home_screen.html#promotions">Promotions</a>
+        <a href="home_screen.html#about">About Us</a>
+        <a href="home_screen.html#contact">Contact</a>
       </nav>
+      <div class="nav-actions">
+        <label class="search-pill"><span>🔎</span><input type="text" placeholder="Search restaurants, food, cuisines..."></label>
+        <button class="notification-btn" aria-label="Notifications">🔔</button>
+        <span id="nav-auth"></span>
+      </div>
     </div>
   </header>
 
@@ -77,7 +90,8 @@
       <h3>Order summary</h3>
       <div class="row"><span>Subtotal</span><span id="sum-subtotal">$0.00</span></div>
       <div class="row"><span>Delivery fee</span><span id="sum-delivery">$0.00</span></div>
-      <div class="row discount"><span>Discount (50% OFF) <span class="badge-applied">APPLIED</span></span><span id="sum-discount">−$0.00</span></div>
+      <div class="row"><span>Service fee</span><span id="sum-service">$0.00</span></div>
+      <div class="row discount" id="discount-row"><span id="discount-row-label">Discount</span><span id="sum-discount">−$0.00</span></div>
       <div class="row total"><span>Total</span><span id="sum-total">$0.00</span></div>
       <div class="promo">
         <input type="text" placeholder="Promo code" id="promo-input" />
@@ -88,6 +102,8 @@
   </main>
 
   <script src="cart.js"></script>
+  <script src="promo.js"></script>
+  <script src="auth.js"></script>
   <script>
     function renderCart() {
       var cart     = DirkCart.getCart();
@@ -132,14 +148,40 @@
     }
 
     function updateSummary(cart) {
-      var subtotal = DirkCart.calculateSubtotal(cart);
-      var delivery = cart.length ? DirkCart.DELIVERY_FEE : 0;
-      var discount = cart.length ? DirkCart.calculateDiscount(subtotal) : 0;
-      var total    = subtotal + delivery - discount;
+      var subtotal   = DirkCart.calculateSubtotal(cart);
+      var promoCalc  = cart.length
+        ? DirkPromo.calculateDiscount(subtotal, DirkCart.DELIVERY_FEE)
+        : { discount: 0, delivery: 0, label: null, promoCode: null };
+      var delivery   = cart.length ? promoCalc.delivery : 0;
+      var discount   = cart.length ? promoCalc.discount  : 0;
+      var serviceFee = cart.length ? 1.00 : 0;
+      var total      = subtotal + delivery + serviceFee - discount;
+
       document.getElementById('sum-subtotal').textContent = '$' + subtotal.toFixed(2);
       document.getElementById('sum-delivery').textContent = '$' + delivery.toFixed(2);
+      document.getElementById('sum-service').textContent  = '$' + serviceFee.toFixed(2);
       document.getElementById('sum-discount').textContent = '−$' + discount.toFixed(2);
       document.getElementById('sum-total').textContent    = '$' + total.toFixed(2);
+
+      /* Update discount label to reflect which promo is active */
+      var labelEl = document.getElementById('discount-row-label');
+      if (labelEl) {
+        var activePromo = DirkPromo.getActivePromo();
+        if (activePromo && (discount > 0 || activePromo.type === 'FREE_DELIVERY')) {
+          labelEl.innerHTML = escHtml(activePromo.label) + ' <span class="badge-applied">APPLIED</span>';
+        } else {
+          labelEl.innerHTML = 'Discount';
+        }
+      }
+      console.log('[CART] updateSummary subtotal=$' + subtotal.toFixed(2) +
+                  ' delivery=$' + delivery.toFixed(2) +
+                  ' discount=$' + discount.toFixed(2) +
+                  ' total=$' + total.toFixed(2) +
+                  ' promo=' + (promoCalc.promoCode || 'none'));
+    }
+
+    function escHtml(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     }
 
     function changeQty(idx, delta) {
@@ -171,12 +213,27 @@
     }
 
     function applyPromo() {
-      var code = document.getElementById('promo-input').value.trim().toUpperCase();
-      if (code === 'DIRK50' || code === 'SAVE50') {
-        alert('Promo code applied! 50% OFF discount already included.');
-      } else if (code.length > 0) {
-        alert('Invalid promo code.');
+      var code = document.getElementById('promo-input').value.trim();
+      if (!code) return;
+      var result = DirkPromo.applyByCode(code);
+      console.log('[CART] applyPromo result:', result);
+      if (result.success) {
+        document.getElementById('promo-input').value = '';
+        renderCart(); /* re-render with new promo applied */
+        showCartToast('✓ ' + result.message, '#16a34a');
+      } else {
+        showCartToast('✗ ' + result.message, '#ef4444');
       }
+    }
+
+    function showCartToast(msg, bg) {
+      var t = document.createElement('div');
+      t.style.cssText = 'position:fixed;bottom:28px;right:28px;padding:13px 22px;border-radius:12px;' +
+                        'font-weight:700;font-size:0.88rem;z-index:9999;color:#fff;' +
+                        'box-shadow:0 8px 28px rgba(0,0,0,0.16);transition:opacity 0.35s;background:' + bg + ';';
+      t.textContent = msg;
+      document.body.appendChild(t);
+      setTimeout(function() { t.style.opacity = '0'; setTimeout(function() { t.remove(); }, 350); }, 2800);
     }
 
     document.addEventListener('DOMContentLoaded', renderCart);

@@ -435,9 +435,9 @@
             <div class="sidebar-section">
                 <div class="sidebar-hd">Restaurant</div>
                 <div class="res-info-row">
-                    <div class="res-logo-sm">KFC</div>
+                    <div class="res-logo-sm" id="track-res-logo">🍽️</div>
                     <div>
-                        <div class="res-name">KFC — TK Avenue</div>
+                        <div class="res-name" id="track-res-name">Restaurant</div>
                         <div class="res-sub">📞 023 456 789 · ⭐ 4.7</div>
                     </div>
                 </div>
@@ -458,7 +458,7 @@
                         <div class="prog-icon done">✓</div>
                         <div class="prog-text">
                             <div class="prog-label">Preparing Food</div>
-                            <div class="prog-sub">KFC is making your order</div>
+                            <div class="prog-sub" id="track-prep-sub">Restaurant is making your order</div>
                         </div>
                     </div>
                     <div class="prog-step done">
@@ -699,7 +699,8 @@
 
     /* ── FALLBACK for when Maps API is not loaded ──────────── */
     function showMapFallback(reason) {
-        const mapEl = document.getElementById('tracking-map');
+        const mapEl   = document.getElementById('tracking-map');
+        const pinName = localStorage.getItem('cart_restaurant_name') || 'Restaurant';
         mapEl.innerHTML = `
             <div class="map-fallback">
                 <div class="fallback-grid"></div>
@@ -732,7 +733,7 @@
 
                 <!-- Restaurant pin -->
                 <div class="fallback-restaurant-pin" style="left:82%;top:12%">
-                    <div class="pin-bubble restaurant">🍴 KFC TK Ave</div>
+                    <div class="pin-bubble restaurant">🍴 ${pinName}</div>
                     <div class="pin-tail restaurant"></div>
                 </div>
 
@@ -780,6 +781,20 @@
         }, 3000);
     }
 
+    /* ── Load restaurant info from localStorage ─────────────── */
+    function loadRestaurantInfo() {
+        var restName = localStorage.getItem('cart_restaurant_name') || 'Restaurant';
+        var restLogo = localStorage.getItem('cart_restaurant_logo') || '🍽️';
+
+        var logoEl    = document.getElementById('track-res-logo');
+        var nameEl    = document.getElementById('track-res-name');
+        var prepEl    = document.getElementById('track-prep-sub');
+
+        if (logoEl)  logoEl.textContent = restLogo;
+        if (nameEl)  nameEl.textContent = restName;
+        if (prepEl)  prepEl.textContent = restName + ' is making your order';
+    }
+
     /* ── BOOTSTRAP ──────────────────────────────────────────── */
     function loadGoogleMaps() {
         const cfg = (typeof MAPS_CONFIG !== 'undefined') ? MAPS_CONFIG : {};
@@ -798,6 +813,7 @@
 
     /* ── DELIVERY TIMEOUT (30 seconds, keeping original logic) ── */
     document.addEventListener('DOMContentLoaded', function () {
+        loadRestaurantInfo();
         loadGoogleMaps();
 
         setTimeout(function () {

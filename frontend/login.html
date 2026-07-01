@@ -66,14 +66,72 @@
     <section class="auth-card" aria-label="Login form">
       <h2>Login</h2>
       <p class="subtle">Use your email and password to continue.</p>
-      <form action="home_screen.html">
-        <div class="field"><label for="email">Email</label><input id="email" type="email" placeholder="you@example.com" required /></div>
+      <form id="login-form">
+        <div class="field"><label for="email">Username or Email</label><input id="email" type="text" placeholder="username or you@example.com" required /></div>
         <div class="field"><label for="password">Password</label><input id="password" type="password" placeholder="Enter your password" required /></div>
         <div class="options"><label style="display:flex;align-items:center;gap:0.5rem;"><input type="checkbox" /> Remember me</label><a href="#">Forgot password?</a></div>
+        <div id="login-err" style="color:#ef4444;font-size:0.88rem;margin-bottom:0.5rem;display:none;"></div>
         <button class="btn btn-primary btn-full" type="submit">Log In</button>
       </form>
       <p class="auth-footer">New here? <a href="signup.html">Create an account</a></p>
     </section>
   </main>
+  <script src="auth.js"></script>
+  <script>
+    var API = 'http://127.0.0.1:8000';
+
+    /* If already logged in via localStorage, skip to home */
+    if (DirkAuth.isLoggedIn()) {
+      window.location.href = 'home_screen.html';
+    }
+
+    document.getElementById('login-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      var usernameOrEmail = document.getElementById('email').value.trim();
+      var password        = document.getElementById('password').value;
+      var errEl           = document.getElementById('login-err');
+      errEl.style.display = 'none';
+
+      if (!usernameOrEmail || !password) {
+        errEl.textContent   = 'Please fill in all fields.';
+        errEl.style.display = 'block';
+        return;
+      }
+
+      /* Fix 4: Try backend login first */
+      fetch(API + '/api/login/', {
+        method:      'POST',
+        credentials: 'include',
+        headers:     { 'Content-Type': 'application/json' },
+        body:        JSON.stringify({ username: usernameOrEmail, password: password })
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.error) {
+          /* Backend rejected credentials — show error */
+          errEl.textContent   = data.error;
+          errEl.style.display = 'block';
+          return;
+        }
+        /* Login succeeded — save role + redirect based on role */
+        var role = data.user ? data.user.role : '';
+        DirkAuth.login({ name: data.user.name || data.user.username, email: data.user.email || '', role: role });
+        if (role === 'superadmin' || role === 'moderator') {
+          window.location.href = 'admin_dashboard.html';
+        } else if (role === 'shop_owner') {
+          window.location.href = 'shop_dashboard.html';
+        } else {
+          window.location.href = 'home_screen.html';
+        }
+      })
+      .catch(function() {
+        /* Backend unreachable — fall back to localStorage-only auth for regular customers */
+        var namePart = usernameOrEmail.split('@')[0].replace(/[._-]+/g, ' ');
+        var name     = namePart.charAt(0).toUpperCase() + namePart.slice(1);
+        DirkAuth.login({ name: name, email: usernameOrEmail });
+        window.location.href = 'home_screen.html';
+      });
+    });
+  </script>
 </body>
 </html>

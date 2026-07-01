@@ -380,7 +380,7 @@
 
             <!-- restaurant marker -->
             <div class="map-marker" style="left:84%;top:18%">
-                <div class="marker-bubble restaurant">🍴 KFC TK Ave</div>
+                <div class="marker-bubble restaurant">🍴 <span id="map-rest-name">Restaurant</span></div>
                 <div class="marker-tail restaurant"></div>
             </div>
 
@@ -404,7 +404,7 @@
             <div class="map-legend">
                 <div class="legend-row">
                     <div class="legend-dot" style="background:var(--secondary)"></div>
-                    <span>Pickup: KFC TK Avenue</span>
+                    <span>Pickup: <span id="legend-rest-name">Restaurant</span></span>
                 </div>
                 <div class="legend-row">
                     <div class="legend-dot" style="background:var(--primary)"></div>
@@ -493,7 +493,11 @@
                     <span class="price-val" id="delivery-value">$ 2.50</span>
                 </div>
                 <div class="price-row">
-                    <span class="price-label">Discount (50% OFF)</span>
+                    <span class="price-label">Service fee</span>
+                    <span class="price-val" id="service-value">$ 1.00</span>
+                </div>
+                <div class="price-row">
+                    <span class="price-label" id="checkout2-discount-label">Discount</span>
                     <span class="price-val discount" id="discount-value">−$ 0.00</span>
                 </div>
             </div>
@@ -513,6 +517,7 @@
 </main>
 
 <script src="cart.js"></script>
+<script src="promo.js"></script>
 <script>
     var selectedPayment = 'khqr';
     var currentPin = 'Portola Drive';
@@ -534,16 +539,38 @@
     }
 
     function loadCheckoutInfo() {
-        var cart     = DirkCart.getCart();
-        var subtotal = DirkCart.calculateSubtotal(cart);
-        var delivery = DirkCart.DELIVERY_FEE;
-        var discount = DirkCart.calculateDiscount(subtotal);
-        var total    = subtotal + delivery - discount;
+        var cart       = DirkCart.getCart();
+        var subtotal   = DirkCart.calculateSubtotal(cart);
+        var promoCalc  = DirkPromo.calculateDiscount(subtotal, DirkCart.DELIVERY_FEE);
+        var delivery   = promoCalc.delivery;
+        var discount   = promoCalc.discount;
+        var serviceFee = 1.00;
+        var total      = subtotal + delivery + serviceFee - discount;
 
         document.getElementById('subtotal-value').textContent = '$ ' + subtotal.toFixed(2);
         document.getElementById('delivery-value').textContent = '$ ' + delivery.toFixed(2);
+        document.getElementById('service-value').textContent  = '$ ' + serviceFee.toFixed(2);
         document.getElementById('discount-value').textContent = '−$ ' + discount.toFixed(2);
         document.getElementById('total-amount').textContent   = '$ ' + total.toFixed(2);
+
+        /* Restaurant name on map marker and legend */
+        var restName = localStorage.getItem('cart_restaurant_name') || '';
+        if (restName) {
+            var markerEl = document.getElementById('map-rest-name');
+            var legendEl = document.getElementById('legend-rest-name');
+            if (markerEl) markerEl.textContent = restName;
+            if (legendEl) legendEl.textContent = restName;
+        }
+
+        var labelEl = document.getElementById('checkout2-discount-label');
+        if (labelEl) {
+            labelEl.textContent = promoCalc.label ? 'Discount (' + promoCalc.label + ')' : 'Discount';
+        }
+        console.log('[CHECKOUT2] loadCheckoutInfo subtotal=$' + subtotal.toFixed(2) +
+                    ' delivery=$' + delivery.toFixed(2) +
+                    ' discount=$' + discount.toFixed(2) +
+                    ' total=$' + total.toFixed(2) +
+                    ' promo=' + (promoCalc.promoCode || 'none'));
     }
 
     function editPinPrompt() {
@@ -556,14 +583,83 @@
     }
 
     function placeOrder() {
-        var cart = DirkCart.getCart();
+        var cart       = DirkCart.getCart();
+        var subtotal   = DirkCart.calculateSubtotal(cart);
+        var promoCalc  = DirkPromo.calculateDiscount(subtotal, DirkCart.DELIVERY_FEE);
+        var delivery   = promoCalc.delivery;
+        var discount   = promoCalc.discount;
+        var serviceFee = 1.00;
+        var total      = subtotal + delivery + serviceFee - discount;
+        var activePromo = DirkPromo.getActivePromo();
+
+        console.log('[CHECKOUT2] placeOrder() subtotal=$' + subtotal.toFixed(2) +
+                    ' delivery=$' + delivery.toFixed(2) +
+                    ' discount=$' + discount.toFixed(2) +
+                    ' total=$' + total.toFixed(2) +
+                    ' promo=' + (activePromo ? activePromo.code : 'none'));
+
+        var order = {
+            id:            'ORD-' + Date.now(),
+            date:          new Date().toISOString(),
+            items:         cart,
+            subtotal:      subtotal,
+            deliveryFee:   delivery,
+            discount:      discount,
+            total:         total,
+            paymentMethod: selectedPayment,
+            promoCode:     activePromo ? activePromo.code  : null,
+            promoLabel:    activePromo ? activePromo.label : null,
+            status:        'Delivered'
+        };
+
+        /* Save as current order for tracking page */
         localStorage.setItem('currentOrder', JSON.stringify({
             items: cart,
-            total: { totalUSD: DirkCart.calculateSubtotal(cart) },
+            total: { totalUSD: total },
             pin: currentPin,
             paymentMethod: selectedPayment,
+            promoCode: activePromo ? activePromo.code : null,
             status: 'confirmed'
         }));
+
+        /* Append to order history (newest first, keep last 30) */
+        var history = [];
+        try { history = JSON.parse(localStorage.getItem('orderHistory')) || []; } catch(e) {}
+        history.unshift(order);
+        if (history.length > 30) history = history.slice(0, 30);
+        localStorage.setItem('orderHistory', JSON.stringify(history));
+
+        /* Clear cart and active promo after order placed */
+        DirkCart.clearCart();
+        DirkPromo.clearPromo();
+        console.log('[CHECKOUT2] Order placed, cart and promo cleared');
+
+        /* Persist order to backend (fire-and-forget — page works even if backend is down) */
+        var user = null;
+        try { user = JSON.parse(localStorage.getItem('dirkmhob_user')); } catch(e) {}
+        fetch('http://127.0.0.1:8000/api/orders/', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                id:              order.id,
+                items:           order.items,
+                subtotal:        order.subtotal,
+                deliveryFee:     order.deliveryFee,
+                discount:        order.discount,
+                total:           order.total,
+                promoCode:       order.promoCode || '',
+                paymentMethod:   order.paymentMethod,
+                deliveryAddress: currentPin,
+                customerName:    user ? (user.name || user.username || '') : '',
+                customerEmail:   user ? (user.email || '') : '',
+            })
+        }).then(function(r) {
+            console.log('[CHECKOUT2] Backend order save status:', r.status);
+        }).catch(function() {
+            console.log('[CHECKOUT2] Backend not reachable, order stored locally only');
+        });
+
         window.location.href = 'order_comfirm.html';
     }
 

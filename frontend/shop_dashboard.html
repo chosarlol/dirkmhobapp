@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DirkMhob — Shop Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root{
+      --primary:#0077c8;--primary-dark:#005fa0;--primary-light:#e8f4fd;
+      --secondary:#ff6b35;--bg:#f1f5f9;--surface:#fff;
+      --text:#0f172a;--muted:#64748b;--border:#e2e8f0;
+      --success:#16a34a;--danger:#dc2626;
+    }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+    a{color:inherit;text-decoration:none;}
+
+    /* ── LOGIN ── */
+    #login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#f0f7ff,#e8f4fd);}
+    .login-card{background:var(--surface);border-radius:24px;padding:2.5rem;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,119,200,0.12);border:1px solid var(--border);}
+    .login-logo{display:flex;align-items:center;gap:12px;margin-bottom:2rem;}
+    .login-logo-mark{width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,var(--primary),var(--secondary));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:1.1rem;}
+    .login-logo span{font-size:1.4rem;font-weight:800;color:var(--primary);}
+    .login-card h2{font-size:1.3rem;font-weight:700;margin-bottom:0.3rem;}
+    .login-card p{color:var(--muted);font-size:0.9rem;margin-bottom:1.5rem;}
+    .field{margin-bottom:1rem;}
+    .field label{display:block;font-size:0.85rem;font-weight:600;color:var(--muted);margin-bottom:0.4rem;text-transform:uppercase;letter-spacing:0.04em;}
+    .field input,.field select,.field textarea{width:100%;padding:0.75rem 1rem;border:1.5px solid var(--border);border-radius:12px;font:inherit;font-size:0.95rem;outline:none;transition:border-color 0.2s;resize:vertical;}
+    .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--primary);}
+    .login-err{color:var(--danger);font-size:0.88rem;margin-bottom:0.75rem;display:none;}
+    .btn-primary{width:100%;padding:0.9rem;background:var(--primary);color:#fff;border:none;border-radius:12px;font:inherit;font-size:1rem;font-weight:700;cursor:pointer;transition:background 0.2s;}
+    .btn-primary:hover{background:var(--primary-dark);}
+
+    /* ── TOP NAV ── */
+    .topnav{background:var(--surface);border-bottom:1px solid var(--border);box-shadow:0 2px 8px rgba(15,23,42,0.04);position:sticky;top:0;z-index:10;}
+    .topnav-inner{max-width:1280px;margin:0 auto;padding:0 1.5rem;height:60px;display:flex;align-items:center;gap:1rem;}
+    .topnav-brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1rem;}
+    .topnav-mark{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--primary),var(--secondary));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:0.85rem;}
+    .topnav-title{font-size:0.85rem;font-weight:600;color:var(--muted);margin-left:4px;}
+    .topnav-user{margin-left:auto;display:flex;align-items:center;gap:10px;}
+    .topnav-avatar{width:34px;height:34px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:0.85rem;}
+    .topnav-name{font-size:0.88rem;font-weight:600;}
+    .logout-btn{padding:0.45rem 0.9rem;border:1.5px solid var(--border);border-radius:999px;background:none;font:inherit;font-size:0.82rem;font-weight:600;color:var(--muted);cursor:pointer;transition:all 0.15s;}
+    .logout-btn:hover{border-color:var(--danger);color:var(--danger);}
+
+    /* ── SHELL ── */
+    #shell{display:none;}
+    .page{max-width:1280px;margin:0 auto;padding:1.5rem;display:grid;grid-template-columns:340px 1fr;gap:1.5rem;align-items:start;}
+
+    /* ── CARD ── */
+    .card{background:var(--surface);border-radius:20px;border:1px solid var(--border);box-shadow:0 4px 20px rgba(15,23,42,0.05);overflow:hidden;}
+    .card-head{padding:1.1rem 1.25rem;border-bottom:1px solid var(--border);}
+    .card-head h3{font-size:1rem;font-weight:700;}
+    .card-head p{color:var(--muted);font-size:0.82rem;margin-top:2px;}
+    .card-body{padding:1.25rem;}
+
+    /* status badge */
+    .status-pill{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:999px;font-size:0.8rem;font-weight:700;}
+    .status-active   {background:#dcfce7;color:var(--success);}
+    .status-pending  {background:#fef9c3;color:#854d0e;}
+    .status-suspended{background:#fee2e2;color:var(--danger);}
+    .status-none     {background:#f1f5f9;color:var(--muted);}
+
+    /* restaurant info */
+    .rest-emoji{font-size:3rem;text-align:center;margin-bottom:0.75rem;}
+    .rest-name{font-size:1.2rem;font-weight:800;text-align:center;margin-bottom:0.25rem;}
+    .rest-sub{text-align:center;color:var(--muted);font-size:0.85rem;margin-bottom:1rem;}
+    .rest-stat-row{display:flex;gap:0.75rem;margin-bottom:1rem;}
+    .rest-stat{flex:1;background:var(--bg);border-radius:12px;padding:0.75rem;text-align:center;}
+    .rest-stat-v{font-size:1.3rem;font-weight:800;color:var(--primary);}
+    .rest-stat-l{font-size:0.75rem;color:var(--muted);margin-top:2px;}
+    .edit-btn{width:100%;padding:0.7rem;border:1.5px solid var(--border);border-radius:12px;background:none;font:inherit;font-size:0.9rem;font-weight:600;cursor:pointer;transition:all 0.15s;}
+    .edit-btn:hover{border-color:var(--primary);color:var(--primary);}
+
+    /* ── SETUP FORM ── */
+    #setup-form .form-row{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;}
+    .btn-submit{padding:0.8rem 1.5rem;background:var(--primary);color:#fff;border:none;border-radius:12px;font:inherit;font-size:0.95rem;font-weight:700;cursor:pointer;transition:background 0.2s;}
+    .btn-submit:hover{background:var(--primary-dark);}
+    .btn-cancel{padding:0.8rem 1.5rem;background:none;border:1.5px solid var(--border);border-radius:12px;font:inherit;font-size:0.95rem;font-weight:600;color:var(--muted);cursor:pointer;}
+
+    /* ── MENU PANEL ── */
+    .menu-toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;}
+    .add-btn{padding:0.6rem 1.1rem;background:var(--primary);color:#fff;border:none;border-radius:12px;font:inherit;font-size:0.88rem;font-weight:700;cursor:pointer;}
+    .add-btn:hover{background:var(--primary-dark);}
+    .menu-grid{display:grid;gap:0.85rem;}
+    .menu-item{display:flex;align-items:center;gap:1rem;padding:0.9rem 1rem;border:1.5px solid var(--border);border-radius:14px;transition:border-color 0.15s;}
+    .menu-item:hover{border-color:var(--primary);}
+    .menu-item.unavailable{opacity:0.55;}
+    .item-emoji{font-size:2rem;width:44px;text-align:center;flex-shrink:0;}
+    .item-info{flex:1;min-width:0;}
+    .item-name{font-weight:700;font-size:0.95rem;}
+    .item-cat{font-size:0.78rem;color:var(--muted);}
+    .item-price{font-weight:800;color:var(--primary);font-size:1rem;white-space:nowrap;}
+    .item-actions{display:flex;gap:0.4rem;flex-shrink:0;}
+    .icon-btn{width:32px;height:32px;border-radius:8px;border:1.5px solid var(--border);background:none;cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center;transition:all 0.15s;}
+    .icon-btn:hover{border-color:var(--primary);background:var(--primary-light);}
+    .icon-btn.del:hover{border-color:var(--danger);background:#fee2e2;}
+    .avail-toggle{padding:4px 10px;border-radius:999px;border:1.5px solid var(--border);background:none;font:inherit;font-size:0.76rem;font-weight:700;cursor:pointer;transition:all 0.15s;}
+    .avail-toggle.on {background:#dcfce7;color:var(--success);border-color:#bbf7d0;}
+    .avail-toggle.off{background:#fee2e2;color:var(--danger);border-color:#fecaca;}
+
+    /* ── ADD/EDIT MODAL ── */
+    .modal-backdrop{position:fixed;inset:0;background:rgba(15,23,42,0.45);z-index:100;display:none;align-items:center;justify-content:center;}
+    .modal-backdrop.open{display:flex;}
+    .modal{background:var(--surface);border-radius:20px;padding:1.75rem;width:100%;max-width:500px;box-shadow:0 20px 60px rgba(0,0,0,0.15);max-height:90vh;overflow-y:auto;}
+    .modal h3{font-size:1.1rem;font-weight:800;margin-bottom:1.25rem;}
+    .modal-footer{display:flex;gap:0.75rem;justify-content:flex-end;margin-top:1.25rem;}
+    .form-row-2{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;}
+
+    .empty-menu{text-align:center;padding:2rem;color:var(--muted);}
+    .empty-menu .big{font-size:2.5rem;margin-bottom:0.5rem;}
+
+    /* logo upload */
+    .logo-upload-wrap{text-align:center;}
+    .logo-preview-circle{
+      width:80px;height:80px;border-radius:50%;
+      background:var(--bg);border:2px dashed var(--border);
+      display:flex;align-items:center;justify-content:center;
+      margin:0 auto 0.4rem;cursor:pointer;overflow:hidden;
+      font-size:2rem;position:relative;transition:border-color 0.2s;
+    }
+    .logo-preview-circle:hover{border-color:var(--primary);}
+    .logo-preview-circle:hover .logo-cam-overlay{display:flex;}
+    .logo-cam-overlay{
+      position:absolute;inset:0;background:rgba(0,0,0,0.35);
+      display:none;align-items:center;justify-content:center;
+      font-size:1.3rem;border-radius:50%;
+    }
+    .logo-preview-circle img{width:100%;height:100%;object-fit:cover;}
+    .logo-up-btn{
+      font:inherit;font-size:0.78rem;color:var(--primary);
+      background:none;border:none;cursor:pointer;font-weight:600;
+      padding:0;text-decoration:underline;
+    }
+
+    /* rest-emoji also doubles as image holder */
+    .rest-emoji img{width:72px;height:72px;border-radius:50%;object-fit:cover;display:block;margin:0 auto;}
+
+    /* menu item image preview (rounded square) */
+    .item-img-preview{
+      width:80px;height:80px;border-radius:12px;
+      background:var(--bg);border:2px dashed var(--border);
+      display:flex;align-items:center;justify-content:center;
+      margin:0 auto 0.4rem;cursor:pointer;overflow:hidden;
+      font-size:2rem;position:relative;transition:border-color 0.2s;
+    }
+    .item-img-preview:hover{border-color:var(--primary);}
+    .item-img-preview:hover .logo-cam-overlay{display:flex;}
+    .item-img-preview img{width:100%;height:100%;object-fit:cover;}
+
+    @media(max-width:900px){.page{grid-template-columns:1fr;}}
+  </style>
+</head>
+<body>
+
+<!-- ── LOGIN / REGISTER SCREEN ── -->
+<div id="login-screen">
+
+  <!-- Login panel -->
+  <div class="login-card" id="login-panel">
+    <div class="login-logo">
+      <div class="login-logo-mark">DM</div>
+      <span>DirkMhob</span>
+    </div>
+    <h2>Shop Owner Login</h2>
+    <p>Sign in to manage your restaurant menu.</p>
+    <div id="login-err" class="login-err"></div>
+    <div class="field"><label>Username</label>
+      <input type="text" id="login-username" placeholder="shopowner" autocomplete="username" />
+    </div>
+    <div class="field"><label>Password</label>
+      <input type="password" id="login-password" placeholder="••••••••"
+             onkeydown="if(event.key==='Enter')doLogin()" />
+    </div>
+    <button class="btn-primary" onclick="doLogin()">Sign in →</button>
+    <p style="text-align:center;margin-top:1rem;font-size:0.88rem;color:var(--muted);">
+      New shop? <a href="#" onclick="showRegisterPanel();return false;"
+                   style="color:var(--primary);font-weight:700;">Register your restaurant →</a>
+    </p>
+  </div>
+
+  <!-- Register panel (Fix 6 — no login required) -->
+  <div class="login-card" id="register-panel" style="display:none;max-width:520px;">
+    <div class="login-logo">
+      <div class="login-logo-mark">DM</div>
+      <span>DirkMhob</span>
+    </div>
+    <h2>Register Your Restaurant</h2>
+    <p>We'll create your shop owner account automatically.</p>
+    <div id="reg-err" class="login-err"></div>
+    <div class="field"><label>Restaurant Name *</label>
+      <input type="text" id="reg-name" placeholder="e.g., Golden Dragon" />
+    </div>
+    <div class="field" style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+      <div><label>Cuisine Type</label><input type="text" id="reg-cuisine" placeholder="Asian, Fast Food…" /></div>
+      <div><label>Logo Emoji</label><input type="text" id="reg-emoji" placeholder="🍽️" value="🍽️" maxlength="4" /></div>
+    </div>
+    <div class="field"><label>Address</label>
+      <input type="text" id="reg-address" placeholder="Street, City" />
+    </div>
+    <div class="field"><label>Phone</label>
+      <input type="text" id="reg-phone" placeholder="+855 12 345 678" />
+    </div>
+    <div class="field" style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+      <div><label>Delivery Fee ($)</label><input type="number" id="reg-delivery" value="2.50" step="0.01" min="0" /></div>
+      <div><label>Min Order ($)</label><input type="number" id="reg-minorder" value="0" step="0.01" min="0" /></div>
+    </div>
+    <div style="display:flex;gap:0.75rem;margin-top:0.25rem;">
+      <button class="btn-primary" style="flex:1" onclick="submitRegister()">Create Account →</button>
+      <button style="padding:0.9rem 1.2rem;border:1.5px solid var(--border);border-radius:12px;background:none;cursor:pointer;font-weight:600;color:var(--muted);"
+              onclick="showLoginPanel()">← Back</button>
+    </div>
+  </div>
+
+  <!-- Credentials modal (shown after successful registration) -->
+  <div id="cred-modal" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.5);z-index:200;align-items:center;justify-content:center;">
+    <div style="background:#fff;border-radius:20px;padding:2rem;max-width:400px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+      <div style="font-size:2.5rem;text-align:center;margin-bottom:0.75rem;">🎉</div>
+      <h3 style="text-align:center;margin-bottom:0.5rem;">Account Created!</h3>
+      <p style="text-align:center;color:var(--muted);font-size:0.88rem;margin-bottom:1.25rem;">
+        Save these credentials — you'll need them to log in.
+      </p>
+      <div style="background:#f1f5f9;border-radius:12px;padding:1rem;margin-bottom:1rem;font-family:monospace;font-size:0.95rem;">
+        <div style="margin-bottom:0.5rem;"><strong>Username:</strong> <span id="cred-username" style="color:var(--primary)"></span></div>
+        <div><strong>Password:</strong> <span id="cred-password" style="color:var(--primary)">shop1234</span></div>
+      </div>
+      <p style="font-size:0.82rem;color:var(--muted);margin-bottom:1rem;">
+        Your restaurant is <strong>pending approval</strong>. An admin will review it shortly.
+      </p>
+      <button class="btn-primary" style="width:100%" onclick="useCredentials()">
+        Log in with these credentials →
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── SHELL ── -->
+<div id="shell">
+  <nav class="topnav">
+    <div class="topnav-inner">
+      <div class="topnav-brand">
+        <div class="topnav-mark">DM</div>
+        <span>DirkMhob</span>
+        <span class="topnav-title">/ Shop Dashboard</span>
+      </div>
+      <div class="topnav-user">
+        <div class="topnav-avatar" id="topnav-avatar">S</div>
+        <span class="topnav-name" id="topnav-name">Shop Owner</span>
+        <button class="logout-btn" onclick="doLogout()">Logout</button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="page">
+
+    <!-- LEFT: Restaurant info / setup -->
+    <div>
+      <!-- Info card (shown when restaurant exists) -->
+      <div class="card" id="rest-info-card" style="display:none">
+        <div class="card-body">
+          <div class="rest-emoji" id="ri-emoji">🍽️</div>
+          <div class="rest-name"  id="ri-name">My Restaurant</div>
+          <div class="rest-sub"   id="ri-cuisine">Cuisine type</div>
+          <div style="text-align:center;margin-bottom:1rem;">
+            <span class="status-pill" id="ri-status">—</span>
+          </div>
+          <div class="rest-stat-row">
+            <div class="rest-stat"><div class="rest-stat-v" id="ri-menu-count">0</div><div class="rest-stat-l">Menu items</div></div>
+            <div class="rest-stat"><div class="rest-stat-v" id="ri-delivery">$2.50</div><div class="rest-stat-l">Delivery fee</div></div>
+          </div>
+          <div style="font-size:0.82rem;color:var(--muted);margin-bottom:1rem;line-height:1.5;" id="ri-address"></div>
+          <button class="edit-btn" onclick="showEditRestModal()">✎ Edit Restaurant Info</button>
+        </div>
+      </div>
+
+      <!-- Setup card (shown when no restaurant yet) -->
+      <div class="card" id="setup-card">
+        <div class="card-head"><h3>Register Your Restaurant</h3><p>Set up your shop to start adding menu items.</p></div>
+        <div class="card-body">
+          <div id="setup-err" style="color:var(--danger);font-size:0.88rem;margin-bottom:0.75rem;display:none;"></div>
+          <form id="setup-form" onsubmit="submitSetup(event)">
+            <div class="field"><label>Restaurant Name *</label><input type="text" id="s-name" required placeholder="e.g., Golden Dragon" /></div>
+            <div class="field form-row">
+              <div><label>Cuisine Type</label><input type="text" id="s-cuisine" placeholder="Asian, Fast Food…" /></div>
+              <div><label>Logo Emoji</label><input type="text" id="s-emoji" placeholder="🍽️" maxlength="4" value="🍽️" /></div>
+            </div>
+            <div class="field"><label>Address</label><input type="text" id="s-address" placeholder="Street, City" /></div>
+            <div class="field"><label>Phone</label><input type="text" id="s-phone" placeholder="+855 12 345 678" /></div>
+            <div class="field form-row">
+              <div><label>Delivery Fee ($)</label><input type="number" id="s-delivery" value="2.50" step="0.01" min="0" /></div>
+              <div><label>Min Order ($)</label><input type="number" id="s-minorder" value="0" step="0.01" min="0" /></div>
+            </div>
+            <div class="field"><label>Description</label><textarea id="s-desc" rows="3" placeholder="Tell customers about your restaurant…"></textarea></div>
+            <button type="submit" class="btn-submit">Register Restaurant →</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Menu management -->
+    <div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Menu Items</h3>
+          <p>Add, edit, or toggle the availability of your dishes.</p>
+        </div>
+        <div class="card-body">
+          <div id="menu-locked" style="text-align:center;padding:2rem;color:var(--muted);">
+            <div style="font-size:2rem;margin-bottom:0.5rem;">🔒</div>
+            <p>Register your restaurant first to manage menu items.</p>
+          </div>
+          <div id="menu-panel" style="display:none;">
+            <div class="menu-toolbar">
+              <span id="menu-count-label" style="font-size:0.9rem;color:var(--muted);font-weight:600;"></span>
+              <button class="add-btn" onclick="openAddModal()">+ Add Item</button>
+            </div>
+            <div class="menu-grid" id="menu-grid">
+              <div class="empty-menu"><div class="big">🍽️</div><p>No menu items yet. Add your first dish!</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── EDIT RESTAURANT MODAL ── -->
+<div class="modal-backdrop" id="edit-rest-modal">
+  <div class="modal">
+    <h3>Edit Restaurant Info</h3>
+    <div class="field"><label>Restaurant Name *</label><input type="text" id="er-name" required /></div>
+    <div class="field form-row-2">
+      <div><label>Cuisine Type</label><input type="text" id="er-cuisine" /></div>
+      <div>
+        <label>Restaurant Logo</label>
+        <div class="logo-upload-wrap">
+          <div class="logo-preview-circle" id="er-logo-circle" onclick="document.getElementById('er-logo-file').click()">
+            <span id="er-logo-placeholder">🍽️</span>
+            <img id="er-logo-img" src="" alt="" style="display:none;" />
+            <div class="logo-cam-overlay">📷</div>
+          </div>
+          <input type="file" id="er-logo-file" accept="image/jpeg,image/jpg,image/png,image/webp" style="display:none;" onchange="previewLogo(this)" />
+          <button type="button" class="logo-up-btn" onclick="document.getElementById('er-logo-file').click()">Click to upload logo</button>
+        </div>
+      </div>
+    </div>
+    <div class="field"><label>Address</label><input type="text" id="er-address" /></div>
+    <div class="field"><label>Phone</label><input type="text" id="er-phone" /></div>
+    <div class="field form-row-2">
+      <div><label>Delivery Fee ($)</label><input type="number" id="er-delivery" step="0.01" min="0" /></div>
+      <div><label>Min Order ($)</label><input type="number" id="er-minorder" step="0.01" min="0" /></div>
+    </div>
+    <div class="field"><label>Description</label><textarea id="er-desc" rows="3"></textarea></div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('edit-rest-modal')">Cancel</button>
+      <button class="btn-submit" onclick="submitEditRest()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── ADD/EDIT MENU ITEM MODAL ── -->
+<div class="modal-backdrop" id="item-modal">
+  <div class="modal">
+    <h3 id="item-modal-title">Add Menu Item</h3>
+    <input type="hidden" id="item-edit-id" value="" />
+    <div class="field"><label>Item Name *</label><input type="text" id="im-name" required placeholder="e.g., Beef Noodle Soup" /></div>
+    <div class="field form-row-2">
+      <div><label>Price ($) *</label><input type="number" id="im-price" step="0.01" min="0" required placeholder="0.00" /></div>
+      <div><label>Emoji</label><input type="text" id="im-emoji" maxlength="4" placeholder="🍜" value="🍽️" /></div>
+    </div>
+    <div class="field"><label>Category</label><input type="text" id="im-category" placeholder="Mains, Drinks, Desserts…" /></div>
+    <div class="field"><label>Description</label><textarea id="im-desc" rows="2" placeholder="Short description of the dish"></textarea></div>
+    <div class="field">
+      <label>Image (optional)</label>
+      <div class="logo-upload-wrap">
+        <div class="item-img-preview" id="im-img-preview" onclick="document.getElementById('im-image').click()">
+          <span id="im-img-placeholder">🖼️</span>
+          <img id="im-img-thumb" src="" alt="" style="display:none;" />
+          <div class="logo-cam-overlay">📷</div>
+        </div>
+        <input type="file" id="im-image" accept="image/jpeg,image/jpg,image/png,image/webp" style="display:none;" onchange="previewItemImg(this)" />
+        <button type="button" class="logo-up-btn" onclick="document.getElementById('im-image').click()">Click to upload image</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('item-modal')">Cancel</button>
+      <button class="btn-submit" onclick="submitItem()">Save Item</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  var API = 'http://127.0.0.1:8000';
+  var currentUser = null;
+  var currentRestaurant = null;
+  var menuItems = [];
+
+  /* Fix 2 — Role guard: redirect to shop_login.html if not shop_owner */
+  async function checkRole() {
+    try {
+      const res  = await fetch(API + '/api/me/', { credentials: 'include' });
+      const data = await res.json();
+      if (!data.is_authenticated || data.role !== 'shop_owner') {
+        /* not logged in or wrong role — leave login screen visible, don't redirect */
+        return;
+      }
+    } catch (e) { /* backend unreachable */ }
+  }
+  checkRole();
+
+  /* ── Helpers ─────────────────────────────────────── */
+  function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  function api(path, opts){
+    return fetch(API + path, Object.assign({ credentials:'include', headers:{'Content-Type':'application/json'} }, opts))
+           .then(function(r){ return r.json(); });
+  }
+
+  function toast(msg, ok){
+    var t = document.createElement('div');
+    t.style.cssText='position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:12px;font-weight:700;font-size:0.88rem;z-index:9999;color:#fff;box-shadow:0 8px 28px rgba(0,0,0,0.14);background:'+(ok?'#16a34a':'#dc2626')+';';
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(function(){ t.style.opacity='0';t.style.transition='opacity 0.3s';setTimeout(function(){t.remove();},300); }, 2800);
+  }
+
+  function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+  function openModal(id) { document.getElementById(id).classList.add('open'); }
+
+  /* ── Auth ────────────────────────────────────────── */
+  function doLogin(){
+    var username = document.getElementById('login-username').value.trim();
+    var password = document.getElementById('login-password').value;
+    var errEl    = document.getElementById('login-err');
+    errEl.style.display = 'none';
+    if(!username||!password){ errEl.textContent='Enter username and password.';errEl.style.display='block';return; }
+    api('/api/login/',{ method:'POST', body:JSON.stringify({username:username,password:password}) })
+    .then(function(data){
+      if(data.error){ errEl.textContent=data.error;errEl.style.display='block';return; }
+      var role = data.user.role;
+      if(role !== 'shop_owner' && role !== 'superadmin'){
+        errEl.textContent = 'Access denied. Shop owner account required.';
+        errEl.style.display = 'block';
+        return;
+      }
+      currentUser = data.user;
+      mountShell();
+    }).catch(function(){
+      errEl.textContent='Cannot connect to backend (http://127.0.0.1:8000). Make sure Django is running.';
+      errEl.style.display='block';
+    });
+  }
+
+  function doLogout(){
+    api('/api/logout/',{method:'POST',body:'{}'}).finally(function(){
+      currentUser = null;
+      document.getElementById('shell').style.display='none';
+      document.getElementById('login-screen').style.display='flex';
+    });
+  }
+
+  function mountShell(){
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('shell').style.display='block';
+    document.getElementById('topnav-name').textContent = currentUser.name||currentUser.username;
+    document.getElementById('topnav-avatar').textContent = (currentUser.name||currentUser.username||'S')[0].toUpperCase();
+    loadRestaurant();
+  }
+
+  /* Auto-mount shell if session cookie is already valid */
+  api('/api/me/').then(function(data){
+    if(data.is_authenticated && (data.role==='shop_owner'||data.role==='superadmin')){
+      currentUser = data.user || { username: data.username, name: data.name, role: data.role };
+      mountShell();
+    }
+  }).catch(function(){});
+
+  /* ── Restaurant ──────────────────────────────────── */
+  function loadRestaurant(){
+    api('/api/shop/restaurant/').then(function(data){
+      currentRestaurant = data.restaurant;
+      if(currentRestaurant){
+        renderRestInfo();
+        document.getElementById('setup-card').style.display = 'none';
+        document.getElementById('rest-info-card').style.display = 'block';
+        document.getElementById('menu-locked').style.display = 'none';
+        document.getElementById('menu-panel').style.display  = 'block';
+        loadMenu();
+      } else {
+        document.getElementById('setup-card').style.display = 'block';
+        document.getElementById('rest-info-card').style.display = 'none';
+      }
+    }).catch(function(){});
+  }
+
+  function renderRestInfo(){
+    var r = currentRestaurant;
+    var emojiEl = document.getElementById('ri-emoji');
+    if (r.logo_image_url) {
+      emojiEl.innerHTML = '<img src="' + r.logo_image_url + '" alt="logo" />';
+    } else {
+      emojiEl.textContent = r.logo_emoji || '🍽️';
+    }
+    document.getElementById('ri-name').textContent    = r.name;
+    document.getElementById('ri-cuisine').textContent = r.cuisine_type || 'Restaurant';
+    document.getElementById('ri-delivery').textContent= '$'+Number(r.delivery_fee).toFixed(2);
+    document.getElementById('ri-address').textContent = r.address || '';
+    var statusEl = document.getElementById('ri-status');
+    statusEl.textContent  = r.status;
+    statusEl.className    = 'status-pill status-'+r.status;
+  }
+
+  function submitSetup(e){
+    e.preventDefault();
+    var errEl = document.getElementById('setup-err');
+    errEl.style.display='none';
+    var payload = {
+      name:         document.getElementById('s-name').value.trim(),
+      cuisine_type: document.getElementById('s-cuisine').value.trim(),
+      logo_emoji:   document.getElementById('s-emoji').value.trim()||'🍽️',
+      address:      document.getElementById('s-address').value.trim(),
+      phone:        document.getElementById('s-phone').value.trim(),
+      delivery_fee: parseFloat(document.getElementById('s-delivery').value)||2.50,
+      min_order:    parseFloat(document.getElementById('s-minorder').value)||0,
+      description:  document.getElementById('s-desc').value.trim(),
+    };
+    api('/api/shop/restaurant/',{method:'POST',body:JSON.stringify(payload)})
+    .then(function(data){
+      if(data.error){ errEl.textContent=data.error;errEl.style.display='block';return; }
+      toast('Restaurant registered! Awaiting approval.', true);
+      loadRestaurant();
+    }).catch(function(){ errEl.textContent='Request failed.';errEl.style.display='block'; });
+  }
+
+  function showEditRestModal(){
+    var r = currentRestaurant;
+    document.getElementById('er-name').value     = r.name||'';
+    document.getElementById('er-cuisine').value  = r.cuisine_type||'';
+    document.getElementById('er-address').value  = r.address||'';
+    document.getElementById('er-phone').value    = r.phone||'';
+    document.getElementById('er-delivery').value = r.delivery_fee||2.50;
+    document.getElementById('er-minorder').value = r.min_order||0;
+    document.getElementById('er-desc').value     = r.description||'';
+    /* Reset file input */
+    document.getElementById('er-logo-file').value = '';
+    /* Show existing logo or emoji placeholder */
+    var imgEl = document.getElementById('er-logo-img');
+    var placeholderEl = document.getElementById('er-logo-placeholder');
+    if (r.logo_image_url) {
+      imgEl.src = r.logo_image_url;
+      imgEl.style.display = 'block';
+      placeholderEl.style.display = 'none';
+    } else {
+      imgEl.style.display = 'none';
+      placeholderEl.style.display = '';
+      placeholderEl.textContent = r.logo_emoji || '🍽️';
+    }
+    openModal('edit-rest-modal');
+  }
+
+  function previewLogo(input) {
+    if (!input.files || !input.files[0]) return;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var imgEl = document.getElementById('er-logo-img');
+      var placeholderEl = document.getElementById('er-logo-placeholder');
+      imgEl.src = e.target.result;
+      imgEl.style.display = 'block';
+      placeholderEl.style.display = 'none';
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+
+  function previewItemImg(input) {
+    if (!input.files || !input.files[0]) return;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var thumb = document.getElementById('im-img-thumb');
+      var placeholder = document.getElementById('im-img-placeholder');
+      thumb.src = e.target.result;
+      thumb.style.display = 'block';
+      placeholder.style.display = 'none';
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+
+  function _resetItemImgPreview(imageUrl) {
+    var thumb = document.getElementById('im-img-thumb');
+    var placeholder = document.getElementById('im-img-placeholder');
+    document.getElementById('im-image').value = '';
+    if (imageUrl) {
+      thumb.src = imageUrl;
+      thumb.style.display = 'block';
+      placeholder.style.display = 'none';
+    } else {
+      thumb.style.display = 'none';
+      placeholder.style.display = '';
+    }
+  }
+
+  function submitEditRest(){
+    var payload = {
+      name:         document.getElementById('er-name').value.trim(),
+      cuisine_type: document.getElementById('er-cuisine').value.trim(),
+      address:      document.getElementById('er-address').value.trim(),
+      phone:        document.getElementById('er-phone').value.trim(),
+      delivery_fee: parseFloat(document.getElementById('er-delivery').value)||2.50,
+      min_order:    parseFloat(document.getElementById('er-minorder').value)||0,
+      description:  document.getElementById('er-desc').value.trim(),
+    };
+    var fileInput  = document.getElementById('er-logo-file');
+    var hasNewLogo = fileInput.files && fileInput.files.length > 0;
+
+    api('/api/shop/restaurant/', {method:'PUT', body:JSON.stringify(payload)})
+    .then(function(data){
+      if (data.error) { toast('Error: '+data.error, false); return; }
+      if (!hasNewLogo) {
+        toast('Restaurant info updated!', true);
+        closeModal('edit-rest-modal');
+        loadRestaurant();
+        return;
+      }
+      /* Upload logo image separately (multipart — no Content-Type header set) */
+      var formData = new FormData();
+      formData.append('logo', fileInput.files[0]);
+      return fetch(API + '/api/shop/restaurant/logo/', {
+        method: 'POST',
+        credentials: 'include',
+        body: formData,
+      })
+      .then(function(r){ return r.json(); })
+      .then(function(logoData){
+        if (logoData.logo_image_url && currentRestaurant) {
+          currentRestaurant.logo_image_url = logoData.logo_image_url;
+        }
+        toast('Restaurant info updated!', true);
+        closeModal('edit-rest-modal');
+        loadRestaurant();
+      });
+    }).catch(function(){ toast('Request failed.', false); });
+  }
+
+  /* ── Menu ────────────────────────────────────────── */
+  function loadMenu(){
+    api('/api/shop/menu/').then(function(data){
+      menuItems = data.items || [];
+      document.getElementById('ri-menu-count').textContent = menuItems.length;
+      renderMenu();
+    }).catch(function(){});
+  }
+
+  function renderMenu(){
+    var grid = document.getElementById('menu-grid');
+    var label = document.getElementById('menu-count-label');
+    label.textContent = menuItems.length + ' item' + (menuItems.length !== 1 ? 's' : '');
+    if(!menuItems.length){
+      grid.innerHTML = '<div class="empty-menu"><div class="big">🍽️</div><p>No menu items yet. Add your first dish!</p></div>';
+      return;
+    }
+    grid.innerHTML = menuItems.map(function(item){
+      return '<div class="menu-item'+(item.is_available?'':' unavailable')+'" id="mi-'+item.id+'">'
+        + '<div class="item-emoji">'+esc(item.emoji||'🍽️')+'</div>'
+        + '<div class="item-info">'
+        +   '<div class="item-name">'+esc(item.name)+'</div>'
+        +   '<div class="item-cat">'+esc(item.category||'Uncategorized')+'</div>'
+        + '</div>'
+        + '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">'
+        +   '<div class="item-price">$'+Number(item.price).toFixed(2)+'</div>'
+        +   '<button class="avail-toggle '+(item.is_available?'on':'off')+'" onclick="toggleItem('+item.id+')">'
+        +     (item.is_available ? '● In Stock' : '○ Out of Stock')
+        +   '</button>'
+        + '</div>'
+        + '<div class="item-actions">'
+        +   '<button class="icon-btn" title="Edit" onclick="openEditModal('+item.id+')">✎</button>'
+        +   '<button class="icon-btn del" title="Delete" onclick="deleteItem('+item.id+')">✕</button>'
+        + '</div>'
+        + '</div>';
+    }).join('');
+  }
+
+  /* ── Add item modal ──────────────────────────────── */
+  function openAddModal(){
+    document.getElementById('item-modal-title').textContent = 'Add Menu Item';
+    document.getElementById('item-edit-id').value = '';
+    document.getElementById('im-name').value = '';
+    document.getElementById('im-price').value = '';
+    document.getElementById('im-emoji').value = '🍽️';
+    document.getElementById('im-category').value = '';
+    document.getElementById('im-desc').value = '';
+    _resetItemImgPreview(null);
+    openModal('item-modal');
+  }
+
+  function openEditModal(id){
+    var item = menuItems.find(function(i){ return i.id === id; });
+    if(!item) return;
+    document.getElementById('item-modal-title').textContent = 'Edit Menu Item';
+    document.getElementById('item-edit-id').value   = item.id;
+    document.getElementById('im-name').value        = item.name;
+    document.getElementById('im-price').value       = item.price;
+    document.getElementById('im-emoji').value       = item.emoji||'🍽️';
+    document.getElementById('im-category').value    = item.category||'';
+    document.getElementById('im-desc').value        = item.description||'';
+    _resetItemImgPreview(item.image_url || null);
+    openModal('item-modal');
+  }
+
+  function submitItem(){
+    var editId = document.getElementById('item-edit-id').value;
+    var name   = document.getElementById('im-name').value.trim();
+    var price  = document.getElementById('im-price').value;
+    if(!name || !price){ toast('Name and price are required.', false); return; }
+
+    if(editId){
+      var imgFile = document.getElementById('im-image').files[0];
+      /* PUT text fields first (JSON) */
+      api('/api/shop/menu/'+editId+'/', {
+        method:'PUT',
+        body:JSON.stringify({
+          name:        name,
+          price:       parseFloat(price),
+          emoji:       document.getElementById('im-emoji').value.trim()||'🍽️',
+          category:    document.getElementById('im-category').value.trim(),
+          description: document.getElementById('im-desc').value.trim(),
+        })
+      }).then(function(data){
+        if(data.error){ toast('Error: '+data.error, false); return; }
+        if(!imgFile){
+          toast('Item updated!', true);
+          closeModal('item-modal');
+          loadMenu();
+          return;
+        }
+        /* Upload image separately — POST multipart (request.FILES only works for POST) */
+        var fd = new FormData();
+        fd.append('image', imgFile);
+        return fetch(API + '/api/shop/menu/'+editId+'/image/', {
+          method: 'POST',
+          credentials: 'include',
+          body: fd,
+        }).then(function(r){ return r.json(); })
+        .then(function(imgData){
+          toast('Item updated!', true);
+          closeModal('item-modal');
+          loadMenu();
+        });
+      }).catch(function(){ toast('Request failed.', false); });
+    } else {
+      /* POST with FormData to support image upload */
+      var fd = new FormData();
+      fd.append('name',        name);
+      fd.append('price',       parseFloat(price));
+      fd.append('emoji',       document.getElementById('im-emoji').value.trim()||'🍽️');
+      fd.append('category',    document.getElementById('im-category').value.trim());
+      fd.append('description', document.getElementById('im-desc').value.trim());
+      var imgFile = document.getElementById('im-image').files[0];
+      if(imgFile) fd.append('image', imgFile);
+
+      fetch(API + '/api/shop/menu/', {
+        method: 'POST',
+        credentials: 'include',
+        body: fd   /* no Content-Type header — browser sets multipart boundary */
+      }).then(function(r){ return r.json(); })
+      .then(function(data){
+        if(data.error){ toast('Error: '+data.error, false); return; }
+        toast('Item added!', true);
+        closeModal('item-modal');
+        loadMenu();
+      }).catch(function(){ toast('Request failed.', false); });
+    }
+  }
+
+  function toggleItem(id){
+    fetch(API + '/api/shop/menu/'+id+'/', {
+      method: 'PATCH',
+      credentials: 'include',
+      headers: {'Content-Type':'application/json'},
+      body: '{}'
+    }).then(function(r){ return r.json(); })
+    .then(function(data){
+      if(data.error){ toast('Error: '+data.error, false); return; }
+      toast(data.is_available ? 'Item marked In Stock.' : 'Item marked Out of Stock.', true);
+      loadMenu();
+    }).catch(function(){ toast('Request failed.', false); });
+  }
+
+  function deleteItem(id){
+    if(!confirm('Delete this menu item?')) return;
+    fetch(API + '/api/shop/menu/'+id+'/', {
+      method: 'DELETE',
+      credentials: 'include',
+      headers: {'Content-Type':'application/json'},
+      body: '{}'
+    }).then(function(r){ return r.json(); })
+    .then(function(data){
+      if(data.error){ toast('Error: '+data.error, false); return; }
+      toast('Item deleted.', true);
+      loadMenu();
+    }).catch(function(){ toast('Request failed.', false); });
+  }
+
+  /* Close modal when clicking backdrop */
+  document.querySelectorAll('.modal-backdrop').forEach(function(el){
+    el.addEventListener('click', function(e){
+      if(e.target === el) el.classList.remove('open');
+    });
+  });
+
+  /* ── Fix 6: Registration helpers ─────────────────── */
+  function showRegisterPanel(){
+    document.getElementById('login-panel').style.display   = 'none';
+    document.getElementById('register-panel').style.display = 'block';
+  }
+  function showLoginPanel(){
+    document.getElementById('register-panel').style.display = 'none';
+    document.getElementById('login-panel').style.display    = 'block';
+  }
+
+  function submitRegister(){
+    var errEl = document.getElementById('reg-err');
+    errEl.style.display = 'none';
+    var name = document.getElementById('reg-name').value.trim();
+    if(!name){ errEl.textContent='Restaurant name is required.';errEl.style.display='block';return; }
+    var payload = {
+      name:         name,
+      cuisine_type: document.getElementById('reg-cuisine').value.trim(),
+      logo_emoji:   document.getElementById('reg-emoji').value.trim()||'🍽️',
+      address:      document.getElementById('reg-address').value.trim(),
+      phone:        document.getElementById('reg-phone').value.trim(),
+      delivery_fee: parseFloat(document.getElementById('reg-delivery').value)||2.50,
+      min_order:    parseFloat(document.getElementById('reg-minorder').value)||0,
+    };
+    fetch(API+'/api/restaurants/register/',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(payload)
+    }).then(function(r){ return r.json(); })
+    .then(function(data){
+      if(data.error){ errEl.textContent=data.error;errEl.style.display='block';return; }
+      var creds = data.credentials || {};
+      /* Show credentials modal */
+      document.getElementById('cred-username').textContent = creds.username || '';
+      document.getElementById('cred-password').textContent = creds.password || '';
+      document.getElementById('cred-modal').style.display  = 'flex';
+      /* Pre-fill login form */
+      document.getElementById('login-username').value = creds.username || '';
+      document.getElementById('login-password').value = creds.password || '';
+      /* Also show a plain alert with the credentials */
+      alert('Restaurant submitted! Waiting for admin approval.\n\nYour login credentials:\nUsername: ' + (creds.username||'') + '\nPassword: ' + (creds.password||''));
+    }).catch(function(){
+      errEl.textContent='Cannot connect to backend.';errEl.style.display='block';
+    });
+  }
+
+  function useCredentials(){
+    document.getElementById('cred-modal').style.display = 'none';
+    document.getElementById('register-panel').style.display = 'none';
+    document.getElementById('login-panel').style.display    = 'block';
+    /* Credentials already pre-filled — just trigger login */
+    doLogin();
+  }
+</script>
+</body>
+</html>

@@ -320,9 +320,9 @@
         <p>Sit back and relax — we're on it right now.</p>
 
         <div class="res-strip">
-            <div class="res-logo-lg">KFC</div>
+            <div class="res-logo-lg" id="confirm-res-logo">🍽️</div>
             <div class="res-strip-text">
-                <div class="res-strip-name">KFC — TK Avenue</div>
+                <div class="res-strip-name" id="confirm-res-name">Restaurant</div>
                 <div class="res-strip-sub">Currently preparing your order</div>
                 <div class="res-strip-badges">
                     <div class="res-badge">📦 #CKDCKD-6767</div>
@@ -362,7 +362,7 @@
                     <div class="step-icon active">🍽️</div>
                     <div class="step-body">
                         <div class="step-title">Restaurant Is Preparing</div>
-                        <div class="step-desc">KFC is currently preparing your food.</div>
+                        <div class="step-desc" id="confirm-prep-desc">Restaurant is currently preparing your food.</div>
                         <div class="step-time">In progress</div>
                     </div>
                 </div>
@@ -397,7 +397,7 @@
         <!-- Alert box -->
         <div class="alert-box">
             <div class="alert-check">✓</div>
-            <p>Order confirmed! KFC is currently preparing your order. A driver will be assigned shortly and you'll receive live tracking updates.</p>
+            <p id="confirm-alert-text">Order confirmed! Your restaurant is currently preparing your order. A driver will be assigned shortly and you'll receive live tracking updates.</p>
         </div>
     </div>
 
@@ -489,5 +489,21 @@
     </div>
 </div>
 
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var restName = localStorage.getItem('cart_restaurant_name') || 'Restaurant';
+        var restLogo = localStorage.getItem('cart_restaurant_logo') || '🍽️';
+
+        var logoEl    = document.getElementById('confirm-res-logo');
+        var nameEl    = document.getElementById('confirm-res-name');
+        var prepEl    = document.getElementById('confirm-prep-desc');
+        var alertEl   = document.getElementById('confirm-alert-text');
+
+        if (logoEl)  logoEl.textContent  = restLogo;
+        if (nameEl)  nameEl.textContent  = restName;
+        if (prepEl)  prepEl.textContent  = restName + ' is currently preparing your food.';
+        if (alertEl) alertEl.textContent = 'Order confirmed! ' + restName + ' is currently preparing your order. A driver will be assigned shortly and you\'ll receive live tracking updates.';
+    });
+</script>
 </body>
 </html>

@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DirkMhob | Restaurant</title>
+  <style>
+    :root { --primary:#0077C8; --secondary:#FF6B35; --bg:#F8FAFC; --surface:#FFFFFF; --text:#1E293B; --muted:#64748B; --border:#E2E8F0; --shadow:0 16px 45px rgba(15,23,42,0.08); }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; background:var(--bg); color:var(--text); line-height:1.5; }
+    a { color:inherit; text-decoration:none; }
+    button, input { font:inherit; }
+
+    .container { width:min(1220px, calc(100% - 2rem)); margin:0 auto; }
+
+    /* ── Navbar ── */
+    .site-header { position:sticky; top:0; z-index:50; backdrop-filter:blur(16px); background:rgba(248,250,252,0.95); border-bottom:1px solid rgba(226,232,240,0.8); }
+    .navbar { display:flex; justify-content:space-between; align-items:center; gap:1rem; padding:1rem 0; }
+    .brand { display:flex; align-items:center; gap:0.75rem; font-weight:800; font-size:1.05rem; }
+    .brand-mark { width:44px; height:44px; display:inline-flex; align-items:center; justify-content:center; border-radius:14px; background:linear-gradient(135deg,var(--primary),var(--secondary)); color:white; box-shadow:0 10px 25px rgba(0,119,200,0.2); }
+    .nav-links { display:flex; gap:1.1rem; align-items:center; color:var(--muted); font-weight:600; }
+    .nav-links a:hover { color:var(--primary); }
+    .nav-actions { display:flex; align-items:center; gap:0.7rem; }
+    .search-box { display:flex; align-items:center; gap:0.5rem; background:white; border:1px solid var(--border); border-radius:999px; padding:0.7rem 0.9rem; min-width:250px; }
+    .search-box input { border:none; outline:none; width:100%; background:transparent; color:var(--text); }
+    .icon-btn { display:inline-flex; align-items:center; justify-content:center; width:42px; height:42px; background:white; border:1px solid var(--border); border-radius:999px; cursor:pointer; box-shadow:0 6px 20px rgba(15,23,42,0.05); transition:transform .2s; text-decoration:none; }
+    .icon-btn:hover { transform:translateY(-2px); }
+
+    /* ── Hero ── */
+    .hero { padding:2rem 0 1.5rem; }
+    .hero-card { background:linear-gradient(135deg,rgba(0,119,200,0.95),rgba(255,107,53,0.95)); color:white; border-radius:30px; padding:2rem; display:grid; grid-template-columns:1.2fr .8fr; gap:1.5rem; box-shadow:var(--shadow); }
+    .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.45rem 0.8rem; border-radius:999px; background:rgba(255,255,255,0.18); font-size:0.9rem; width:max-content; margin-bottom:1rem; }
+    .hero h1 { font-size:clamp(1.8rem,3vw,2.7rem); margin-bottom:0.6rem; }
+    .hero p { color:rgba(255,255,255,0.9); max-width:650px; }
+    .hero-stats { display:flex; flex-wrap:wrap; gap:0.75rem; margin-top:1.2rem; }
+    .hero-stats span { background:rgba(255,255,255,0.14); padding:0.65rem 0.85rem; border-radius:999px; font-weight:600; }
+    .spotlight { background:rgba(255,255,255,0.16); border:1px solid rgba(255,255,255,0.2); border-radius:24px; padding:1rem; display:grid; gap:0.85rem; align-content:start; }
+    .spotlight-top { display:flex; align-items:center; gap:0.8rem; }
+    .spotlight-logo { width:64px; height:64px; display:flex; align-items:center; justify-content:center; border-radius:20px; background:white; font-size:2rem; flex-shrink:0; }
+    .spotlight-text strong { display:block; font-size:1rem; }
+    .spotlight-text span { color:rgba(255,255,255,0.85); font-size:0.88rem; }
+
+    /* ── Layout ── */
+    .section { padding:1rem 0 2rem; }
+    .layout { display:grid; grid-template-columns:1.6fr .8fr; gap:1.2rem; align-items:start; }
+    .panel { background:var(--surface); border:1px solid var(--border); border-radius:24px; box-shadow:var(--shadow); }
+    .panel-header { padding:1.25rem 1.25rem 0; display:flex; justify-content:space-between; align-items:center; }
+    .panel-title { font-size:1.15rem; font-weight:800; }
+
+    /* ── Menu grid ── */
+    .menu-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1rem; padding:1.25rem; }
+    .menu-card { border:1px solid var(--border); border-radius:18px; overflow:hidden; transition:transform .2s,box-shadow .2s; }
+    .menu-card:hover { transform:translateY(-3px); box-shadow:0 12px 30px rgba(15,23,42,0.1); }
+    .menu-image { height:150px; background:linear-gradient(135deg,#ffefe7,#ffedd5); display:flex; align-items:center; justify-content:center; font-size:2.5rem; }
+    .menu-body { padding:0.95rem; display:grid; gap:0.6rem; }
+    .menu-body h3 { font-size:1rem; }
+    .menu-body p { color:var(--muted); font-size:0.92rem; line-height:1.4; }
+    .menu-meta { display:flex; justify-content:space-between; align-items:center; font-weight:700; }
+    .qty-row { display:flex; align-items:center; gap:0.5rem; }
+    .qty-btn { width:30px; height:30px; border-radius:50%; border:1px solid var(--border); background:var(--bg); cursor:pointer; font-weight:700; font-size:1rem; transition:background .15s; }
+    .qty-btn:hover { background:var(--primary); color:white; border-color:var(--primary); }
+    .qty-value { min-width:20px; text-align:center; font-weight:700; }
+    .empty-menu { grid-column:1/-1; text-align:center; padding:3rem 1rem; color:var(--muted); }
+
+    /* ── Order sidebar ── */
+    .cart-panel { padding:1.25rem; position:sticky; top:95px; display:grid; gap:1rem; }
+    .cart-panel-head { display:flex; justify-content:space-between; align-items:center; }
+    .cart-item { display:flex; justify-content:space-between; align-items:center; padding:0.7rem 0; border-bottom:1px solid var(--border); font-size:0.9rem; gap:0.5rem; }
+    .cart-item:last-child { border-bottom:none; }
+    .cart-item-name { flex:1; color:var(--text); }
+    .summary-row { display:flex; justify-content:space-between; padding:0.3rem 0; color:var(--muted); font-size:0.93rem; }
+    .summary-total { font-size:1.1rem; font-weight:800; color:var(--text); border-top:1px solid var(--border); margin-top:0.25rem; padding-top:0.5rem; }
+    .checkout-btn { display:block; width:100%; padding:0.9rem; background:linear-gradient(135deg,var(--primary),var(--secondary)); color:white; font-weight:700; font-size:1rem; border:none; border-radius:999px; cursor:pointer; text-align:center; box-shadow:0 12px 30px rgba(0,119,200,0.18); transition:transform .2s,box-shadow .2s; }
+    .checkout-btn:hover { transform:translateY(-2px); box-shadow:0 16px 36px rgba(0,119,200,0.25); }
+    .checkout-btn:disabled { opacity:0.45; cursor:not-allowed; transform:none; }
+
+    /* ── Footer ── */
+    .footer { margin-top:2rem; padding:2.2rem 0; background:#0f172a; color:#cbd5e1; }
+    .footer-grid { display:grid; grid-template-columns:1.2fr 1fr 1fr 1fr; gap:1.5rem; }
+    .footer h4 { color:white; margin-bottom:0.7rem; }
+    .footer ul { list-style:none; display:grid; gap:0.5rem; color:#94a3b8; }
+    .footer a:hover { color:white; }
+    .footer-bottom { margin-top:1.2rem; padding-top:1rem; border-top:1px solid rgba(148,163,184,0.2); color:#94a3b8; font-size:0.88rem; }
+
+    @media (max-width:980px) { .layout{grid-template-columns:1fr;} .cart-panel{position:static;} .hero-card{grid-template-columns:1fr;} }
+    @media (max-width:760px) { .nav-links{display:none;} .search-box{display:none;} .menu-grid{grid-template-columns:1fr;} .footer-grid{grid-template-columns:1fr 1fr;} }
+    @media (max-width:520px) { .footer-grid{grid-template-columns:1fr;} }
+  </style>
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container navbar">
+      <a class="brand" href="home_screen.html"><span class="brand-mark">DM</span><span>DirkMhob</span></a>
+      <nav class="nav-links" aria-label="Main navigation">
+        <a href="home_screen.html">Home</a>
+        <a href="search_screen.html">Restaurants</a>
+        <a href="asian_dish.html">Categories</a>
+        <a href="home_screen.html#promotions">Promotions</a>
+        <a href="home_screen.html#about">About</a>
+      </nav>
+      <div class="nav-actions">
+        <label class="search-box"><span>🔍</span><input placeholder="Search dishes" /></label>
+        <a class="icon-btn" href="cart_screen.html" aria-label="Cart">🛒</a>
+        <span id="nav-auth"></span>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Hero -->
+    <section class="hero">
+      <div class="hero-card">
+        <div>
+          <div class="hero-badge" id="hero-badge">🍽️ Restaurant</div>
+          <h1 id="hero-name">Loading…</h1>
+          <p id="hero-desc">Please wait while we fetch the restaurant details.</p>
+          <div class="hero-stats" id="hero-stats">
+            <span>⭐ —</span>
+            <span>⏱ 20–35 min</span>
+            <span>🚚 $2.50 delivery</span>
+          </div>
+        </div>
+        <div class="spotlight">
+          <div class="spotlight-top">
+            <div class="spotlight-logo" id="spotlight-logo">🍽️</div>
+            <div class="spotlight-text">
+              <strong id="spotlight-name">—</strong>
+              <span id="spotlight-sub">Open now</span>
+            </div>
+          </div>
+          <div id="spotlight-desc" style="color:rgba(255,255,255,0.88);font-size:0.9rem;">—</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Menu + Order sidebar -->
+    <section class="section">
+      <div class="layout">
+
+        <!-- Menu panel -->
+        <div class="panel">
+          <div class="panel-header">
+            <h2 class="panel-title">Menu</h2>
+            <span style="color:var(--muted);font-weight:600;" id="menu-subtitle">Loading…</span>
+          </div>
+          <div class="menu-grid" id="menu-grid">
+            <div class="empty-menu">Loading menu items…</div>
+          </div>
+        </div>
+
+        <!-- Order sidebar -->
+        <aside class="panel cart-panel">
+          <div class="cart-panel-head">
+            <h2 class="panel-title">Your order</h2>
+            <span style="color:var(--muted);font-weight:600;">Delivery</span>
+          </div>
+          <div id="cart-items">
+            <div class="cart-item">
+              <span class="cart-item-name" style="color:var(--muted);">Cart is empty</span>
+              <strong>$0.00</strong>
+            </div>
+          </div>
+          <div>
+            <div class="summary-row"><span>Subtotal</span><span id="subtotal">$0.00</span></div>
+            <div class="summary-row"><span>Delivery fee</span><span id="delivery-display">$2.50</span></div>
+            <div class="summary-row"><span>Service fee</span><span>$1.00</span></div>
+            <div class="summary-row summary-total"><span>Total</span><span id="order-total">$3.50</span></div>
+          </div>
+          <button class="checkout-btn" id="checkout-btn" onclick="goCheckout()" disabled>
+            Checkout →
+          </button>
+        </aside>
+
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-grid">
+      <div><h4>DirkMhob</h4><p>Fast delivery, healthier choices, and beautifully curated meals from your favorite local spots.</p></div>
+      <div><h4>Quick links</h4><ul><li><a href="home_screen.html">Home</a></li><li><a href="search_screen.html">Restaurants</a></li><li><a href="asian_dish.html">Categories</a></li></ul></div>
+      <div><h4>Support</h4><ul><li>Help Center</li><li>Contact Us</li><li>Terms</li></ul></div>
+      <div><h4>Follow us</h4><ul><li>Instagram</li><li>Facebook</li><li>Twitter</li></ul></div>
+    </div>
+    <div class="container footer-bottom">© 2026 DirkMhob. Crafted for modern food delivery.</div>
+  </footer>
+
+  <script src="cart.js"></script>
+  <script src="auth.js"></script>
+  <script>
+    var API = 'http://127.0.0.1:8000';
+
+    /* ── Read restaurant ID from URL ── */
+    var REST_ID   = new URLSearchParams(window.location.search).get('id');
+    var REST_NAME = '';
+    var REST_LOGO = '';
+    var DELIVERY_FEE = 2.50;
+
+    /* Map of item.id → item data, populated when menu loads */
+    var MENU_ITEMS = {};
+
+    if (!REST_ID) {
+      window.location.href = 'home_screen.html';
+    }
+
+    function esc(s) {
+      return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    /* ── Fetch restaurant details ─────────────────────── */
+    fetch(API + '/api/restaurants/' + REST_ID + '/', { credentials: 'include' })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.error) {
+        document.getElementById('hero-name').textContent = 'Restaurant not found';
+        document.getElementById('hero-desc').textContent = 'This restaurant may not be approved yet or does not exist.';
+        return;
+      }
+      REST_NAME    = data.name;
+      REST_LOGO    = data.logo_emoji || '🍽️';
+      DELIVERY_FEE = parseFloat(data.delivery_fee) || 2.50;
+
+      document.title = 'DirkMhob | ' + data.name;
+      document.getElementById('hero-badge').textContent    = (data.logo_emoji || '🍽️') + '  ' + (data.cuisine_type || 'Restaurant');
+      document.getElementById('hero-name').textContent     = data.name;
+      document.getElementById('hero-desc').textContent     = data.description || 'Delicious food delivered to your door.';
+      document.getElementById('hero-stats').innerHTML      =
+        '<span>⭐ ' + Number(data.rating || 0).toFixed(1) + ' rating</span>' +
+        '<span>⏱ 20–35 min</span>' +
+        '<span>🚚 $' + Number(data.delivery_fee).toFixed(2) + ' delivery</span>' +
+        (data.cuisine_type ? '<span>' + esc(data.cuisine_type) + '</span>' : '');
+      var spotlightLogo = document.getElementById('spotlight-logo');
+      if (data.logo_image_url) {
+        spotlightLogo.innerHTML = '<img src="' + data.logo_image_url + '" alt="logo" style="width:100%;height:100%;object-fit:cover;border-radius:16px;" />';
+        spotlightLogo.style.padding = '0';
+        spotlightLogo.style.overflow = 'hidden';
+      } else {
+        spotlightLogo.textContent = data.logo_emoji || '🍽️';
+      }
+      document.getElementById('spotlight-name').textContent = data.name;
+      document.getElementById('spotlight-sub').textContent  = data.address ? data.address : 'Open now';
+      document.getElementById('spotlight-desc').textContent = data.description || '';
+      document.getElementById('delivery-display').textContent = '$' + Number(data.delivery_fee).toFixed(2);
+      updateTotals();
+    })
+    .catch(function() {
+      document.getElementById('hero-name').textContent = 'Could not load restaurant';
+      document.getElementById('hero-desc').textContent = 'Make sure the Django server is running at http://127.0.0.1:8000';
+    });
+
+    /* ── Fetch menu items ─────────────────────────────── */
+    fetch(API + '/api/restaurants/' + REST_ID + '/menu/', { credentials: 'include' })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var items = data.items || [];
+      var grid  = document.getElementById('menu-grid');
+      document.getElementById('menu-subtitle').textContent = items.length ? items.length + ' item' + (items.length !== 1 ? 's' : '') : 'No items yet';
+
+      if (!items.length) {
+        grid.innerHTML = '<div class="empty-menu">No menu items available for this restaurant yet.</div>';
+        return;
+      }
+
+      /* Store in MENU_ITEMS map for use in changeQty() */
+      items.forEach(function(item) {
+        MENU_ITEMS[item.id] = item;
+      });
+
+      grid.innerHTML = items.map(function(item) {
+        var imageHtml = item.image_url
+          ? '<img src="' + item.image_url + '" alt="' + esc(item.name) + '" style="width:100%;height:100%;object-fit:cover;" />'
+          : esc(item.emoji || '🍽️');
+        return '<article class="menu-card">' +
+          '<div class="menu-image" style="' + (item.image_url ? 'padding:0;overflow:hidden;font-size:0;' : '') + '">' + imageHtml + '</div>' +
+          '<div class="menu-body">' +
+            '<h3>' + esc(item.name) + '</h3>' +
+            (item.description ? '<p>' + esc(item.description) + '</p>' : '') +
+            '<div class="menu-meta">' +
+              '<span>$' + Number(item.price).toFixed(2) + '</span>' +
+              '<div class="qty-row">' +
+                '<button class="qty-btn" onclick="changeQty(' + item.id + ',-1)">−</button>' +
+                '<span class="qty-value" id="qty-' + item.id + '">0</span>' +
+                '<button class="qty-btn" onclick="changeQty(' + item.id + ',1)">+</button>' +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+        '</article>';
+      }).join('');
+
+      restoreQtys();
+    })
+    .catch(function() {
+      document.getElementById('menu-grid').innerHTML = '<div class="empty-menu">Could not load menu items. Is the server running?</div>';
+      document.getElementById('menu-subtitle').textContent = 'Error';
+    });
+
+    /* ── +/- quantity handler ─────────────────────────── */
+    function changeQty(itemId, delta) {
+      var item = MENU_ITEMS[itemId];
+      if (!item) return;
+
+      var qtyEl   = document.getElementById('qty-' + itemId);
+      var current = parseInt(qtyEl.textContent, 10) || 0;
+      var next    = Math.max(0, current + delta);
+      qtyEl.textContent = next;
+
+      if (delta > 0 && current === 0) {
+        /* First time adding — push new entry */
+        DirkCart.addToCart({
+          restaurantId:   String(REST_ID),
+          restaurantName: REST_NAME,
+          name:           item.name,
+          price:          item.price,
+          quantity:       1,
+          emoji:          item.emoji || '🍽️'
+        });
+      } else {
+        /* Update existing (removes if next === 0) */
+        DirkCart.updateQuantity(String(REST_ID), item.name, next);
+      }
+      renderCartPanel();
+    }
+
+    /* ── Render order sidebar ─────────────────────────── */
+    function renderCartPanel() {
+      var allCart = DirkCart.getCart();
+      var cart    = allCart.filter(function(i) { return String(i.restaurantId) === String(REST_ID); });
+      var el      = document.getElementById('cart-items');
+      var btn     = document.getElementById('checkout-btn');
+
+      if (!cart.length) {
+        el.innerHTML = '<div class="cart-item"><span class="cart-item-name" style="color:var(--muted)">Cart is empty</span><strong>$0.00</strong></div>';
+        btn.disabled = true;
+        updateTotals();
+        return;
+      }
+
+      el.innerHTML = cart.map(function(item) {
+        return '<div class="cart-item">' +
+          '<span class="cart-item-name">' + (item.emoji || '') + ' ' + esc(item.name) + ' <span style="color:var(--muted)">×' + item.quantity + '</span></span>' +
+          '<strong>$' + (item.price * item.quantity).toFixed(2) + '</strong>' +
+          '</div>';
+      }).join('');
+
+      btn.disabled = false;
+      updateTotals();
+    }
+
+    function updateTotals() {
+      var cart     = DirkCart.getCart().filter(function(i) { return String(i.restaurantId) === String(REST_ID); });
+      var subtotal = cart.reduce(function(s, i) { return s + i.price * i.quantity; }, 0);
+      var hasItems = subtotal > 0;
+      var total    = hasItems ? subtotal + DELIVERY_FEE + 1.00 : 0;
+
+      document.getElementById('subtotal').textContent      = '$' + subtotal.toFixed(2);
+      document.getElementById('delivery-display').textContent = hasItems ? '$' + DELIVERY_FEE.toFixed(2) : '$0.00';
+      document.getElementById('order-total').textContent   = '$' + total.toFixed(2);
+    }
+
+    /* ── Restore quantities from cart on page load ──── */
+    function restoreQtys() {
+      var cart = DirkCart.getCart().filter(function(i) { return String(i.restaurantId) === String(REST_ID); });
+      cart.forEach(function(cartItem) {
+        Object.keys(MENU_ITEMS).forEach(function(id) {
+          if (MENU_ITEMS[id].name === cartItem.name) {
+            var el = document.getElementById('qty-' + id);
+            if (el) el.textContent = cartItem.quantity;
+          }
+        });
+      });
+      renderCartPanel();
+    }
+
+    /* ── Checkout ─────────────────────────────────────── */
+    function goCheckout() {
+      var cart       = DirkCart.getCart().filter(function(i) { return String(i.restaurantId) === String(REST_ID); });
+      var subtotal   = cart.reduce(function(s, i) { return s + i.price * i.quantity; }, 0);
+      var serviceFee = 1.00;
+      var total      = subtotal + DELIVERY_FEE + serviceFee;
+
+      localStorage.setItem('cart_restaurant_id',   String(REST_ID));
+      localStorage.setItem('cart_restaurant_name', REST_NAME);
+      localStorage.setItem('cart_restaurant_logo', REST_LOGO);
+      localStorage.setItem('cart_items',           JSON.stringify(cart));
+      localStorage.setItem('cart_subtotal',        subtotal.toFixed(2));
+      localStorage.setItem('cart_delivery_fee',    DELIVERY_FEE.toFixed(2));
+      localStorage.setItem('cart_service_fee',     serviceFee.toFixed(2));
+      localStorage.setItem('cart_total',           total.toFixed(2));
+
+      window.location.href = 'cart_screen.html';
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      renderCartPanel();
+    });
+  </script>
+</body>
+</html>

@@ -711,8 +711,7 @@
                     <input type="text" placeholder="Search restaurants, food, cuisines...">
                 </label>
                 <button class="notification-btn" id="notificationButton" onclick="handleNotificationClick(event)" aria-label="Notifications">🔔<span id="notif-dot" class="notif-dot"></span></button>
-                <a class="btn btn-secondary" href="login.html">Login</a>
-                <a class="btn btn-primary" href="signup.html">Sign Up</a>
+                <span id="nav-auth"></span>
             </div>
         </div>
     </header>
@@ -759,20 +758,20 @@
                     <a href="search_screen.html">View all offers</a>
                 </div>
                 <div class="promo-grid">
-                    <article class="promo-card primary">
+                    <article class="promo-card primary" onclick="activatePromo('WEEKEND50')" style="cursor:pointer" role="button" tabindex="0">
                         <h3>Weekend Deal</h3>
                         <strong>50% OFF</strong>
                         <p>Enjoy exclusive discounts on selected restaurants and combos.</p>
                     </article>
-                    <article class="promo-card secondary">
+                    <article class="promo-card secondary" onclick="activatePromo('FREEDEL')" style="cursor:pointer" role="button" tabindex="0">
                         <h3>Lunch Rush</h3>
                         <strong>Free Delivery</strong>
                         <p>Order before 2 PM and get free delivery on your first three orders.</p>
                     </article>
-                    <article class="promo-card tertiary">
+                    <article class="promo-card tertiary" onclick="activatePromo('NEWUSER')" style="cursor:pointer" role="button" tabindex="0">
                         <h3>Member Rewards</h3>
-                        <strong>Points Boost</strong>
-                        <p>Collect rewards and unlock more savings with every order.</p>
+                        <strong>50% OFF</strong>
+                        <p>New user exclusive — 50% off your first order, up to $10.</p>
                     </article>
                 </div>
             </div>
@@ -784,48 +783,7 @@
                     <h2>Browse by category</h2>
                     <a href="search_screen.html">See more</a>
                 </div>
-                <div class="categories-grid">
-                    <a class="category-card" href="asian_dish.html">
-                        <div class="category-icon">🥢</div>
-                        <h3>Asian</h3>
-                        <p>Bold flavors and comfort meals</p>
-                    </a>
-                    <a class="category-card" href="khmer_dish.html">
-                        <div class="category-icon">🍜</div>
-                        <h3>Khmer</h3>
-                        <p>Traditional favorites made fresh</p>
-                    </a>
-                    <a class="category-card" href="coffee_dish.html">
-                        <div class="category-icon">☕</div>
-                        <h3>Coffee</h3>
-                        <p>Warm brews and sweet treats</p>
-                    </a>
-                    <a class="category-card" href="pastry_dish.html">
-                        <div class="category-icon">🥐</div>
-                        <h3>Pastry</h3>
-                        <p>Freshly baked delights</p>
-                    </a>
-                    <a class="category-card" href="home_screen.html">
-                        <div class="category-icon">🍔</div>
-                        <h3>Fast Food</h3>
-                        <p>Quick bites for busy days</p>
-                    </a>
-                    <a class="category-card" href="home_screen.html">
-                        <div class="category-icon">🍕</div>
-                        <h3>Pizza</h3>
-                        <p>Hot and cheesy favorites</p>
-                    </a>
-                    <a class="category-card" href="home_screen.html">
-                        <div class="category-icon">🍟</div>
-                        <h3>Burgers</h3>
-                        <p>Classic comfort food</p>
-                    </a>
-                    <a class="category-card" href="home_screen.html">
-                        <div class="category-icon">🍰</div>
-                        <h3>Desserts</h3>
-                        <p>Sweet endings to every order</p>
-                    </a>
-                </div>
+                <div class="categories-grid" id="categories-grid"></div>
             </div>
         </section>
 
@@ -835,69 +793,10 @@
                     <h2>Restaurants near you</h2>
                     <a href="search_screen.html">View all</a>
                 </div>
-                <div class="restaurant-grid">
-                    <article class="restaurant-card">
-                        <div class="restaurant-image">☕</div>
-                        <div class="restaurant-body">
-                            <div class="restaurant-meta">
-                                <div class="restaurant-name">Brown - TK Avenue</div>
-                                <div class="restaurant-rating">★ 4.6</div>
-                            </div>
-                            <div class="restaurant-info">
-                                <span>Bakery • Coffee</span>
-                                <span>•</span>
-                                <span>20-30 min</span>
-                                <span>•</span>
-                                <span>2.0 km</span>
-                            </div>
-                            <div class="restaurant-actions">
-                                <span class="chip">Free delivery</span>
-                                <a class="btn btn-primary" href="res_brown.html">Order Now</a>
-                            </div>
-                        </div>
-                    </article>
-
-                    <article class="restaurant-card">
-                        <div class="restaurant-image">🍗</div>
-                        <div class="restaurant-body">
-                            <div class="restaurant-meta">
-                                <div class="restaurant-name">Texas Chicken</div>
-                                <div class="restaurant-rating">★ 4.5</div>
-                            </div>
-                            <div class="restaurant-info">
-                                <span>Fast Food • Chicken</span>
-                                <span>•</span>
-                                <span>15-25 min</span>
-                                <span>•</span>
-                                <span>1.2 km</span>
-                            </div>
-                            <div class="restaurant-actions">
-                                <span class="chip">Best seller</span>
-                                <a class="btn btn-primary" href="res_texas.html">Order Now</a>
-                            </div>
-                        </div>
-                    </article>
-
-                    <article class="restaurant-card">
-                        <div class="restaurant-image">🍗</div>
-                        <div class="restaurant-body">
-                            <div class="restaurant-meta">
-                                <div class="restaurant-name">KFC - TK Avenue</div>
-                                <div class="restaurant-rating">★ 4.4</div>
-                            </div>
-                            <div class="restaurant-info">
-                                <span>Fast Food • Fried Chicken</span>
-                                <span>•</span>
-                                <span>10-20 min</span>
-                                <span>•</span>
-                                <span>1.5 km</span>
-                            </div>
-                            <div class="restaurant-actions">
-                                <span class="chip">Quick pickup</span>
-                                <a class="btn btn-primary" href="res_kfc.html">Order Now</a>
-                            </div>
-                        </div>
-                    </article>
+                <div class="restaurant-grid" id="restaurant-grid">
+                    <div id="rest-loading" style="grid-column:1/-1;text-align:center;padding:3rem 1rem;color:var(--muted);font-size:0.95rem;">
+                        Loading restaurants…
+                    </div>
                 </div>
             </div>
         </section>
@@ -1038,6 +937,28 @@
         </div>
     </footer>
 
+    <script src="promo.js"></script>
+    <script src="auth.js"></script>
+    <script>
+        function activatePromo(key) {
+            console.log('[HOME] Promo card clicked:', key);
+            var result = DirkPromo.applyByKey(key);
+            if (result.success) {
+                showPromoToast('✓ ' + result.message, '#16a34a');
+            } else {
+                showPromoToast('✗ ' + result.message, '#ef4444');
+            }
+        }
+        function showPromoToast(msg, bg) {
+            var t = document.createElement('div');
+            t.style.cssText = 'position:fixed;bottom:28px;right:28px;padding:13px 22px;border-radius:12px;' +
+                              'font-weight:700;font-size:0.9rem;z-index:9999;color:#fff;' +
+                              'box-shadow:0 8px 28px rgba(0,0,0,0.18);transition:opacity 0.35s;background:' + bg + ';';
+            t.textContent = msg;
+            document.body.appendChild(t);
+            setTimeout(function() { t.style.opacity = '0'; setTimeout(function() { t.remove(); }, 350); }, 2800);
+        }
+    </script>
     <script>
         function getDeliveryNotification() {
             const notificationStr = localStorage.getItem('deliveryNotification');
@@ -1066,6 +987,85 @@
         }
 
         document.addEventListener('DOMContentLoaded', updateNotificationBadge);
+    </script>
+
+    <!-- Dynamic category grid: rendered from JS data array -->
+    <script>
+        (function () {
+            var CATEGORIES = [
+                { icon: '🥢', name: 'Asian',     desc: 'Bold flavors and comfort meals',      href: 'asian_dish.html'  },
+                { icon: '🍜', name: 'Khmer',     desc: 'Traditional favorites made fresh',    href: 'khmer_dish.html'  },
+                { icon: '☕', name: 'Coffee',    desc: 'Warm brews and sweet treats',         href: 'coffee_dish.html' },
+                { icon: '🥐', name: 'Pastry',    desc: 'Freshly baked delights',              href: 'pastry_dish.html' },
+                { icon: '🍔', name: 'Fast Food', desc: 'Quick bites for busy days',           href: 'search_screen.html' },
+                { icon: '🍕', name: 'Pizza',     desc: 'Hot and cheesy favorites',            href: 'search_screen.html' },
+                { icon: '🍟', name: 'Burgers',   desc: 'Classic comfort food',                href: 'search_screen.html' },
+                { icon: '🍰', name: 'Desserts',  desc: 'Sweet endings to every order',        href: 'search_screen.html' },
+            ];
+
+            var grid = document.getElementById('categories-grid');
+            if (!grid) return;
+
+            grid.innerHTML = CATEGORIES.map(function (c) {
+                return '<a class="category-card" href="' + c.href + '">' +
+                    '<div class="category-icon">' + c.icon + '</div>' +
+                    '<h3>' + c.name + '</h3>' +
+                    '<p>' + c.desc + '</p>' +
+                    '</a>';
+            }).join('');
+        })();
+    </script>
+
+    <!-- Dynamic restaurant grid: fetches only is_approved=True restaurants from backend -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var grid    = document.getElementById('restaurant-grid');
+            var loading = document.getElementById('rest-loading');
+
+            function esc(s) {
+                return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            }
+
+            fetch('http://127.0.0.1:8000/api/restaurants/', { credentials: 'include' })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                var list = data.restaurants || [];
+                if (loading) loading.remove();
+
+                if (!list.length) {
+                    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:3rem 1rem;color:var(--muted);">No restaurants available yet. Check back soon!</div>';
+                    return;
+                }
+
+                list.forEach(function (r) {
+                    var card = document.createElement('article');
+                    card.className = 'restaurant-card';
+                    var logoHtml = r.logo_image_url
+                        ? '<img src="' + r.logo_image_url + '" alt="' + esc(r.name) + '" style="width:100%;height:100%;object-fit:cover;" />'
+                        : esc(r.logo_emoji || '🍽️');
+                    card.innerHTML =
+                        '<div class="restaurant-image">' + logoHtml + '</div>' +
+                        '<div class="restaurant-body">' +
+                          '<div class="restaurant-meta">' +
+                            '<div class="restaurant-name">' + esc(r.name) + '</div>' +
+                            '<div class="restaurant-rating">★ ' + Number(r.rating || 0).toFixed(1) + '</div>' +
+                          '</div>' +
+                          '<div class="restaurant-info">' +
+                            '<span>' + esc(r.cuisine_type || 'Restaurant') + '</span>' +
+                            (r.address ? '<span>•</span><span>' + esc(r.address) + '</span>' : '') +
+                          '</div>' +
+                          '<div class="restaurant-actions">' +
+                            '<span class="chip">$' + Number(r.delivery_fee || 0).toFixed(2) + ' delivery</span>' +
+                            '<a class="btn btn-primary" href="restaurant.html?id=' + r.id + '">Order Now</a>' +
+                          '</div>' +
+                        '</div>';
+                    grid.appendChild(card);
+                });
+            })
+            .catch(function () {
+                if (loading) loading.textContent = 'Could not load restaurants. Make sure the server is running.';
+            });
+        });
     </script>
 </body>
 </html>

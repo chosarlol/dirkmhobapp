@@ -60,13 +60,17 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'dirkmhobapp.wsgi.application'
 
-# Database — PostgreSQL on Render via DATABASE_URL, SQLite locally
-DATABASES = {
-    'default': dj_database_url.config(
-        default=f"sqlite:///{BASE_DIR}/db.sqlite3",
-        conn_max_age=600,
-    )
-}
+# Database — use PostgreSQL if DATABASE_URL is a valid URL, otherwise SQLite
+_db_url = os.environ.get('DATABASE_URL', '').strip()
+if _db_url and not _db_url.startswith('://') and '://' in _db_url:
+    DATABASES = {'default': dj_database_url.config(conn_max_age=600)}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},

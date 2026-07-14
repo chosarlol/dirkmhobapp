@@ -3,7 +3,6 @@ import os
 from django.contrib import admin
 from django.urls import path
 from django.conf import settings
-from django.conf.urls.static import static
 from django.http import FileResponse, Http404
 from api import views
 
@@ -13,9 +12,20 @@ def serve_frontend(request, path=''):
     if not path:
         path = 'home_screen.html'
     filepath = os.path.join(settings.BASE_DIR, 'frontend', os.path.normpath(path))
-    # Security: make sure the resolved path is still inside frontend/
     frontend_root = os.path.join(settings.BASE_DIR, 'frontend')
     if not filepath.startswith(frontend_root):
+        raise Http404
+    if os.path.isfile(filepath):
+        content_type, _ = mimetypes.guess_type(filepath)
+        return FileResponse(open(filepath, 'rb'), content_type=content_type or 'application/octet-stream')
+    raise Http404
+
+
+def serve_media(request, path=''):
+    """Serve uploaded media files — works regardless of DEBUG setting."""
+    filepath = os.path.join(settings.MEDIA_ROOT, os.path.normpath(path))
+    media_root = str(settings.MEDIA_ROOT)
+    if not filepath.startswith(media_root):
         raise Http404
     if os.path.isfile(filepath):
         content_type, _ = mimetypes.guess_type(filepath)
@@ -67,7 +77,7 @@ urlpatterns = [
     path('api/restaurants/<int:restaurant_id>/',              views.restaurant_detail,    name='restaurant_detail'),
     path('api/shop/register/',                                views.shop_register,        name='shop_register'),
 
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) + [
+    path('media/<path:path>', serve_media),
     # Serve the frontend HTML/PNG/etc. files — must come LAST
     path('', serve_frontend),
     path('<path:path>', serve_frontend),

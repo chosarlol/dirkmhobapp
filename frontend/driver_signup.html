@@ -285,7 +285,7 @@
       setTimeout(function(){ window.location.href = 'driver_orders.html'; }, 1800);
     })
     .catch(function(){
-      errEl.textContent = 'Cannot connect to backend (http://127.0.0.1:8000). Make sure Django is running.';
+      errEl.textContent = 'Server is waking up — please refresh the page in a moment.';
       errEl.style.display = 'block';
       btn.textContent = 'Create Driver Account →';
       btn.disabled    = false;

@@ -450,7 +450,7 @@
       currentUser = data.user;
       mountShell();
     }).catch(function(){
-      errEl.textContent='Cannot connect to backend (http://127.0.0.1:8000). Make sure Django is running.';
+      errEl.textContent='Server is waking up — please refresh the page in a moment.';
       errEl.style.display='block';
     });
   }

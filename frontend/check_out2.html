@@ -598,8 +598,10 @@
                     ' total=$' + total.toFixed(2) +
                     ' promo=' + (activePromo ? activePromo.code : 'none'));
 
+        var orderRef = 'ORD-' + Date.now();
+
         var order = {
-            id:            'ORD-' + Date.now(),
+            id:            orderRef,
             date:          new Date().toISOString(),
             items:         cart,
             subtotal:      subtotal,
@@ -609,8 +611,11 @@
             paymentMethod: selectedPayment,
             promoCode:     activePromo ? activePromo.code  : null,
             promoLabel:    activePromo ? activePromo.label : null,
-            status:        'Delivered'
+            status:        'confirmed'
         };
+
+        /* Save order ref for live status polling on order_comfirm.html */
+        localStorage.setItem('last_order_ref', orderRef);
 
         /* Save as current order for tracking page */
         localStorage.setItem('currentOrder', JSON.stringify({
@@ -632,17 +637,21 @@
         /* Clear cart and active promo after order placed */
         DirkCart.clearCart();
         DirkPromo.clearPromo();
-        console.log('[CHECKOUT2] Order placed, cart and promo cleared');
+        console.log('[CHECKOUT2] Order placed, ref=' + orderRef + ', cart cleared');
 
-        /* Persist order to backend (fire-and-forget — page works even if backend is down) */
+        /* Persist order to backend then navigate — if backend fails, navigate anyway */
         var user = null;
         try { user = JSON.parse(localStorage.getItem('dirkmhob_user')); } catch(e) {}
-        fetch('http://127.0.0.1:8000/api/orders/', {
+
+        function goToConfirm() { window.location.href = 'order_comfirm.html'; }
+
+        var _API = (location.port==='5500'||location.port==='5501')?'http://127.0.0.1:8000':location.origin;
+        fetch(_API + '/api/orders/', {
             method: 'POST',
             credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                id:              order.id,
+                id:              orderRef,
                 items:           order.items,
                 subtotal:        order.subtotal,
                 deliveryFee:     order.deliveryFee,
@@ -651,16 +660,23 @@
                 promoCode:       order.promoCode || '',
                 paymentMethod:   order.paymentMethod,
                 deliveryAddress: currentPin,
+                restaurantName:  cart.length ? (cart[0].restaurantName || '') : '',
                 customerName:    user ? (user.name || user.username || '') : '',
                 customerEmail:   user ? (user.email || '') : '',
             })
-        }).then(function(r) {
-            console.log('[CHECKOUT2] Backend order save status:', r.status);
-        }).catch(function() {
-            console.log('[CHECKOUT2] Backend not reachable, order stored locally only');
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            /* Backend may return a different ref — keep it consistent */
+            if (d.order_ref) localStorage.setItem('last_order_ref', d.order_ref);
+            console.log('[CHECKOUT2] Backend saved order:', d.order_ref || d.db_id);
+            goToConfirm();
+        })
+        .catch(function() {
+            console.log('[CHECKOUT2] Backend not reachable — proceeding with client ref');
+            goToConfirm();
         });
-
-        window.location.href = 'order_comfirm.html';
+        return; /* navigation happens inside .then/.catch */
     }
 
     document.addEventListener('DOMContentLoaded', loadCheckoutInfo);

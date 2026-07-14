@@ -1,0 +1,296 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DirkMhob | Driver Sign Up</title>
+  <style>
+    :root{--primary:#1a73e8;--primary-dark:#1558c0;--danger:#dc2626;--success:#16a34a;--bg:#f0f2f5;--surface:#fff;--border:#e2e8f0;--text:#0f172a;--muted:#64748b;}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;display:flex;flex-direction:column;background:var(--bg);color:var(--text);}
+    a{color:inherit;text-decoration:none;}
+
+    /* ── Top nav bar ── */
+    .topbar{background:rgba(255,255,255,.9);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 1.5rem;height:56px;display:flex;align-items:center;gap:.5rem;position:sticky;top:0;z-index:50;}
+    .brand-mark{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--primary),#ff6b35);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:.88rem;}
+    .brand-name{font-weight:800;font-size:1rem;color:var(--text);}
+    .topbar-sep{color:var(--muted);margin:0 3px;}
+    .topbar-label{font-size:.85rem;color:var(--muted);font-weight:600;}
+    .topbar-home{margin-left:auto;font-size:.85rem;color:var(--muted);font-weight:600;}
+    .topbar-home:hover{color:var(--primary);}
+
+    /* ── Page: two-column ── */
+    .page{flex:1;display:grid;grid-template-columns:1fr 1fr;min-height:calc(100vh - 56px);}
+
+    /* ── Left hero ── */
+    .hero{background:linear-gradient(160deg,var(--primary) 0%,#1558c0 60%,#0f3d8c 100%);color:#fff;display:flex;flex-direction:column;justify-content:center;padding:3rem 4rem;position:relative;overflow:hidden;}
+    .hero::before{content:'';position:absolute;inset:0;background-image:radial-gradient(circle at 70% 20%,rgba(255,255,255,.08) 0%,transparent 60%),radial-gradient(circle at 20% 80%,rgba(255,255,255,.06) 0%,transparent 50%);}
+    .hero-scooter{font-size:5rem;margin-bottom:1.5rem;display:block;animation:float 3s ease-in-out infinite;}
+    @keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
+    .hero-title{font-size:2rem;font-weight:800;line-height:1.2;margin-bottom:.75rem;}
+    .hero-sub{font-size:1rem;opacity:.85;margin-bottom:2rem;line-height:1.6;}
+    .perks{list-style:none;display:flex;flex-direction:column;gap:.75rem;}
+    .perks li{display:flex;align-items:center;gap:.75rem;font-size:.92rem;opacity:.9;}
+    .perk-icon{width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;}
+    .hero-footer{margin-top:2.5rem;padding-top:1.5rem;border-top:1px solid rgba(255,255,255,.15);font-size:.82rem;opacity:.65;}
+
+    /* ── Right form ── */
+    .form-side{display:flex;align-items:flex-start;justify-content:center;padding:2rem;background:#f8fafc;overflow-y:auto;}
+    .form-card{width:100%;max-width:480px;background:var(--surface);border-radius:20px;padding:2.25rem;box-shadow:0 8px 40px rgba(0,0,0,.1);border:1px solid var(--border);margin:auto;}
+    .card-head{display:flex;align-items:center;gap:.85rem;margin-bottom:1.5rem;padding-bottom:1.25rem;border-bottom:1px solid var(--border);}
+    .head-icon{font-size:2.2rem;}
+    .head-title{font-size:1.2rem;font-weight:800;}
+    .head-sub{font-size:.83rem;color:var(--muted);margin-top:.15rem;}
+
+    .sec-label{font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.6rem;margin-top:1.2rem;}
+    .sec-label:first-of-type{margin-top:0;}
+
+    .field{margin-bottom:.85rem;}
+    .field label{display:block;font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.35rem;}
+    .field input,.field select{width:100%;padding:.75rem 1rem;border:1.5px solid var(--border);border-radius:11px;font:inherit;font-size:.93rem;outline:none;background:#f9fbff;color:var(--text);transition:border-color .2s,box-shadow .2s;}
+    .field input:focus,.field select:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(26,115,232,.1);}
+    .field-row{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;}
+    .input-wrap{position:relative;}
+    .input-wrap .prefix{position:absolute;left:.9rem;top:50%;transform:translateY(-50%);font-size:.95rem;pointer-events:none;}
+    .field input.has-prefix{padding-left:2.4rem;}
+    .opt-tag{font-size:.68rem;color:var(--muted);font-weight:500;margin-left:.3rem;text-transform:none;letter-spacing:0;}
+
+    /* Strength bar */
+    .strength-bar{height:3px;border-radius:3px;background:#e2e8f0;margin-top:.4rem;overflow:hidden;}
+    .strength-fill{height:100%;border-radius:3px;width:0;transition:width .3s,background .3s;}
+
+    /* Messages */
+    .err{color:var(--danger);font-size:.85rem;margin-bottom:.85rem;padding:.6rem .9rem;background:#fff0f0;border-radius:10px;border-left:3px solid var(--danger);display:none;}
+    .success-msg{text-align:center;padding:1.5rem 1rem;display:none;}
+    .success-msg .checkmark{font-size:3.5rem;margin-bottom:.75rem;}
+    .success-msg h3{font-size:1.1rem;font-weight:800;color:var(--success);margin-bottom:.35rem;}
+    .success-msg p{color:var(--muted);font-size:.88rem;}
+
+    /* Button */
+    .btn{width:100%;padding:.9rem;background:var(--primary);color:#fff;border:none;border-radius:12px;font:inherit;font-size:.97rem;font-weight:700;cursor:pointer;transition:background .2s,transform .1s;margin-top:.25rem;}
+    .btn:hover{background:var(--primary-dark);}
+    .btn:active{transform:scale(.98);}
+    .btn:disabled{background:#93c5fd;cursor:not-allowed;transform:none;}
+
+    .card-footer{margin-top:1.1rem;text-align:center;font-size:.87rem;color:var(--muted);}
+    .card-footer a{color:var(--primary);font-weight:700;}
+
+    @media(max-width:768px){
+      .page{grid-template-columns:1fr;}
+      .hero{display:none;}
+      .form-side{min-height:calc(100vh - 56px);}
+      .field-row{grid-template-columns:1fr;}
+    }
+  </style>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<div class="topbar">
+  <div class="brand-mark">DM</div>
+  <span class="brand-name">DirkMhob</span>
+  <span class="topbar-sep">/</span>
+  <span class="topbar-label">Driver Sign Up</span>
+  <a href="home_screen.html" class="topbar-home">← Back to home</a>
+</div>
+
+<!-- TWO-COLUMN PAGE -->
+<div class="page">
+
+  <!-- LEFT HERO -->
+  <div class="hero">
+    <span class="hero-scooter">🛵</span>
+    <div class="hero-title">Become a Driver Today</div>
+    <div class="hero-sub">Sign up in minutes and start earning with DirkMhob delivery.</div>
+    <ul class="perks">
+      <li><div class="perk-icon">💰</div> Earn competitive fees on every delivery</li>
+      <li><div class="perk-icon">⏱️</div> Set your own hours — full or part time</li>
+      <li><div class="perk-icon">📦</div> Easy-to-use driver dashboard</li>
+      <li><div class="perk-icon">🗺️</div> Route view for every active order</li>
+    </ul>
+    <div class="hero-footer">DirkMhob Driver Portal · Phnom Penh, Cambodia</div>
+  </div>
+
+  <!-- RIGHT FORM -->
+  <div class="form-side">
+    <div class="form-card">
+
+      <!-- Header -->
+      <div class="card-head">
+        <span class="head-icon">🛵</span>
+        <div>
+          <div class="head-title">Create Driver Account</div>
+          <div class="head-sub">Join the DirkMhob delivery team</div>
+        </div>
+      </div>
+
+      <!-- Error banner -->
+      <div class="err" id="signup-err"></div>
+
+      <!-- Success state -->
+      <div class="success-msg" id="success-msg">
+        <div class="checkmark">✅</div>
+        <h3>Account created!</h3>
+        <p>Redirecting you to the driver dashboard…</p>
+      </div>
+
+      <!-- Form -->
+      <form id="signup-form" autocomplete="off">
+
+        <div class="sec-label">Personal Information</div>
+
+        <div class="field-row">
+          <div class="field">
+            <label>Full Name</label>
+            <input type="text" id="name" placeholder="e.g. Seang Cha" required />
+          </div>
+          <div class="field">
+            <label>Phone <span class="opt-tag">(optional)</span></label>
+            <div class="input-wrap">
+              <span class="prefix">📞</span>
+              <input type="tel" id="phone" class="has-prefix" placeholder="012 345 678" />
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Email Address</label>
+          <input type="email" id="email" placeholder="you@example.com" required />
+        </div>
+
+        <div class="sec-label">Security</div>
+
+        <div class="field-row">
+          <div class="field">
+            <label>Password</label>
+            <input type="password" id="password" placeholder="At least 6 characters" required oninput="updateStrength()" />
+            <div class="strength-bar"><div class="strength-fill" id="strength-fill"></div></div>
+          </div>
+          <div class="field">
+            <label>Confirm Password</label>
+            <input type="password" id="confirm-password" placeholder="Repeat password" required />
+          </div>
+        </div>
+
+        <div class="sec-label">Vehicle Information <span class="opt-tag" style="text-transform:none;letter-spacing:0;">(can be updated later)</span></div>
+
+        <div class="field-row">
+          <div class="field">
+            <label>Vehicle Type</label>
+            <select id="vehicle-type">
+              <option value="">— Select Type —</option>
+              <option value="Motorbike">Motorbike</option>
+              <option value="Car">Car</option>
+              <option value="Bicycle">Bicycle</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Plate Number</label>
+            <input type="text" id="plate-number" placeholder="e.g. PP-1234" />
+          </div>
+        </div>
+
+        <div style="margin-top:1rem;"></div>
+        <button class="btn" type="submit" id="submit-btn">Create Driver Account →</button>
+      </form>
+
+      <p class="card-footer">Already have an account? <a href="driver_login.html">Sign in</a></p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  var API = (location.port==='5500'||location.port==='5501')?'http://127.0.0.1:8000':location.origin;
+
+  function updateStrength() {
+    var pw   = document.getElementById('password').value;
+    var fill = document.getElementById('strength-fill');
+    var score = 0;
+    if (pw.length >= 6)           score++;
+    if (pw.length >= 10)          score++;
+    if (/[A-Z]/.test(pw))         score++;
+    if (/[0-9]/.test(pw))         score++;
+    if (/[^A-Za-z0-9]/.test(pw))  score++;
+    var pct   = [0, 20, 40, 65, 85, 100][score];
+    var color = ['#e2e8f0','#ef4444','#f97316','#eab308','#22c55e','#16a34a'][score];
+    fill.style.width      = pct + '%';
+    fill.style.background = color;
+  }
+
+  document.getElementById('signup-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    var name     = document.getElementById('name').value.trim();
+    var email    = document.getElementById('email').value.trim();
+    var phone    = document.getElementById('phone').value.trim();
+    var password = document.getElementById('password').value;
+    var confirm  = document.getElementById('confirm-password').value;
+    var vehicleT = document.getElementById('vehicle-type').value;
+    var plateN   = document.getElementById('plate-number').value.trim();
+    var errEl    = document.getElementById('signup-err');
+    var btn      = document.getElementById('submit-btn');
+
+    errEl.style.display = 'none';
+
+    if (!name || !email || !password) {
+      errEl.textContent = 'Name, email and password are required.';
+      errEl.style.display = 'block';
+      return;
+    }
+    if (password.length < 6) {
+      errEl.textContent = 'Password must be at least 6 characters.';
+      errEl.style.display = 'block';
+      return;
+    }
+    if (password !== confirm) {
+      errEl.textContent = 'Passwords do not match.';
+      errEl.style.display = 'block';
+      return;
+    }
+
+    btn.textContent = 'Creating account…';
+    btn.disabled    = true;
+
+    fetch(API + '/api/driver/signup/', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: name, email: email, password: password, phone: phone })
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      if (data.error) {
+        errEl.textContent = data.error;
+        errEl.style.display = 'block';
+        btn.textContent = 'Create Driver Account →';
+        btn.disabled    = false;
+        return;
+      }
+
+      if (vehicleT) localStorage.setItem('driver_vehicle_type', vehicleT);
+      if (plateN)   localStorage.setItem('driver_plate', plateN);
+
+      try {
+        localStorage.setItem('dirkmhob_user', JSON.stringify({
+          name:     data.name || name,
+          email:    data.email || email,
+          role:     'driver',
+          username: data.username,
+        }));
+      } catch(ex) {}
+
+      document.getElementById('signup-form').style.display  = 'none';
+      document.querySelector('.card-footer').style.display  = 'none';
+      document.getElementById('success-msg').style.display  = 'block';
+      setTimeout(function(){ window.location.href = 'driver_orders.html'; }, 1800);
+    })
+    .catch(function(){
+      errEl.textContent = 'Cannot connect to backend (http://127.0.0.1:8000). Make sure Django is running.';
+      errEl.style.display = 'block';
+      btn.textContent = 'Create Driver Account →';
+      btn.disabled    = false;
+    });
+  });
+</script>
+</body>
+</html>

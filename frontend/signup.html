@@ -76,7 +76,7 @@
   </main>
   <script src="auth.js"></script>
   <script>
-    var API = 'http://127.0.0.1:8000';
+    var API = (location.port==='5500'||location.port==='5501')?'http://127.0.0.1:8000':location.origin;
 
     if (DirkAuth.isLoggedIn()) {
       window.location.href = 'home_screen.html';

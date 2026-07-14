@@ -1,0 +1,179 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DirkMhob | Driver Login</title>
+  <style>
+    :root{--primary:#1a73e8;--primary-dark:#1558c0;--danger:#dc2626;--bg:#f0f2f5;--surface:#fff;--border:#e2e8f0;--text:#0f172a;--muted:#64748b;}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;display:flex;flex-direction:column;background:var(--bg);color:var(--text);}
+    a{color:inherit;text-decoration:none;}
+
+    /* ── Top nav bar ── */
+    .topbar{background:rgba(255,255,255,.9);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 1.5rem;height:56px;display:flex;align-items:center;gap:.5rem;position:sticky;top:0;z-index:50;}
+    .brand-mark{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--primary),#ff6b35);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:.88rem;}
+    .brand-name{font-weight:800;font-size:1rem;color:var(--text);}
+    .topbar-sep{color:var(--muted);margin:0 3px;}
+    .topbar-label{font-size:.85rem;color:var(--muted);font-weight:600;}
+    .topbar-home{margin-left:auto;font-size:.85rem;color:var(--muted);font-weight:600;}
+    .topbar-home:hover{color:var(--primary);}
+
+    /* ── Page: two-column ── */
+    .page{flex:1;display:grid;grid-template-columns:1fr 1fr;min-height:calc(100vh - 56px);}
+
+    /* ── Left hero ── */
+    .hero{background:linear-gradient(160deg,var(--primary) 0%,#1558c0 60%,#0f3d8c 100%);color:#fff;display:flex;flex-direction:column;justify-content:center;padding:3rem 4rem;position:relative;overflow:hidden;}
+    .hero::before{content:'';position:absolute;inset:0;background-image:radial-gradient(circle at 70% 20%,rgba(255,255,255,.08) 0%,transparent 60%),radial-gradient(circle at 20% 80%,rgba(255,255,255,.06) 0%,transparent 50%);}
+    .hero-scooter{font-size:5rem;margin-bottom:1.5rem;display:block;}
+    .hero-title{font-size:2rem;font-weight:800;line-height:1.2;margin-bottom:.75rem;}
+    .hero-sub{font-size:1rem;opacity:.85;margin-bottom:2rem;line-height:1.6;}
+    .perks{list-style:none;display:flex;flex-direction:column;gap:.75rem;}
+    .perks li{display:flex;align-items:center;gap:.75rem;font-size:.92rem;opacity:.9;}
+    .perk-icon{width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;}
+    .hero-footer{margin-top:2.5rem;padding-top:1.5rem;border-top:1px solid rgba(255,255,255,.15);font-size:.82rem;opacity:.65;}
+
+    /* ── Right form ── */
+    .form-side{display:flex;align-items:center;justify-content:center;padding:2rem;background:#f8fafc;}
+    .form-card{width:100%;max-width:420px;background:var(--surface);border-radius:20px;padding:2.5rem;box-shadow:0 8px 40px rgba(0,0,0,.1);border:1px solid var(--border);}
+    .card-icon{font-size:2.2rem;text-align:center;margin-bottom:.75rem;}
+    .card-title{font-size:1.35rem;font-weight:800;text-align:center;margin-bottom:.25rem;}
+    .card-sub{font-size:.88rem;color:var(--muted);text-align:center;margin-bottom:1.75rem;}
+
+    .field{margin-bottom:1rem;}
+    .field label{display:block;font-size:.76rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.38rem;}
+    .field input{width:100%;padding:.8rem 1rem;border:1.5px solid var(--border);border-radius:12px;font:inherit;font-size:.95rem;outline:none;background:#f9fbff;color:var(--text);transition:border-color .2s,box-shadow .2s;}
+    .field input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(26,115,232,.1);}
+
+    .err{color:var(--danger);font-size:.87rem;margin-bottom:.85rem;padding:.65rem .9rem;background:#fff0f0;border-radius:10px;border-left:3px solid var(--danger);display:none;}
+    .denied-msg{background:#fff0f0;border:1.5px solid #fecaca;border-radius:12px;padding:.9rem 1.1rem;margin-bottom:1rem;display:none;color:var(--danger);font-weight:600;font-size:.88rem;text-align:center;}
+
+    .btn-primary{width:100%;padding:.9rem;background:var(--primary);color:#fff;border:none;border-radius:12px;font:inherit;font-size:1rem;font-weight:700;cursor:pointer;transition:background .2s,transform .1s;margin-top:.25rem;}
+    .btn-primary:hover{background:var(--primary-dark);}
+    .btn-primary:active{transform:scale(.98);}
+
+    .card-links{margin-top:1.25rem;display:flex;flex-direction:column;gap:.4rem;text-align:center;font-size:.87rem;color:var(--muted);}
+    .card-links a{color:var(--primary);font-weight:700;}
+
+    @media(max-width:768px){
+      .page{grid-template-columns:1fr;}
+      .hero{display:none;}
+      .form-side{min-height:calc(100vh - 56px);}
+    }
+  </style>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<div class="topbar">
+  <div class="brand-mark">DM</div>
+  <span class="brand-name">DirkMhob</span>
+  <span class="topbar-sep">/</span>
+  <span class="topbar-label">Driver Portal</span>
+  <a href="home_screen.html" class="topbar-home">← Back to home</a>
+</div>
+
+<!-- TWO-COLUMN PAGE -->
+<div class="page">
+
+  <!-- LEFT HERO -->
+  <div class="hero">
+    <span class="hero-scooter">🛵</span>
+    <div class="hero-title">Deliver with DirkMhob</div>
+    <div class="hero-sub">Join our growing team of delivery drivers and earn on your own schedule.</div>
+    <ul class="perks">
+      <li><div class="perk-icon">💰</div> Earn competitive delivery fees on every order</li>
+      <li><div class="perk-icon">⏱️</div> Flexible hours — work whenever you want</li>
+      <li><div class="perk-icon">📦</div> Simple order management right in your browser</li>
+      <li><div class="perk-icon">🗺️</div> Live route view for every active delivery</li>
+    </ul>
+    <div class="hero-footer">DirkMhob Driver Portal · Phnom Penh, Cambodia</div>
+  </div>
+
+  <!-- RIGHT FORM -->
+  <div class="form-side">
+    <div class="form-card">
+      <div class="card-icon">🔑</div>
+      <div class="card-title">Driver Sign In</div>
+      <p class="card-sub">Sign in to start accepting deliveries.</p>
+
+      <div class="denied-msg" id="denied-msg">Access denied. This portal is for drivers only.</div>
+      <div class="err" id="login-err"></div>
+
+      <div class="field">
+        <label>Username</label>
+        <input type="text" id="username" placeholder="your_username" autocomplete="username"
+               onkeydown="if(event.key==='Enter')doLogin()" />
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="password" placeholder="••••••••"
+               onkeydown="if(event.key==='Enter')doLogin()" />
+      </div>
+
+      <button class="btn-primary" onclick="doLogin()">Sign In →</button>
+
+      <div class="card-links">
+        <span>New driver? <a href="driver_signup.html">Create an account</a></span>
+        <span>Not a driver? <a href="login.html">Go to main login</a></span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  var API = (location.port==='5500'||location.port==='5501')?'http://127.0.0.1:8000':location.origin;
+
+  if (window.location.hash === '#denied') {
+    document.getElementById('denied-msg').style.display = 'block';
+  }
+
+  function doLogin() {
+    var username = document.getElementById('username').value.trim();
+    var password = document.getElementById('password').value;
+    var errEl    = document.getElementById('login-err');
+    errEl.style.display = 'none';
+
+    if (!username || !password) {
+      errEl.textContent   = 'Enter your username and password.';
+      errEl.style.display = 'block';
+      return;
+    }
+
+    fetch(API + '/api/login/', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: username, password: password })
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      if (data.error) {
+        errEl.textContent   = data.error;
+        errEl.style.display = 'block';
+        return;
+      }
+      var role = data.user ? data.user.role : '';
+      if (role !== 'driver') {
+        errEl.textContent   = 'Access denied. Drivers only. Your role is: ' + (role || 'unknown') + '.';
+        errEl.style.display = 'block';
+        return;
+      }
+      try {
+        localStorage.setItem('dirkmhob_user', JSON.stringify({
+          name:     data.user.name || data.user.username,
+          email:    data.user.email || '',
+          role:     'driver',
+          username: data.user.username,
+        }));
+      } catch(e) {}
+      window.location.href = 'driver_orders.html';
+    })
+    .catch(function(){
+      errEl.textContent   = 'Cannot connect to backend (http://127.0.0.1:8000). Make sure Django is running.';
+      errEl.style.display = 'block';
+    });
+  }
+</script>
+</body>
+</html>

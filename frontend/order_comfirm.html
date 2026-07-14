@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -315,9 +315,9 @@
 <!-- ── SUCCESS BANNER ── -->
 <div class="success-banner">
     <div class="success-inner">
-        <div class="success-check">✓</div>
-        <h1>Your Order Is Being Prepared!</h1>
-        <p>Sit back and relax — we're on it right now.</p>
+        <div class="success-check" id="banner-check">✓</div>
+        <h1 id="banner-h1">Your Order Is Being Prepared!</h1>
+        <p id="banner-p">Sit back and relax — we're on it right now.</p>
 
         <div class="res-strip">
             <div class="res-logo-lg" id="confirm-res-logo">🍽️</div>
@@ -342,52 +342,52 @@
 
         <!-- Live status card -->
         <div class="status-card">
-            <div class="status-card-head">
-                <div class="pulse-dot"></div>
-                <span>Live — Preparing Order</span>
+            <div class="status-card-head" id="status-card-head">
+                <div class="pulse-dot" id="live-dot"></div>
+                <span id="live-banner">Live — Preparing Order</span>
             </div>
 
             <div class="timeline">
 
-                <div class="timeline-step done">
-                    <div class="step-icon done">✓</div>
+                <div class="timeline-step done" id="step-1">
+                    <div class="step-icon done" id="icon-1">✓</div>
                     <div class="step-body">
-                        <div class="step-title">Order Confirmed</div>
-                        <div class="step-desc">Your order has been received and confirmed.</div>
+                        <div class="step-title" id="title-1">Order Confirmed</div>
+                        <div class="step-desc" id="desc-1">Your order has been received and confirmed.</div>
                         <div class="step-time">Just now</div>
                     </div>
                 </div>
 
-                <div class="timeline-step active">
-                    <div class="step-icon active">🍽️</div>
+                <div class="timeline-step active" id="step-2">
+                    <div class="step-icon active" id="icon-2">🍽️</div>
                     <div class="step-body">
-                        <div class="step-title">Restaurant Is Preparing</div>
-                        <div class="step-desc" id="confirm-prep-desc">Restaurant is currently preparing your food.</div>
-                        <div class="step-time">In progress</div>
+                        <div class="step-title" id="title-2">Restaurant Is Preparing</div>
+                        <div class="step-desc" id="desc-2">Restaurant is currently preparing your food.</div>
+                        <div class="step-time" id="time-2">In progress</div>
                     </div>
                 </div>
 
-                <div class="timeline-step">
-                    <div class="step-icon pending">🛵</div>
+                <div class="timeline-step" id="step-3">
+                    <div class="step-icon pending" id="icon-3">🛵</div>
                     <div class="step-body">
-                        <div class="step-title pending">Driver Assigned</div>
-                        <div class="step-desc">A nearby driver will be assigned soon.</div>
+                        <div class="step-title pending" id="title-3">Driver Assigned</div>
+                        <div class="step-desc" id="desc-3">A nearby driver will be assigned soon.</div>
                     </div>
                 </div>
 
-                <div class="timeline-step">
-                    <div class="step-icon pending">📍</div>
+                <div class="timeline-step" id="step-4">
+                    <div class="step-icon pending" id="icon-4">📍</div>
                     <div class="step-body">
-                        <div class="step-title pending">On The Way</div>
-                        <div class="step-desc">Your driver will head to your location.</div>
+                        <div class="step-title pending" id="title-4">On The Way</div>
+                        <div class="step-desc" id="desc-4">Your driver will head to your location.</div>
                     </div>
                 </div>
 
-                <div class="timeline-step">
-                    <div class="step-icon pending">🎉</div>
+                <div class="timeline-step" id="step-5">
+                    <div class="step-icon pending" id="icon-5">🎉</div>
                     <div class="step-body">
-                        <div class="step-title pending">Delivered</div>
-                        <div class="step-desc">Enjoy your meal!</div>
+                        <div class="step-title pending" id="title-5">Delivered</div>
+                        <div class="step-desc" id="desc-5">Enjoy your meal!</div>
                     </div>
                 </div>
 
@@ -398,6 +398,14 @@
         <div class="alert-box">
             <div class="alert-check">✓</div>
             <p id="confirm-alert-text">Order confirmed! Your restaurant is currently preparing your order. A driver will be assigned shortly and you'll receive live tracking updates.</p>
+        </div>
+
+        <!-- Chat button (shown once driver is assigned) -->
+        <div id="chat-btn-wrap" style="display:none;margin-top:16px;">
+            <a id="chat-btn-link" href="#" target="_blank"
+               style="display:flex;align-items:center;justify-content:center;gap:8px;padding:14px 20px;background:#0077c8;color:#fff;border-radius:14px;font-weight:700;font-size:15px;text-decoration:none;transition:background .2s;">
+                💬 Chat with Driver
+            </a>
         </div>
     </div>
 
@@ -483,27 +491,170 @@
         <div class="strip-icon">🏠</div>
         <div class="strip-text">
             <div class="strip-label">Delivery to</div>
-            <div class="strip-addr">Portola Drive · Expected in ~25 mins</div>
+            <div class="strip-addr" id="strip-addr">Portola Drive · Expected in ~25 mins</div>
         </div>
         <button class="track-btn" onclick="window.location.href='tracking_screen.html'">Track Order →</button>
     </div>
 </div>
 
 <script>
+    var API = (location.port==='5500'||location.port==='5501')?'http://127.0.0.1:8000':location.origin;
+    var pollTimer = null;
+    var lastStatus = null;
+
     document.addEventListener('DOMContentLoaded', function() {
+        // Populate restaurant name / logo from cart
         var restName = localStorage.getItem('cart_restaurant_name') || 'Restaurant';
         var restLogo = localStorage.getItem('cart_restaurant_logo') || '🍽️';
+        var logoEl = document.getElementById('confirm-res-logo');
+        var nameEl = document.getElementById('confirm-res-name');
+        if (logoEl) logoEl.textContent = restLogo;
+        if (nameEl) nameEl.textContent = restName;
 
-        var logoEl    = document.getElementById('confirm-res-logo');
-        var nameEl    = document.getElementById('confirm-res-name');
-        var prepEl    = document.getElementById('confirm-prep-desc');
-        var alertEl   = document.getElementById('confirm-alert-text');
-
-        if (logoEl)  logoEl.textContent  = restLogo;
-        if (nameEl)  nameEl.textContent  = restName;
-        if (prepEl)  prepEl.textContent  = restName + ' is currently preparing your food.';
-        if (alertEl) alertEl.textContent = 'Order confirmed! ' + restName + ' is currently preparing your order. A driver will be assigned shortly and you\'ll receive live tracking updates.';
+        // Start polling if we have an order ref
+        var orderRef = localStorage.getItem('last_order_ref');
+        if (orderRef) {
+            pollStatus(orderRef);
+            pollTimer = setInterval(function() { pollStatus(orderRef); }, 5000);
+        } else {
+            // No ref yet — show default "confirmed" state
+            updateStatusUI('confirmed', '', restName);
+        }
     });
+
+    function pollStatus(orderRef) {
+        fetch(API + '/api/orders/' + orderRef + '/status/', { credentials: 'include' })
+          .then(function(r) { return r.json(); })
+          .then(function(d) {
+              if (d.error) return;
+              if (d.status !== lastStatus) {
+                  lastStatus = d.status;
+                  updateStatusUI(d.status, d.driver_name || '', d.restaurant_name || '');
+              }
+              if (d.status === 'delivered' || d.status === 'cancelled') {
+                  clearInterval(pollTimer); pollTimer = null;
+              }
+          })
+          .catch(function() {});
+    }
+
+    // ── Step state helpers ────────────────────────────────────────────────
+    function setStep(n, state, iconContent) {
+        var step  = document.getElementById('step-'  + n);
+        var icon  = document.getElementById('icon-'  + n);
+        var title = document.getElementById('title-' + n);
+        if (!step) return;
+
+        // step container class
+        step.className  = 'timeline-step' + (state === 'done' ? ' done' : state === 'active' ? ' active' : '');
+        // icon class + content
+        icon.className  = 'step-icon ' + (state === 'done' ? 'done' : state === 'active' ? 'active' : 'pending');
+        if (iconContent !== undefined) icon.textContent = iconContent;
+        // title class
+        title.className = 'step-title' + (state === 'pending' ? ' pending' : '');
+    }
+
+    function setText(id, text) {
+        var el = document.getElementById(id);
+        if (el) el.textContent = text;
+    }
+
+    function showChatBtn() {
+        var ref = localStorage.getItem('last_order_ref') || orderRef;
+        if (!ref) return;
+        var wrap = document.getElementById('chat-btn-wrap');
+        var link = document.getElementById('chat-btn-link');
+        if (wrap && link) {
+            link.href = 'chat_screen.html?order_ref=' + encodeURIComponent(ref);
+            wrap.style.display = 'block';
+        }
+    }
+
+    // Keep a module-level orderRef for the chat button
+    var orderRef = localStorage.getItem('last_order_ref') || '';
+
+    // ── Main update function ─────────────────────────────────────────────
+    function updateStatusUI(status, driverName, restName) {
+        var rn = restName || localStorage.getItem('cart_restaurant_name') || 'Restaurant';
+        var dn = driverName || 'your driver';
+
+        if (status === 'confirmed') {
+            // Step 1 done, Step 2 active, 3-5 pending
+            setStep(1, 'done', '✓');
+            setStep(2, 'active', '🍽️');
+            setStep(3, 'pending', '🛵');
+            setStep(4, 'pending', '📍');
+            setStep(5, 'pending', '🎉');
+            setText('desc-2', rn + ' is currently preparing your food.');
+            setText('desc-3', 'A nearby driver will be assigned soon.');
+            setText('desc-4', 'Your driver will head to your location.');
+            setText('desc-5', 'Enjoy your meal!');
+            setText('live-banner', 'Live — Preparing Order');
+            setText('confirm-alert-text', 'Order confirmed! ' + rn + ' is preparing your order. A driver will be assigned shortly.');
+        }
+        else if (status === 'preparing') {
+            // Steps 1-2 done, Step 3 active
+            setStep(1, 'done', '✓');
+            setStep(2, 'done', '✓');
+            setStep(3, 'active', '🛵');
+            setStep(4, 'pending', '📍');
+            setStep(5, 'pending', '🎉');
+            setText('desc-3', driverName ? (driverName + ' is on the way to the restaurant.') : 'Driver is on the way to the restaurant.');
+            setText('desc-4', 'Your driver will head to your location after pickup.');
+            setText('desc-5', 'Enjoy your meal!');
+            setText('live-banner', 'Live — Driver Assigned 🛵');
+            setText('confirm-alert-text', (driverName ? driverName : 'A driver') + ' has been assigned and is heading to ' + rn + ' to pick up your order.');
+            showChatBtn();
+        }
+        else if (status === 'on_the_way') {
+            // Steps 1-3 done, Step 4 active
+            setStep(1, 'done', '✓');
+            setStep(2, 'done', '✓');
+            setStep(3, 'done', '✓');
+            setStep(4, 'active', '📍');
+            setStep(5, 'pending', '🎉');
+            setText('desc-4', (driverName ? driverName : 'Your driver') + ' has picked up your order and is on the way!');
+            setText('desc-5', 'Almost there — get ready!');
+            setText('live-banner', 'Live — Driver On The Way 🛵');
+            setText('confirm-alert-text', (driverName ? driverName : 'Your driver') + ' has your food and is heading to you. Hang tight!');
+            showChatBtn();
+            var addrEl = document.getElementById('strip-addr');
+            if (addrEl) {
+                var addr = localStorage.getItem('currentOrder');
+                try { addr = JSON.parse(addr).pin || addrEl.textContent; } catch(e) {}
+                addrEl.textContent = (typeof addr === 'string' ? addr : addrEl.textContent) + ' · Driver on the way!';
+            }
+        }
+        else if (status === 'delivered') {
+            // All 5 steps done
+            setStep(1, 'done', '✓');
+            setStep(2, 'done', '✓');
+            setStep(3, 'done', '✓');
+            setStep(4, 'done', '✓');
+            setStep(5, 'done', '✓');
+            setText('live-banner', 'Order Delivered! 🎉');
+            var head = document.getElementById('status-card-head');
+            if (head) head.style.background = '#16a34a';
+            var dot = document.getElementById('live-dot');
+            if (dot) dot.style.display = 'none';
+            setText('banner-h1', 'Your Order Has Been Delivered! 🎉');
+            setText('banner-p', 'Enjoy your meal! Thank you for ordering with DirkMhob.');
+            var check = document.getElementById('banner-check');
+            if (check) { check.textContent = '🎉'; check.style.background = 'rgba(255,255,255,0.3)'; }
+            setText('confirm-alert-text', 'Your order has been delivered. Enjoy your meal!');
+            // Remove any polling ref so refreshing doesn't keep polling
+            try { localStorage.removeItem('last_order_ref'); } catch(e) {}
+        }
+        else if (status === 'cancelled') {
+            setText('live-banner', 'Order Cancelled');
+            var head2 = document.getElementById('status-card-head');
+            if (head2) head2.style.background = '#dc2626';
+            setText('banner-h1', 'Order Cancelled');
+            setText('banner-p', 'Your order has been cancelled.');
+            setText('confirm-alert-text', 'This order was cancelled. Please place a new order.');
+            try { localStorage.removeItem('last_order_ref'); } catch(e) {}
+        }
+    }
 </script>
 </body>
 </html>

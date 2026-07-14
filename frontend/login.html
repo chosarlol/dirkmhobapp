@@ -78,7 +78,7 @@
   </main>
   <script src="auth.js"></script>
   <script>
-    var API = 'http://127.0.0.1:8000';
+    var API = (location.port==='5500'||location.port==='5501')?'http://127.0.0.1:8000':location.origin;
 
     /* If already logged in via localStorage, skip to home */
     if (DirkAuth.isLoggedIn()) {
@@ -120,6 +120,8 @@
           window.location.href = 'admin_dashboard.html';
         } else if (role === 'shop_owner') {
           window.location.href = 'shop_dashboard.html';
+        } else if (role === 'driver') {
+          window.location.href = 'driver_orders.html';
         } else {
           window.location.href = 'home_screen.html';
         }

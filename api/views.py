@@ -7,7 +7,7 @@ import json
 import re
 import time
 
-from .models import UserProfile, Restaurant, MenuItem, Order, OrderItem
+from .models import UserProfile, Restaurant, MenuItem, Order, OrderItem, ChatMessage
 
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
@@ -59,9 +59,17 @@ def admin_login_api(request):
     except json.JSONDecodeError:
         return _json({'error': 'Invalid JSON'}, 400)
 
-    user = authenticate(request,
-                        username=data.get('username', '').strip(),
-                        password=data.get('password', '').strip())
+    identifier = data.get('username', '').strip()
+    password   = data.get('password', '').strip()
+
+    # Support email-based login: look up the actual username first
+    if '@' in identifier:
+        try:
+            identifier = User.objects.get(email__iexact=identifier).username
+        except (User.DoesNotExist, User.MultipleObjectsReturned):
+            pass  # fall through — authenticate will fail and return the right error
+
+    user = authenticate(request, username=identifier, password=password)
     if not user:
         return _json({'error': 'Invalid credentials'}, 400)
 
@@ -152,6 +160,7 @@ def me_api(request):
     return _json({
         # New flat format (used by checkRole in HTML pages)
         'is_authenticated': True,
+        'id':       request.user.id,
         'role':     role,
         'username': request.user.username,
         'name':     request.user.get_full_name() or request.user.username,
@@ -227,6 +236,14 @@ def admin_user_action(request, user_id, action):
         profile.is_banned = False
         profile.save()
         return _json({'status': 'unbanned'})
+    if action == 'set_driver':
+        profile.role = 'driver'
+        profile.save()
+        return _json({'status': 'set as driver'})
+    if action == 'set_customer':
+        profile.role = 'customer'
+        profile.save()
+        return _json({'status': 'set as customer'})
     return _json({'error': 'Unknown action'}, 400)
 
 
@@ -500,23 +517,56 @@ def submit_order(request):
     if not items_data:
         return _json({'error': 'No items in order'}, 400)
 
-    order_ref = data.get('id') or f'ORD-{int(time.time() * 1000)}'
-    if Order.objects.filter(order_ref=order_ref).exists():
-        return _json({'status': 'already_saved'})
+    # Use the client-supplied id if it looks like a valid ref (starts with ORD-)
+    # so the customer can track the order via localStorage from order_comfirm.html.
+    # Fall back to a server-generated ref when the client omits it.
+    client_id = (data.get('id') or '').strip()
+    if client_id.startswith('ORD-') and not Order.objects.filter(order_ref=client_id).exists():
+        order_ref = client_id
+    else:
+        order_ref = f'ORD-{int(time.time() * 1000)}'
+
+    # Customer — prefer the authenticated session over client-supplied strings
+    if request.user.is_authenticated:
+        customer_name  = request.user.get_full_name() or request.user.username
+        customer_email = request.user.email
+    else:
+        customer_name  = (data.get('customerName') or data.get('customer_name') or '').strip()
+        customer_email = (data.get('customerEmail') or data.get('customer_email') or '').strip()
+
+    # Restaurant name — pull from items or top-level key
+    restaurant_name = (
+        data.get('restaurantName') or
+        data.get('restaurant_name') or
+        (items_data[0].get('restaurantName', '') if items_data else '')
+    ).strip()
+
+    # Delivery fee — look up from the approved Restaurant record for accuracy
+    delivery_fee = float(data.get('deliveryFee') or data.get('delivery_fee') or 2.50)
+    if restaurant_name:
+        try:
+            r = Restaurant.objects.get(name=restaurant_name, is_approved=True)
+            delivery_fee = float(r.delivery_fee)
+        except (Restaurant.DoesNotExist, Restaurant.MultipleObjectsReturned):
+            pass  # keep the client-supplied value
+
+    delivery_address = (data.get('deliveryAddress') or data.get('delivery_address') or '').strip()
+    payment_method   = (data.get('paymentMethod')   or data.get('payment_method')   or 'khqr').strip()
 
     order = Order.objects.create(
         order_ref        = order_ref,
-        customer_name    = data.get('customerName', ''),
-        customer_email   = data.get('customerEmail', ''),
-        restaurant_name  = items_data[0].get('restaurantName', '') if items_data else '',
+        customer_name    = customer_name,
+        customer_email   = customer_email,
+        restaurant_name  = restaurant_name,
         subtotal         = float(data.get('subtotal', 0)),
-        delivery_fee     = float(data.get('deliveryFee', 2.50)),
+        delivery_fee     = delivery_fee,
         discount         = float(data.get('discount', 0)),
         total            = float(data.get('total', 0)),
-        promo_code       = data.get('promoCode', '') or '',
-        payment_method   = data.get('paymentMethod', 'khqr'),
+        promo_code       = (data.get('promoCode') or data.get('promo_code') or ''),
+        payment_method   = payment_method,
         status           = 'confirmed',
-        delivery_address = data.get('deliveryAddress', ''),
+        delivery_address = delivery_address,
+        # assigned_driver stays NULL — drivers pick this up via driver_orders endpoint
     )
     for it in items_data:
         OrderItem.objects.create(
@@ -525,9 +575,9 @@ def submit_order(request):
             price           = float(it.get('price', 0)),
             quantity        = int(it.get('quantity', 1)),
             emoji           = it.get('emoji', '🍽️'),
-            restaurant_name = it.get('restaurantName', ''),
+            restaurant_name = it.get('restaurantName', '') or restaurant_name,
         )
-    return _json({'status': 'saved', 'db_id': order.id}, 201)
+    return _json({'status': 'saved', 'db_id': order.id, 'order_ref': order.order_ref}, 201)
 
 
 # ── Public: approved restaurant list (for home_screen.html) ────────────────────
@@ -742,3 +792,305 @@ def restaurant_approve(request, restaurant_id):
     r.status = 'active'
     r.save()
     return _json({'status': 'approved', 'restaurant': r.name, 'is_approved': True})
+
+
+# ── Driver ─────────────────────────────────────────────────────────────────────
+
+@csrf_exempt
+def driver_signup_api(request):
+    """POST /api/driver/signup/ — register a new driver account and log them in."""
+    if request.method != 'POST':
+        return _json({'error': 'POST only'}, 405)
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return _json({'error': 'Invalid JSON'}, 400)
+
+    name     = data.get('name', '').strip()
+    email    = data.get('email', '').strip().lower()
+    password = data.get('password', '')
+    phone    = data.get('phone', '').strip()
+
+    if not name or not email or not password:
+        return _json({'error': 'Name, email, and password are required'}, 400)
+    if len(password) < 6:
+        return _json({'error': 'Password must be at least 6 characters'}, 400)
+    if User.objects.filter(email__iexact=email).exists():
+        return _json({'error': 'An account with this email already exists'}, 400)
+
+    base     = re.sub(r'[^a-z0-9_]', '', email.split('@')[0].lower()) or 'driver'
+    username = base
+    counter  = 1
+    while User.objects.filter(username=username).exists():
+        username = f'{base}{counter}'
+        counter += 1
+
+    name_parts = name.split()
+    user = User.objects.create_user(
+        username   = username,
+        email      = email,
+        password   = password,
+        first_name = name_parts[0],
+        last_name  = ' '.join(name_parts[1:]),
+    )
+    UserProfile.objects.create(user=user, role='driver', phone=phone)
+
+    login(request, user)
+    return _json({
+        'status':   'created',
+        'username': username,
+        'name':     name,
+        'email':    email,
+        'role':     'driver',
+    }, 201)
+
+
+def driver_orders(request):
+    """GET /api/driver/orders/ — new unassigned orders + this driver's active/completed counts."""
+    ok, err = _check_auth(request, ('driver', 'superadmin'))
+    if not ok:
+        return err
+    if request.method != 'GET':
+        return _json({'error': 'GET only'}, 405)
+
+    from django.utils import timezone
+
+    rejected_ids = request.session.get('driver_rejected_orders', [])
+    today = timezone.now().date()
+
+    def _fmt(o):
+        return {
+            'id':                o.id,
+            'order_ref':         o.order_ref,
+            'restaurant_name':   o.restaurant_name,
+            'customer_name':     o.customer_name or 'Customer',
+            'delivery_address':  o.delivery_address or '—',
+            'delivery_fee':      float(o.delivery_fee),
+            'payment_method':    o.payment_method,
+            'status':            o.status,
+            'distance_km':       round(((o.id % 7) + 1), 1),
+            'estimated_minutes': (o.id % 12) + 8,
+            'created_at':        o.created_at.strftime('%Y-%m-%dT%H:%M:%S'),
+        }
+
+    # Only today's confirmed orders with no driver assigned
+    new_orders = Order.objects.filter(
+        status='confirmed',
+        assigned_driver__isnull=True,
+        created_at__date=today,
+    ).exclude(id__in=rejected_ids).order_by('-created_at')[:30]
+
+    # Orders this driver has accepted (preparing = picking up, on_the_way/delivering = en route)
+    active_orders = Order.objects.filter(
+        assigned_driver=request.user,
+        status__in=['preparing', 'on_the_way', 'delivering'],
+    ).order_by('-created_at')
+
+    completed_count = Order.objects.filter(
+        assigned_driver=request.user,
+        status='delivered',
+    ).count()
+
+    return _json({
+        'new_orders':      [_fmt(o) for o in new_orders],
+        'active_orders':   [_fmt(o) for o in active_orders],
+        'completed_count': completed_count,
+    })
+
+
+@csrf_exempt
+def driver_order_action(request, order_id, action):
+    """POST /api/driver/orders/<id>/accept|reject|complete/"""
+    ok, err = _check_auth(request, ('driver', 'superadmin'))
+    if not ok:
+        return err
+    if request.method != 'POST':
+        return _json({'error': 'POST only'}, 405)
+    try:
+        order = Order.objects.get(pk=order_id)
+    except Order.DoesNotExist:
+        return _json({'error': 'Order not found'}, 404)
+
+    if action == 'accept':
+        if order.assigned_driver is not None:
+            return _json({'error': 'Order already taken'}, 409)
+        order.assigned_driver = request.user
+        order.status = 'preparing'
+        order.save()
+        return _json({
+            'status':    'accepted',
+            'order_ref': order.order_ref,
+            'order': {
+                'id':                order.id,
+                'order_ref':         order.order_ref,
+                'restaurant_name':   order.restaurant_name,
+                'customer_name':     order.customer_name or 'Customer',
+                'delivery_address':  order.delivery_address or '—',
+                'delivery_fee':      float(order.delivery_fee),
+                'payment_method':    order.payment_method,
+                'status':            'preparing',
+                'distance_km':       round(((order.id % 7) + 1), 1),
+                'estimated_minutes': (order.id % 12) + 8,
+                'created_at':        order.created_at.strftime('%Y-%m-%dT%H:%M:%S'),
+            },
+        })
+
+    if action == 'pickup':
+        if order.assigned_driver != request.user and not request.user.is_superuser:
+            return _json({'error': 'Not your order'}, 403)
+        order.status = 'on_the_way'
+        order.save()
+        return _json({'status': 'picked_up'})
+
+    if action == 'reject':
+        rejected = request.session.get('driver_rejected_orders', [])
+        if order_id not in rejected:
+            rejected.append(order_id)
+            request.session['driver_rejected_orders'] = rejected
+            request.session.modified = True
+        return _json({'status': 'rejected'})
+
+    if action in ('complete', 'delivered'):
+        if order.assigned_driver != request.user and not request.user.is_superuser:
+            return _json({'error': 'Not your order'}, 403)
+        order.status = 'delivered'
+        order.save()
+        return _json({'status': 'completed', 'delivery_fee': float(order.delivery_fee)})
+
+    return _json({'error': 'Unknown action'}, 400)
+
+
+def driver_earnings(request):
+    """GET /api/driver/earnings/ — earnings breakdown for this driver."""
+    ok, err = _check_auth(request, ('driver', 'superadmin'))
+    if not ok:
+        return err
+    if request.method != 'GET':
+        return _json({'error': 'GET only'}, 405)
+
+    from django.utils import timezone
+    from datetime import timedelta
+
+    now         = timezone.now()
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    week_start  = today_start - timedelta(days=now.weekday())
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+    delivered = Order.objects.filter(assigned_driver=request.user, status='delivered')
+
+    def _earn(qs):
+        return float(qs.aggregate(s=Sum('delivery_fee'))['s'] or 0)
+
+    today_qs = delivered.filter(created_at__gte=today_start)
+    week_qs  = delivered.filter(created_at__gte=week_start)
+    month_qs = delivered.filter(created_at__gte=month_start)
+
+    recent = []
+    for o in delivered.order_by('-created_at')[:50]:
+        recent.append({
+            'order_ref':        o.order_ref,
+            'restaurant_name':  o.restaurant_name,
+            'customer_name':    o.customer_name or 'Customer',
+            'delivery_address': o.delivery_address or '—',
+            'delivery_fee':     float(o.delivery_fee),
+            'payment_method':   o.payment_method or '—',
+            'completed_at':     o.created_at.strftime('%Y-%m-%dT%H:%M:%S'),
+        })
+
+    return _json({
+        'today':  {'earnings': _earn(today_qs),  'count': today_qs.count()},
+        'week':   {'earnings': _earn(week_qs),   'count': week_qs.count()},
+        'month':  {'earnings': _earn(month_qs),  'count': month_qs.count()},
+        'recent': recent,
+    })
+
+
+# ── Customer: live order status (polled by order_comfirm.html) ─────────────────
+
+def order_status(request, order_ref):
+    """GET /api/orders/<order_ref>/status/ — returns current status for polling."""
+    try:
+        order = Order.objects.get(order_ref=order_ref)
+    except Order.DoesNotExist:
+        return _json({'error': 'Order not found'}, 404)
+
+    driver_name = ''
+    if order.assigned_driver:
+        driver_name = order.assigned_driver.get_full_name() or order.assigned_driver.username
+
+    # Translate internal status to UI-friendly value
+    status_map = {
+        'confirmed':  'confirmed',
+        'preparing':  'preparing',
+        'on_the_way': 'on_the_way',
+        'delivering': 'on_the_way',   # legacy alias
+        'delivered':  'delivered',
+        'cancelled':  'cancelled',
+    }
+    ui_status = status_map.get(order.status, order.status)
+
+    return _json({
+        'status':           ui_status,
+        'driver_name':      driver_name,
+        'restaurant_name':  order.restaurant_name,
+        'delivery_address': order.delivery_address or '',
+        'order_ref':        order.order_ref,
+    })
+
+
+# ── Chat ────────────────────────────────────────────────────────────────────────
+
+@csrf_exempt
+def chat_messages(request, order_ref):
+    """GET /api/chat/<order_ref>/?since_id=N  — poll new messages
+       POST /api/chat/<order_ref>/             — send a message"""
+    if not request.user.is_authenticated:
+        return _json({'error': 'Authentication required'}, 401)
+
+    try:
+        order = Order.objects.get(order_ref=order_ref)
+    except Order.DoesNotExist:
+        return _json({'error': 'Order not found'}, 404)
+
+    driver_name = ''
+    if order.assigned_driver:
+        driver_name = order.assigned_driver.get_full_name() or order.assigned_driver.username
+
+    def _fmt(m):
+        is_driver = order.assigned_driver and m.sender_id == order.assigned_driver_id
+        return {
+            'id':          m.id,
+            'sender_id':   m.sender_id,
+            'sender_name': m.sender.get_full_name() or m.sender.username,
+            'is_driver':   is_driver,
+            'body':        m.body,
+            'created_at':  m.created_at.strftime('%H:%M'),
+        }
+
+    if request.method == 'GET':
+        since_id = int(request.GET.get('since_id', 0))
+        qs = order.messages.select_related('sender')
+        if since_id:
+            qs = qs.filter(id__gt=since_id)
+        return _json({
+            'messages':      [_fmt(m) for m in qs],
+            'driver_name':   driver_name,
+            'customer_name': order.customer_name or '',
+            'order_ref':     order.order_ref,
+            'restaurant':    order.restaurant_name,
+            'status':        order.status,
+            'delivery_addr': order.delivery_address or '',
+        })
+
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            return _json({'error': 'Invalid JSON'}, 400)
+        body = (data.get('body') or '').strip()
+        if not body:
+            return _json({'error': 'Empty message'}, 400)
+        msg = ChatMessage.objects.create(order=order, sender=request.user, body=body)
+        return _json(_fmt(msg), 201)
+
+    return _json({'error': 'GET or POST only'}, 405)

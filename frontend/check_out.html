@@ -695,7 +695,8 @@
             }
         } catch(e) {}
         /* Fall back to /api/me/ */
-        fetch('http://127.0.0.1:8000/api/me/', { credentials: 'include' })
+        var _API = (location.port==='5500'||location.port==='5501')?'http://127.0.0.1:8000':location.origin;
+        fetch(_API + '/api/me/', { credentials: 'include' })
             .then(function(r) { return r.json(); })
             .then(function(data) {
                 var name = data.name || (data.first_name ? (data.first_name + (data.last_name ? ' ' + data.last_name : '')) : '');

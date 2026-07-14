@@ -1,0 +1,417 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DirkMhob | Driver Profile</title>
+  <style>
+    :root{--primary:#1a73e8;--primary-dark:#1558c0;--success:#22c55e;--danger:#ef4444;--bg:#f0f2f5;--surface:#fff;--border:#e2e8f0;--text:#1e293b;--muted:#64748b;}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);min-height:100vh;color:var(--text);}
+    a{color:inherit;text-decoration:none;}
+
+    /* ── HEADER ── */
+    .site-header{background:var(--primary);color:#fff;position:sticky;top:0;z-index:100;box-shadow:0 2px 16px rgba(26,115,232,.35);}
+    .header-inner{display:flex;align-items:center;gap:1rem;padding:0 1.5rem;height:64px;}
+    .brand{display:flex;align-items:center;gap:.5rem;flex-shrink:0;}
+    .brand-mark{width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.9rem;}
+    .brand-name{font-weight:800;font-size:1.05rem;}
+    .brand-sep{opacity:.4;margin:0 3px;}
+    .portal-lbl{font-size:.85rem;opacity:.8;font-weight:600;}
+    .header-spacer{flex:1;}
+    .top-nav{display:flex;gap:2px;}
+    .nav-link{padding:7px 14px;border-radius:8px;font-size:.85rem;font-weight:600;color:rgba(255,255,255,.72);transition:background .15s,color .15s;}
+    .nav-link:hover{background:rgba(255,255,255,.12);color:#fff;}
+    .nav-link.active{background:rgba(255,255,255,.22);color:#fff;}
+    .user-chip{display:flex;align-items:center;gap:7px;font-size:.85rem;font-weight:600;}
+    .avatar-sm{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.25);border:2px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.75rem;}
+    .logout-btn{padding:7px 14px;border-radius:8px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.85);font-size:.82rem;font-weight:600;cursor:pointer;transition:background .15s;}
+    .logout-btn:hover{background:rgba(255,255,255,.2);color:#fff;}
+
+    /* ── PAGE BODY ── */
+    .page-body{display:grid;grid-template-columns:320px 1fr;min-height:calc(100vh - 64px);align-items:start;}
+
+    /* ── LEFT: Profile card ── */
+    .left-col{padding:1.5rem 1.25rem;display:flex;flex-direction:column;gap:1rem;background:#f8fafc;border-right:1px solid var(--border);min-height:calc(100vh - 64px);}
+    .profile-card{background:var(--surface);border-radius:16px;padding:1.75rem 1.5rem;border:1px solid var(--border);box-shadow:0 1px 8px rgba(0,0,0,.05);text-align:center;}
+    .avatar-lg{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--primary),#60a5fa);color:#fff;font-size:2rem;font-weight:800;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;border:3px solid rgba(26,115,232,.2);}
+    .profile-name{font-size:1.15rem;font-weight:800;margin-bottom:.2rem;}
+    .profile-email{font-size:.83rem;color:var(--muted);margin-bottom:.75rem;word-break:break-all;}
+    .profile-stats{display:flex;justify-content:center;gap:1.5rem;padding:.75rem 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin:.75rem 0;}
+    .pstat{text-align:center;}
+    .pstat-v{font-size:1.2rem;font-weight:800;color:var(--text);}
+    .pstat-l{font-size:.7rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-top:2px;}
+    .rating-row{display:flex;align-items:center;justify-content:center;gap:.35rem;font-size:.88rem;color:var(--muted);margin:.5rem 0;}
+    .stars{color:#f59e0b;font-size:1rem;}
+    .profile-btn{width:100%;padding:.7rem;border-radius:10px;font-weight:700;font-size:.87rem;cursor:pointer;transition:all .15s;margin-top:.5rem;}
+    .btn-edit{background:#eff6ff;color:var(--primary);border:1.5px solid #bfdbfe;}
+    .btn-edit:hover{background:var(--primary);color:#fff;}
+    .btn-logout{background:#fff0f0;color:var(--danger);border:1.5px solid #fecaca;}
+    .btn-logout:hover{background:var(--danger);color:#fff;}
+
+    /* Edit modal (inline overlay) */
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:center;justify-content:center;}
+    .modal-overlay.open{display:flex;}
+    .modal{background:var(--surface);border-radius:20px;padding:2rem;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.2);}
+    .modal h3{font-size:1.1rem;font-weight:800;margin-bottom:1.25rem;}
+    .mfield{margin-bottom:.9rem;}
+    .mfield label{display:block;font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.35rem;}
+    .mfield input{width:100%;padding:.7rem 1rem;border:1.5px solid var(--border);border-radius:10px;font:inherit;font-size:.92rem;outline:none;transition:border-color .2s;}
+    .mfield input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(26,115,232,.1);}
+    .modal-btns{display:flex;gap:.75rem;margin-top:1.25rem;}
+    .mbtn{flex:1;padding:.7rem;border-radius:10px;font-weight:700;font-size:.87rem;cursor:pointer;border:none;}
+    .mbtn-cancel{background:#f1f5f9;color:var(--text);}
+    .mbtn-save{background:var(--primary);color:#fff;}
+    .mbtn-save:hover{background:var(--primary-dark);}
+
+    /* ── RIGHT: Settings panels ── */
+    .right-col{padding:1.5rem;}
+    .panel{background:var(--surface);border-radius:16px;padding:1.5rem;border:1px solid var(--border);box-shadow:0 1px 8px rgba(0,0,0,.05);margin-bottom:1.25rem;}
+    .panel-title{font-size:.88rem;font-weight:800;color:var(--text);margin-bottom:.25rem;}
+    .panel-sub{font-size:.82rem;color:var(--muted);margin-bottom:1.25rem;}
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+    .field{margin-bottom:.9rem;}
+    .field label{display:block;font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.35rem;}
+    .field select,.field input{width:100%;padding:.72rem 1rem;border:1.5px solid var(--border);border-radius:10px;font:inherit;font-size:.92rem;outline:none;background:#f9fbff;color:var(--text);transition:border-color .2s,box-shadow .2s;}
+    .field select:focus,.field input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(26,115,232,.1);}
+    .save-btn{padding:.72rem 2rem;background:var(--primary);color:#fff;border:none;border-radius:10px;font-weight:700;font-size:.87rem;cursor:pointer;transition:background .15s;}
+    .save-btn:hover{background:var(--primary-dark);}
+    .save-banner{display:none;background:#dcfce7;color:#15803d;border:1px solid #bbf7d0;border-radius:8px;padding:.55rem 1rem;font-size:.85rem;font-weight:600;margin-top:.75rem;}
+    .save-banner.show{display:block;}
+
+    /* FAQ accordion */
+    .faq-item{border-bottom:1px solid var(--border);}
+    .faq-item:last-child{border-bottom:none;}
+    .faq-q{padding:.75rem 0;display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-weight:600;font-size:.88rem;gap:.5rem;}
+    .faq-q:hover{color:var(--primary);}
+    .faq-arrow{flex-shrink:0;font-size:.75rem;color:var(--muted);transition:transform .2s;}
+    .faq-a{display:none;padding:0 0 .75rem;font-size:.85rem;color:var(--muted);line-height:1.6;}
+    .faq-item.open .faq-a{display:block;}
+    .faq-item.open .faq-arrow{transform:rotate(180deg);}
+
+    /* Account settings */
+    .settings-row{display:flex;justify-content:space-between;align-items:center;padding:.75rem 0;border-bottom:1px solid var(--border);}
+    .settings-row:last-child{border-bottom:none;}
+    .settings-label{font-size:.88rem;font-weight:600;}
+    .settings-desc{font-size:.78rem;color:var(--muted);margin-top:2px;}
+    .settings-btn{padding:.5rem 1.25rem;border-radius:8px;font-weight:600;font-size:.82rem;cursor:pointer;border:1.5px solid var(--border);background:#f8fafc;color:var(--text);transition:all .15s;white-space:nowrap;}
+    .settings-btn:hover{border-color:var(--primary);color:var(--primary);}
+    .settings-btn.danger:hover{border-color:var(--danger);color:var(--danger);background:#fff0f0;}
+
+    /* Change password panel (inline) */
+    .cpw-section{display:none;border-top:1px solid var(--border);padding-top:1rem;margin-top:.5rem;}
+    .cpw-section.show{display:block;}
+    .err-banner{background:#fff0f0;color:var(--danger);border:1px solid #fecaca;border-radius:8px;padding:.55rem 1rem;font-size:.85rem;font-weight:600;margin-bottom:.75rem;display:none;}
+    .err-banner.show{display:block;}
+
+    @media(max-width:900px){.page-body{grid-template-columns:1fr;}.left-col{min-height:auto;border-right:none;border-bottom:1px solid var(--border);}.form-row{grid-template-columns:1fr;}.portal-lbl{display:none;}}
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="site-header">
+  <div class="header-inner">
+    <div class="brand">
+      <div class="brand-mark">DM</div>
+      <span class="brand-name">DirkMhob</span>
+      <span class="brand-sep">/</span>
+      <span class="portal-lbl">Driver Portal</span>
+    </div>
+    <div class="header-spacer"></div>
+    <nav class="top-nav">
+      <a class="nav-link" href="driver_orders.html">📦 Orders</a>
+      <a class="nav-link" href="driver_earning.html">💰 Earnings</a>
+      <a class="nav-link active" href="driver_profile.html">👤 Profile</a>
+    </nav>
+    <div class="user-chip">
+      <div class="avatar-sm" id="header-avatar">?</div>
+      <span id="header-name">Driver</span>
+    </div>
+    <button class="logout-btn" onclick="doLogout()">Logout</button>
+  </div>
+</header>
+
+<!-- PAGE BODY -->
+<div class="page-body">
+
+  <!-- LEFT: Profile card -->
+  <div class="left-col">
+    <div class="profile-card">
+      <div class="avatar-lg" id="avatar-big">?</div>
+      <div class="profile-name" id="prof-name">Loading…</div>
+      <div class="profile-email" id="prof-email"></div>
+      <div class="rating-row"><span class="stars">⭐⭐⭐⭐⭐</span> <span>4.8 rating</span></div>
+      <div class="profile-stats">
+        <div class="pstat"><div class="pstat-v" id="prof-deliveries">—</div><div class="pstat-l">Deliveries</div></div>
+        <div class="pstat"><div class="pstat-v" id="prof-today">$0</div><div class="pstat-l">Today</div></div>
+        <div class="pstat"><div class="pstat-v" id="prof-month">$0</div><div class="pstat-l">Month</div></div>
+      </div>
+      <button class="profile-btn btn-edit" onclick="openEditModal()">✏️ Edit Profile</button>
+      <button class="profile-btn btn-logout" onclick="doLogout()" style="margin-top:.5rem;">🚪 Logout</button>
+    </div>
+  </div>
+
+  <!-- RIGHT: Settings panels -->
+  <div class="right-col">
+
+    <!-- Vehicle Information -->
+    <div class="panel">
+      <div class="panel-title">🏍️ Vehicle Information</div>
+      <div class="panel-sub">This information helps restaurants and customers identify you.</div>
+      <div class="form-row">
+        <div class="field">
+          <label>Vehicle Type</label>
+          <select id="vehicle-type">
+            <option value="">— Select Type —</option>
+            <option value="Motorbike">Motorbike</option>
+            <option value="Car">Car</option>
+            <option value="Bicycle">Bicycle</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Plate Number</label>
+          <input type="text" id="plate-number" placeholder="e.g. PP-1234" />
+        </div>
+      </div>
+      <button class="save-btn" onclick="saveVehicle()">Save Changes</button>
+      <div class="save-banner" id="vehicle-banner">✓ Vehicle info saved!</div>
+    </div>
+
+    <!-- Help & FAQ -->
+    <div class="panel">
+      <div class="panel-title">❓ Help &amp; FAQ</div>
+      <div class="panel-sub">Common questions about delivering with DirkMhob.</div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">How do I accept an order? <span class="faq-arrow">▼</span></div>
+        <div class="faq-a">Go to the Orders tab. When you're online, new orders appear on the left. Click "Accept" to take an order — you'll see the route on the map.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">How are delivery fees calculated? <span class="faq-arrow">▼</span></div>
+        <div class="faq-a">Each order has a fixed delivery fee set by the restaurant. You earn 100% of that fee. Track your totals on the Earnings page.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">What happens if I reject an order? <span class="faq-arrow">▼</span></div>
+        <div class="faq-a">Rejected orders disappear from your list and become available to other drivers. There's no penalty — just stay online to keep receiving orders.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">How do I mark an order as delivered? <span class="faq-arrow">▼</span></div>
+        <div class="faq-a">In the Orders tab under Active Deliveries, click "Mark as Delivered ✓" once you've handed over the food to the customer.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Who do I contact for support? <span class="faq-arrow">▼</span></div>
+        <div class="faq-a">Email driver-support@dirkmhob.com or reach us at +855 23 123 456 (Mon–Fri 8am–6pm). For urgent delivery issues, call the restaurant directly.</div>
+      </div>
+    </div>
+
+    <!-- Account Settings -->
+    <div class="panel">
+      <div class="panel-title">⚙️ Account Settings</div>
+      <div class="panel-sub">Manage your driver account security and preferences.</div>
+
+      <div class="settings-row">
+        <div>
+          <div class="settings-label">Change Password</div>
+          <div class="settings-desc">Update your login password</div>
+        </div>
+        <button class="settings-btn" onclick="toggleCpw()">Change Password</button>
+      </div>
+
+      <!-- Inline change password form -->
+      <div class="cpw-section" id="cpw-section">
+        <div class="err-banner" id="cpw-err"></div>
+        <div class="form-row">
+          <div class="field">
+            <label>Current Password</label>
+            <input type="password" id="cpw-current" placeholder="Current password" />
+          </div>
+          <div class="field">
+            <label>New Password</label>
+            <input type="password" id="cpw-new" placeholder="New password (min 6 chars)" />
+          </div>
+        </div>
+        <div class="field" style="max-width:50%;">
+          <label>Confirm New Password</label>
+          <input type="password" id="cpw-confirm" placeholder="Repeat new password" />
+        </div>
+        <button class="save-btn" onclick="changePassword()">Update Password</button>
+        <div class="save-banner" id="cpw-banner" style="margin-top:.75rem;">✓ Password changed!</div>
+      </div>
+
+      <div class="settings-row">
+        <div>
+          <div class="settings-label">Driver Status</div>
+          <div class="settings-desc">Your role is managed by an administrator</div>
+        </div>
+        <span style="font-size:.82rem;color:#16a34a;font-weight:700;background:#dcfce7;padding:4px 12px;border-radius:999px;">🛵 Active Driver</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Edit Profile Modal -->
+<div class="modal-overlay" id="edit-modal">
+  <div class="modal">
+    <h3>Edit Profile</h3>
+    <div class="mfield">
+      <label>Display Name</label>
+      <input type="text" id="edit-name" placeholder="Your name" />
+    </div>
+    <div class="mfield">
+      <label>Email</label>
+      <input type="email" id="edit-email" placeholder="you@example.com" />
+    </div>
+    <div class="modal-btns">
+      <button class="mbtn mbtn-cancel" onclick="closeEditModal()">Cancel</button>
+      <button class="mbtn mbtn-save" onclick="saveProfile()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  var API = (location.port==='5500'||location.port==='5501')?'http://127.0.0.1:8000':location.origin;
+  var currentUser = null;
+
+  /* ── Auth guard ── */
+  fetch(API + '/api/me/', { credentials: 'include' })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (!d.is_authenticated || d.role !== 'driver') {
+        window.location.href = 'driver_login.html#denied';
+        return;
+      }
+      currentUser = d;
+      var name = d.name || d.username || 'Driver';
+      var email = d.email || '';
+      var initials = name.split(' ').map(function(w){ return w[0]; }).join('').toUpperCase().slice(0, 2);
+
+      document.getElementById('header-name').textContent  = name;
+      document.getElementById('header-avatar').textContent = initials;
+      document.getElementById('avatar-big').textContent    = initials;
+      document.getElementById('prof-name').textContent     = name;
+      document.getElementById('prof-email').textContent    = email;
+      document.getElementById('edit-name').value           = name;
+      document.getElementById('edit-email').value          = email;
+
+      loadVehicleFromStorage();
+      loadEarningsSummary();
+    })
+    .catch(function(){ window.location.href = 'driver_login.html#denied'; });
+
+  function loadVehicleFromStorage() {
+    var vt = localStorage.getItem('driver_vehicle_type') || '';
+    var pn = localStorage.getItem('driver_plate') || '';
+    var sel = document.getElementById('vehicle-type');
+    for (var i = 0; i < sel.options.length; i++) {
+      if (sel.options[i].value === vt) { sel.selectedIndex = i; break; }
+    }
+    document.getElementById('plate-number').value = pn;
+  }
+
+  function loadEarningsSummary() {
+    fetch(API + '/api/driver/earnings/', { credentials: 'include' })
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        document.getElementById('prof-deliveries').textContent = (d.today && d.today.count != null ? (d.month && d.month.count) : 0) || (d.month && d.month.count) || 0;
+        document.getElementById('prof-today').textContent  = '$' + ((d.today && d.today.earnings) || 0).toFixed(0);
+        document.getElementById('prof-month').textContent  = '$' + ((d.month && d.month.earnings) || 0).toFixed(0);
+      })
+      .catch(function(){});
+  }
+
+  /* ── Vehicle ── */
+  function saveVehicle() {
+    var vt = document.getElementById('vehicle-type').value;
+    var pn = document.getElementById('plate-number').value.trim();
+    if (vt) localStorage.setItem('driver_vehicle_type', vt);
+    if (pn) localStorage.setItem('driver_plate', pn);
+    var banner = document.getElementById('vehicle-banner');
+    banner.classList.add('show');
+    setTimeout(function(){ banner.classList.remove('show'); }, 2500);
+  }
+
+  /* ── Edit profile modal ── */
+  function openEditModal() {
+    document.getElementById('edit-modal').classList.add('open');
+  }
+  function closeEditModal() {
+    document.getElementById('edit-modal').classList.remove('open');
+  }
+  function saveProfile() {
+    var name  = document.getElementById('edit-name').value.trim();
+    var email = document.getElementById('edit-email').value.trim();
+    if (!name) return;
+    document.getElementById('prof-name').textContent    = name;
+    document.getElementById('prof-email').textContent   = email;
+    document.getElementById('header-name').textContent  = name;
+    var initials = name.split(' ').map(function(w){ return w[0]; }).join('').toUpperCase().slice(0, 2);
+    document.getElementById('avatar-big').textContent    = initials;
+    document.getElementById('header-avatar').textContent = initials;
+    try {
+      var u = JSON.parse(localStorage.getItem('dirkmhob_user') || '{}');
+      u.name  = name;
+      u.email = email;
+      localStorage.setItem('dirkmhob_user', JSON.stringify(u));
+    } catch(e) {}
+    closeEditModal();
+  }
+  /* Close modal on overlay click */
+  document.getElementById('edit-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeEditModal();
+  });
+
+  /* ── FAQ toggle ── */
+  function toggleFaq(el) {
+    var item = el.parentElement;
+    item.classList.toggle('open');
+  }
+
+  /* ── Change password ── */
+  function toggleCpw() {
+    var sec = document.getElementById('cpw-section');
+    sec.classList.toggle('show');
+  }
+
+  function changePassword() {
+    var cur     = document.getElementById('cpw-current').value;
+    var nw      = document.getElementById('cpw-new').value;
+    var confirm = document.getElementById('cpw-confirm').value;
+    var err     = document.getElementById('cpw-err');
+    var banner  = document.getElementById('cpw-banner');
+    err.classList.remove('show');
+    banner.classList.remove('show');
+
+    if (!cur || !nw || !confirm) {
+      err.textContent = 'All fields are required.';
+      err.classList.add('show');
+      return;
+    }
+    if (nw.length < 6) {
+      err.textContent = 'New password must be at least 6 characters.';
+      err.classList.add('show');
+      return;
+    }
+    if (nw !== confirm) {
+      err.textContent = 'New passwords do not match.';
+      err.classList.add('show');
+      return;
+    }
+    banner.classList.add('show');
+    document.getElementById('cpw-current').value = '';
+    document.getElementById('cpw-new').value     = '';
+    document.getElementById('cpw-confirm').value = '';
+    setTimeout(function(){ banner.classList.remove('show'); }, 3000);
+  }
+
+  /* ── Logout ── */
+  function doLogout() {
+    fetch(API + '/api/logout/', { method: 'POST', credentials: 'include' })
+      .finally(function(){
+        try { localStorage.removeItem('dirkmhob_user'); } catch(e) {}
+        window.location.href = 'driver_login.html';
+      });
+  }
+</script>
+</body>
+</html>

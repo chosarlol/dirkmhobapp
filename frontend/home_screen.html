@@ -993,14 +993,14 @@
     <script>
         (function () {
             var CATEGORIES = [
-                { icon: '🥢', name: 'Asian',     desc: 'Bold flavors and comfort meals',      href: 'asian_dish.html'  },
-                { icon: '🍜', name: 'Khmer',     desc: 'Traditional favorites made fresh',    href: 'khmer_dish.html'  },
-                { icon: '☕', name: 'Coffee',    desc: 'Warm brews and sweet treats',         href: 'coffee_dish.html' },
-                { icon: '🥐', name: 'Pastry',    desc: 'Freshly baked delights',              href: 'pastry_dish.html' },
-                { icon: '🍔', name: 'Fast Food', desc: 'Quick bites for busy days',           href: 'search_screen.html' },
-                { icon: '🍕', name: 'Pizza',     desc: 'Hot and cheesy favorites',            href: 'search_screen.html' },
-                { icon: '🍟', name: 'Burgers',   desc: 'Classic comfort food',                href: 'search_screen.html' },
-                { icon: '🍰', name: 'Desserts',  desc: 'Sweet endings to every order',        href: 'search_screen.html' },
+                { icon: '🥢', name: 'Asian',     desc: 'Bold flavors and comfort meals',      href: 'search_screen.html?category=Asian'     },
+                { icon: '🍜', name: 'Khmer',     desc: 'Traditional favorites made fresh',    href: 'search_screen.html?category=Khmer'     },
+                { icon: '☕', name: 'Coffee',    desc: 'Warm brews and sweet treats',         href: 'search_screen.html?category=Coffee'    },
+                { icon: '🥐', name: 'Pastry',    desc: 'Freshly baked delights',              href: 'search_screen.html?category=Pastry'    },
+                { icon: '🍔', name: 'Fast Food', desc: 'Quick bites for busy days',           href: 'search_screen.html?category=Fast+Food' },
+                { icon: '🍕', name: 'Pizza',     desc: 'Hot and cheesy favorites',            href: 'search_screen.html?category=Pizza'     },
+                { icon: '🍟', name: 'Burgers',   desc: 'Classic comfort food',                href: 'search_screen.html?category=Burgers'   },
+                { icon: '🍰', name: 'Desserts',  desc: 'Sweet endings to every order',        href: 'search_screen.html?category=Desserts'  },
             ];
 
             var grid = document.getElementById('categories-grid');
@@ -1026,7 +1026,8 @@
                 return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
             }
 
-            fetch('http://127.0.0.1:8000/api/restaurants/', { credentials: 'include' })
+            var _API = (location.port==='5500'||location.port==='5501')?'http://127.0.0.1:8000':location.origin;
+            fetch(_API + '/api/restaurants/', { credentials: 'include' })
             .then(function (r) { return r.json(); })
             .then(function (data) {
                 var list = data.restaurants || [];

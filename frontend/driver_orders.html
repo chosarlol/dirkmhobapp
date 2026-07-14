@@ -1,0 +1,646 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DirkMhob | Driver Orders</title>
+  <style>
+    :root{--primary:#1a73e8;--primary-dark:#1558c0;--success:#22c55e;--success-dark:#16a34a;--danger:#ef4444;--bg:#f0f2f5;--surface:#fff;--border:#e2e8f0;--text:#1e293b;--muted:#64748b;}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);min-height:100vh;color:var(--text);}
+    a{color:inherit;text-decoration:none;}
+
+    /* ── HEADER ── */
+    .site-header{background:var(--primary);color:#fff;position:sticky;top:0;z-index:100;box-shadow:0 2px 16px rgba(26,115,232,.35);}
+    .header-inner{display:flex;align-items:center;gap:1rem;padding:0 1.5rem;height:64px;}
+    .brand{display:flex;align-items:center;gap:.5rem;flex-shrink:0;}
+    .brand-mark{width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.9rem;}
+    .brand-name{font-weight:800;font-size:1.05rem;}
+    .brand-sep{opacity:.4;margin:0 3px;}
+    .portal-lbl{font-size:.85rem;opacity:.8;font-weight:600;}
+    .header-center{flex:1;display:flex;align-items:center;justify-content:center;gap:1rem;}
+    .status-group{display:flex;align-items:center;gap:6px;font-size:.85rem;opacity:.9;}
+    .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;transition:background .3s;}
+    .dot.offline{background:#fbbf24;}
+    .dot.online{background:#4ade80;}
+    .toggle-btn{padding:8px 22px;border-radius:999px;border:none;font-weight:700;font-size:.85rem;cursor:pointer;transition:background .2s,transform .1s;letter-spacing:.01em;}
+    .toggle-btn:active{transform:scale(.96);}
+    .toggle-btn.go-online{background:var(--success);color:#fff;}
+    .toggle-btn.go-offline{background:var(--danger);color:#fff;}
+    .header-right{display:flex;align-items:center;gap:.75rem;flex-shrink:0;}
+    .stat-pills{display:flex;gap:.5rem;}
+    .stat-pill{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:5px 13px;text-align:center;}
+    .stat-pill .sv{font-size:.95rem;font-weight:800;line-height:1;}
+    .stat-pill .sl{font-size:.6rem;opacity:.8;text-transform:uppercase;letter-spacing:.04em;margin-top:1px;}
+    .top-nav{display:flex;gap:2px;}
+    .nav-link{padding:7px 14px;border-radius:8px;font-size:.85rem;font-weight:600;color:rgba(255,255,255,.72);transition:background .15s,color .15s;}
+    .nav-link:hover{background:rgba(255,255,255,.12);color:#fff;}
+    .nav-link.active{background:rgba(255,255,255,.22);color:#fff;}
+    .user-chip{display:flex;align-items:center;gap:7px;font-size:.85rem;font-weight:600;}
+    .avatar-sm{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.25);border:2px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.75rem;}
+    .logout-btn{padding:7px 14px;border-radius:8px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.85);font-size:.82rem;font-weight:600;cursor:pointer;transition:background .15s;}
+    .logout-btn:hover{background:rgba(255,255,255,.2);color:#fff;}
+
+    /* ── OFFLINE SPLASH ── */
+    .offline-splash{position:fixed;inset:64px 0 0 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.1rem;text-align:center;padding:2rem;background:var(--bg);z-index:10;}
+    .offline-splash.hidden{display:none;}
+    .scooter{font-size:5.5rem;animation:float 3s ease-in-out infinite;}
+    @keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);}}
+    .offline-splash h2{font-size:1.7rem;font-weight:800;color:var(--text);}
+    .offline-splash p{color:var(--muted);font-size:1rem;}
+
+    /* ── PAGE BODY ── */
+    .page-body{display:grid;grid-template-columns:400px 1fr;height:calc(100vh - 64px);overflow:hidden;}
+
+    /* ── LEFT COLUMN ── */
+    .left-col{overflow-y:auto;padding:1.25rem;background:#f8fafc;border-right:1px solid var(--border);display:flex;flex-direction:column;}
+    .sec-head{display:flex;align-items:center;gap:.5rem;font-weight:800;font-size:.88rem;color:var(--text);margin-bottom:.7rem;margin-top:1rem;flex-shrink:0;}
+    .sec-head:first-child{margin-top:0;}
+    .cnt{background:var(--primary);color:#fff;font-size:.68rem;padding:2px 7px;border-radius:999px;font-weight:700;}
+
+    /* ── Order card ── */
+    .order-card{background:var(--surface);border-radius:14px;padding:.9rem;border:1px solid var(--border);box-shadow:0 1px 6px rgba(0,0,0,.05);margin-bottom:.7rem;transition:box-shadow .2s,opacity .2s;flex-shrink:0;}
+    .order-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.1);}
+    .order-card.accepting{opacity:.5;pointer-events:none;}
+    .order-card.completing{opacity:.5;pointer-events:none;}
+    .order-card.active-card{border-left:3px solid var(--success);}
+
+    /* Flash-in animation for newly arrived orders */
+    @keyframes flashIn{
+      0%  {background:#fef3c7;transform:translateX(-8px);box-shadow:0 0 0 3px rgba(251,191,36,.4);}
+      60% {background:#fffbeb;transform:translateX(0);}
+      100%{background:#fff;box-shadow:0 1px 6px rgba(0,0,0,.05);}
+    }
+    .order-card.flash-in{animation:flashIn .9s ease forwards;}
+
+    .card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;}
+    .oref{font-weight:700;font-size:.87rem;}
+    .badge{font-size:.67rem;font-weight:700;padding:2px 8px;border-radius:999px;}
+    .badge-new    {background:#fef9c3;color:#854d0e;}
+    .badge-pickup {background:#fef3c7;color:#92400e;}
+    .badge-onway  {background:#dcfce7;color:#15803d;}
+    .rest{font-size:.93rem;font-weight:700;margin-bottom:.18rem;}
+    .dist{font-size:.77rem;color:var(--muted);margin-bottom:.38rem;}
+    .irow{font-size:.81rem;color:#374151;margin:.14rem 0;display:flex;gap:.35rem;}
+    .irow span{flex:1;}
+    .fee-strip{display:flex;justify-content:space-between;align-items:center;margin-top:.55rem;padding-top:.55rem;border-top:1px solid #f1f5f9;}
+    .fee-v{font-weight:800;font-size:.93rem;color:var(--primary);}
+    .pay-chip{font-size:.7rem;color:var(--muted);background:#f8fafc;padding:3px 8px;border-radius:5px;text-transform:uppercase;}
+    .card-btns{display:flex;gap:.5rem;margin-top:.6rem;}
+    .btn-accept  {flex:1;padding:.6rem;background:var(--success);color:#fff;border:none;border-radius:9px;font-weight:700;font-size:.83rem;cursor:pointer;transition:background .15s;}
+    .btn-accept:hover{background:var(--success-dark);}
+    .btn-reject  {flex:1;padding:.6rem;background:#fee2e2;color:var(--danger);border:1px solid #fecaca;border-radius:9px;font-weight:700;font-size:.83rem;cursor:pointer;transition:all .15s;}
+    .btn-reject:hover{background:var(--danger);color:#fff;border-color:var(--danger);}
+    .btn-pickup  {width:100%;padding:.6rem;background:#f59e0b;color:#fff;border:none;border-radius:9px;font-weight:700;font-size:.83rem;cursor:pointer;margin-top:.5rem;transition:background .15s;}
+    .btn-pickup:hover{background:#d97706;}
+    .btn-complete{width:100%;padding:.6rem;background:var(--primary);color:#fff;border:none;border-radius:9px;font-weight:700;font-size:.83rem;cursor:pointer;margin-top:.5rem;transition:background .15s;}
+    .btn-complete:hover{background:var(--primary-dark);}
+    .btn-chat{display:block;width:100%;padding:.6rem;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:9px;font-weight:700;font-size:.83rem;cursor:pointer;margin-top:.45rem;text-align:center;text-decoration:none;transition:background .15s;}
+    .btn-chat:hover{background:#dcfce7;}
+    .empty{text-align:center;padding:1.5rem 1rem;color:#94a3b8;font-size:.85rem;}
+
+    /* ── RIGHT COLUMN: MAP ── */
+    .right-col{position:relative;overflow:hidden;background:#e8f4f8;}
+    .map-area{width:100%;height:100%;position:absolute;inset:0;}
+
+    /* Map fallback (same style as tracking_screen.html) */
+    .map-fallback{width:100%;height:100%;background:linear-gradient(145deg,#7aad96 0%,#6a9fbf 30%,#8db8d8 60%,#4a8aa8 100%);position:relative;overflow:hidden;}
+    .fallback-grid{position:absolute;inset:0;background-image:repeating-linear-gradient(0deg,rgba(255,255,255,.05) 0,rgba(255,255,255,.05) 1px,transparent 1px,transparent 50px),repeating-linear-gradient(90deg,rgba(255,255,255,.05) 0,rgba(255,255,255,.05) 1px,transparent 1px,transparent 50px);}
+    .fallback-road-h{position:absolute;height:18px;background:rgba(255,255,255,.35);left:0;right:0;border-radius:2px;}
+    .fallback-road-v{position:absolute;width:18px;background:rgba(255,255,255,.35);top:0;bottom:0;border-radius:2px;}
+    .fallback-bld{position:absolute;border-radius:6px;opacity:.5;}
+    .route-svg{position:absolute;inset:0;width:100%;height:100%;}
+    .fallback-restaurant-pin,.fallback-customer-pin{position:absolute;display:flex;flex-direction:column;align-items:center;transform:translate(-50%,-100%);}
+    .pin-bubble{padding:6px 12px;border-radius:20px;font-size:12px;font-weight:700;color:#fff;display:flex;align-items:center;gap:5px;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.2);}
+    .pin-bubble.restaurant{background:#ff6b35;}
+    .pin-bubble.customer  {background:#1a73e8;}
+    .pin-tail{width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;}
+    .pin-tail.restaurant{border-top:8px solid #ff6b35;}
+    .pin-tail.customer  {border-top:8px solid #1a73e8;}
+    .fallback-driver{position:absolute;width:44px;height:44px;border-radius:50%;background:#1a73e8;border:3px solid #fff;display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 4px 16px rgba(0,0,0,.25);transform:translate(-50%,-50%);animation:driverPulse 2s infinite;transition:left 1.5s ease,top 1.5s ease;}
+    @keyframes driverPulse{0%,100%{box-shadow:0 4px 16px rgba(0,0,0,.25),0 0 0 0 rgba(26,115,232,.4);}50%{box-shadow:0 4px 16px rgba(0,0,0,.25),0 0 0 14px rgba(26,115,232,0);}}
+
+    .map-placeholder{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;text-align:center;color:var(--muted);padding:2rem;background:#f0f6fb;}
+    .map-placeholder .big{font-size:4.5rem;opacity:.4;}
+    .map-placeholder h3{font-size:1.15rem;font-weight:700;color:#94a3b8;}
+    .map-placeholder p{font-size:.88rem;color:#b0bec5;}
+
+    /* Active delivery info bar at bottom of map */
+    .active-panel{position:absolute;bottom:0;left:0;right:0;background:rgba(255,255,255,.97);backdrop-filter:blur(8px);border-top:1px solid var(--border);padding:1rem 1.5rem;display:none;align-items:center;gap:2rem;}
+    .active-panel.visible{display:flex;}
+    .ap-item .ap-lbl{font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;}
+    .ap-item .ap-val{font-size:.93rem;font-weight:700;color:var(--text);margin-top:2px;}
+
+    @media(max-width:1024px){.page-body{grid-template-columns:340px 1fr;}}
+    @media(max-width:860px){.page-body{grid-template-columns:1fr;height:auto;overflow:auto;}.right-col{height:50vh;}.stat-pills{display:none;}.portal-lbl{display:none;}}
+    @media(max-width:640px){.top-nav .nav-link{padding:7px 8px;font-size:.8rem;}}
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="site-header">
+  <div class="header-inner">
+    <div class="brand">
+      <div class="brand-mark">DM</div>
+      <span class="brand-name">DirkMhob</span>
+      <span class="brand-sep">/</span>
+      <span class="portal-lbl">Driver Portal</span>
+    </div>
+
+    <div class="header-center">
+      <div class="status-group">
+        <span class="dot offline" id="dot"></span>
+        <span id="status-txt">Offline</span>
+      </div>
+      <button class="toggle-btn go-online" id="toggle-btn" onclick="toggleOnline()">Go Online</button>
+    </div>
+
+    <div class="header-right">
+      <div class="stat-pills">
+        <div class="stat-pill"><div class="sv" id="s-active">0</div><div class="sl">Active</div></div>
+        <div class="stat-pill"><div class="sv" id="s-done">0</div><div class="sl">Done</div></div>
+        <div class="stat-pill"><div class="sv" id="s-earn">$0.00</div><div class="sl">Today</div></div>
+      </div>
+      <nav class="top-nav">
+        <a class="nav-link active" href="driver_orders.html">📦 Orders</a>
+        <a class="nav-link" href="driver_earning.html">💰 Earnings</a>
+        <a class="nav-link" href="driver_chat.html">💬 Chat</a>
+        <a class="nav-link" href="driver_profile.html">👤 Profile</a>
+      </nav>
+      <div class="user-chip">
+        <div class="avatar-sm" id="header-avatar">?</div>
+        <span id="header-name">Driver</span>
+      </div>
+      <button class="logout-btn" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+</header>
+
+<!-- OFFLINE SPLASH -->
+<div class="offline-splash" id="splash">
+  <div class="scooter">🛵</div>
+  <h2>You're Offline</h2>
+  <p>Click "Go Online" to start receiving delivery orders</p>
+</div>
+
+<!-- PAGE BODY -->
+<div class="page-body" id="page-body" style="display:none;">
+
+  <!-- LEFT: Orders list -->
+  <div class="left-col">
+    <div class="sec-head">New Orders <span class="cnt" id="cnt-new">0</span></div>
+    <div id="list-new"></div>
+
+    <div class="sec-head">Active Deliveries <span class="cnt" id="cnt-active">0</span></div>
+    <div id="list-active"></div>
+  </div>
+
+  <!-- RIGHT: Map -->
+  <div class="right-col">
+    <div class="map-area" id="map-area">
+      <div class="map-placeholder">
+        <div class="big">🗺️</div>
+        <h3>No Active Delivery</h3>
+        <p>Accept an order to see the delivery route here</p>
+      </div>
+    </div>
+    <div class="active-panel" id="active-panel">
+      <div class="ap-item"><div class="ap-lbl">Customer</div><div class="ap-val" id="ap-customer">—</div></div>
+      <div class="ap-item"><div class="ap-lbl">Delivery Address</div><div class="ap-val" id="ap-addr">—</div></div>
+      <div class="ap-item"><div class="ap-lbl">Restaurant</div><div class="ap-val" id="ap-rest">—</div></div>
+      <div class="ap-item"><div class="ap-lbl">Fee</div><div class="ap-val" id="ap-fee" style="color:var(--primary);">$0.00</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  var API = (location.port==='5500'||location.port==='5501')?'http://127.0.0.1:8000':location.origin;
+  var POLL_INTERVAL = 5000;    // real-time: poll every 5 seconds
+  var isOnline      = false;
+  var pollId        = null;
+  var isFirstPoll   = false;   // suppresses notifications on first poll after going online
+
+  // Restore online state if the page was refreshed while online
+  if (sessionStorage.getItem('driver_online') === '1') {
+    // defer until DOM + auth guard are ready
+    window.addEventListener('load', function() {
+      setTimeout(function() {
+        if (!isOnline) toggleOnline();
+      }, 600);
+    });
+  }
+
+  // ── Order state ──────────────────────────────────────────────────────
+  var knownNewIds    = new Set(); // IDs currently shown in New Orders
+  var rejectedIds    = new Set(); // IDs rejected this session — never show again
+  var newlyArrived   = new Set(); // IDs that appeared since last poll (for flash animation)
+  var localStatus    = {};        // { [orderId]: 'picking_up' | 'on_way' }
+  var localActiveMap = {};        // { [orderId]: orderObject } for immediate UI updates
+
+  // ── Notifications ────────────────────────────────────────────────────
+  function requestNotifPermission() {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }
+
+  function showBrowserNotif(title, body) {
+    if ('Notification' in window && Notification.permission === 'granted') {
+      try { new Notification(title, { body: body, tag: 'dm-order' }); } catch(e) {}
+    }
+  }
+
+  function playBeep() {
+    try {
+      var ctx = new (window.AudioContext || window.webkitAudioContext)();
+      // Low tone
+      var o1 = ctx.createOscillator(), g1 = ctx.createGain();
+      o1.connect(g1); g1.connect(ctx.destination);
+      o1.type = 'sine'; o1.frequency.value = 880;
+      g1.gain.setValueAtTime(0.5, ctx.currentTime);
+      g1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+      o1.start(ctx.currentTime); o1.stop(ctx.currentTime + 0.35);
+      // High tone (slightly delayed)
+      var o2 = ctx.createOscillator(), g2 = ctx.createGain();
+      o2.connect(g2); g2.connect(ctx.destination);
+      o2.type = 'sine'; o2.frequency.value = 1320;
+      g2.gain.setValueAtTime(0.35, ctx.currentTime + 0.18);
+      g2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+      o2.start(ctx.currentTime + 0.18); o2.stop(ctx.currentTime + 0.5);
+    } catch(e) {}
+  }
+
+  // ── Auth guard ───────────────────────────────────────────────────────
+  fetch(API + '/api/me/', { credentials: 'include' })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (!d.is_authenticated || d.role !== 'driver') {
+        window.location.href = 'driver_login.html#denied'; return;
+      }
+      var name = d.name || d.username || 'Driver';
+      document.getElementById('header-name').textContent = name;
+      var initials = name.split(' ').map(function(w){ return w[0]; }).join('').toUpperCase().slice(0,2);
+      document.getElementById('header-avatar').textContent = initials;
+      loadTodayEarnings();
+      requestNotifPermission();
+    })
+    .catch(function(){ window.location.href = 'driver_login.html#denied'; });
+
+  function loadTodayEarnings() {
+    fetch(API + '/api/driver/earnings/', { credentials: 'include' })
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        document.getElementById('s-earn').textContent = '$' + ((d.today && d.today.earnings) || 0).toFixed(2);
+        document.getElementById('s-done').textContent = (d.today && d.today.count) || 0;
+      })
+      .catch(function(){});
+  }
+
+  // ── Online / Offline toggle ──────────────────────────────────────────
+  function toggleOnline() {
+    isOnline = !isOnline;
+    var dot = document.getElementById('dot');
+    var txt = document.getElementById('status-txt');
+    var btn = document.getElementById('toggle-btn');
+
+    if (isOnline) {
+      sessionStorage.setItem('driver_online', '1');
+      dot.className = 'dot online';
+      txt.textContent = 'Online';
+      btn.className = 'toggle-btn go-offline';
+      btn.textContent = 'Go Offline';
+      document.getElementById('splash').classList.add('hidden');
+      document.getElementById('page-body').style.display = 'grid';
+
+      // Reset all state
+      knownNewIds.clear(); rejectedIds.clear(); newlyArrived.clear();
+      localStatus = {}; localActiveMap = {};
+      isFirstPoll = true;
+
+      fetchOrders();
+      pollId = setInterval(fetchOrders, POLL_INTERVAL);
+    } else {
+      sessionStorage.removeItem('driver_online');
+      dot.className = 'dot offline';
+      txt.textContent = 'Offline';
+      btn.className = 'toggle-btn go-online';
+      btn.textContent = 'Go Online';
+      document.getElementById('splash').classList.remove('hidden');
+      document.getElementById('page-body').style.display = 'none';
+      if (pollId) { clearInterval(pollId); pollId = null; }
+    }
+  }
+
+  // ── Poll: GET /api/driver/orders/ every 5 s ───────────────────────────
+  function fetchOrders() {
+    fetch(API + '/api/driver/orders/', { credentials: 'include' })
+      .then(function(r){
+        if (r.status === 401) {
+          sessionStorage.removeItem('driver_online');
+          window.location.href = 'driver_login.html';
+          return null;
+        }
+        return r.json();
+      })
+      .then(function(d){
+        if (!d) return;
+        var suppressNotif = isFirstPoll;
+        isFirstPoll = false;
+
+        var rawNew       = d.new_orders    || [];
+        var activeOrders = d.active_orders || [];
+
+        // Filter out rejected orders client-side (belt-and-suspenders alongside session)
+        var newOrders = rawNew.filter(function(o){ return !rejectedIds.has(o.id); });
+
+        // ── Detect new arrivals since last poll ──────────────────────
+        newlyArrived.clear();
+        newOrders.forEach(function(o) {
+          if (!knownNewIds.has(o.id)) {
+            knownNewIds.add(o.id);
+            newlyArrived.add(o.id);
+            if (!suppressNotif) {
+              playBeep();
+              showBrowserNotif(
+                'New order from ' + o.restaurant_name + '!',
+                o.customer_name + ' · $' + Number(o.delivery_fee).toFixed(2) + ' · ' + o.delivery_address
+              );
+            }
+          }
+        });
+
+        // Remove IDs no longer available (taken by another driver)
+        var currentSet = new Set(newOrders.map(function(o){ return o.id; }));
+        knownNewIds.forEach(function(id){ if (!currentSet.has(id)) knownNewIds.delete(id); });
+
+        renderNew(newOrders);
+        renderActive(activeOrders);
+        document.getElementById('s-active').textContent = activeOrders.length;
+        document.getElementById('s-done').textContent   = d.completed_count || 0;
+      })
+      .catch(function(){});
+  }
+
+  // ── Helpers ──────────────────────────────────────────────────────────
+  function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  // ── Render: new orders ───────────────────────────────────────────────
+  function renderNew(orders) {
+    var el = document.getElementById('list-new');
+    document.getElementById('cnt-new').textContent = orders.length;
+    if (!orders.length) {
+      el.innerHTML = '<div class="empty">No new orders nearby. Waiting for orders…</div>';
+      return;
+    }
+    el.innerHTML = orders.map(function(o) {
+      var flash = newlyArrived.has(o.id) ? ' flash-in' : '';
+      return '<div class="order-card' + flash + '" id="card-' + o.id + '">' +
+        '<div class="card-head"><span class="oref">#' + esc(o.order_ref) + '</span><span class="badge badge-new">New!</span></div>' +
+        '<div class="rest">' + esc(o.restaurant_name) + '</div>' +
+        '<div class="dist">🗺 ' + o.distance_km + ' km &nbsp;·&nbsp; ' + o.estimated_minutes + ' min</div>' +
+        '<div class="irow">👤 <span>' + esc(o.customer_name) + '</span></div>' +
+        '<div class="irow">📍 <span>' + esc(o.delivery_address) + '</span></div>' +
+        '<div class="fee-strip"><span class="fee-v">$' + Number(o.delivery_fee).toFixed(2) + '</span><span class="pay-chip">' + esc(o.payment_method) + '</span></div>' +
+        '<div class="card-btns">' +
+          '<button class="btn-accept" onclick="acceptOrder(' + o.id + ')">✓ Accept</button>' +
+          '<button class="btn-reject" onclick="rejectOrder(' + o.id + ')">✗ Reject</button>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  // ── Render: active deliveries ────────────────────────────────────────
+  function renderActive(orders) {
+    var el = document.getElementById('list-active');
+    document.getElementById('cnt-active').textContent = orders.length;
+
+    orders.forEach(function(o) {
+      // Always sync from backend — on_the_way/delivering means pickup already happened
+      if (o.status === 'on_the_way' || o.status === 'delivering') {
+        localStatus[o.id] = 'on_way';
+      } else if (!localStatus[o.id]) {
+        localStatus[o.id] = 'picking_up';
+      }
+      localActiveMap[o.id] = o;
+    });
+    var activeSet = new Set(orders.map(function(o){ return o.id; }));
+    Object.keys(localStatus).forEach(function(id) {
+      if (!activeSet.has(parseInt(id))) { delete localStatus[id]; delete localActiveMap[id]; }
+    });
+
+    if (!orders.length) {
+      el.innerHTML = '<div class="empty">No active deliveries.</div>';
+      return;
+    }
+    el.innerHTML = orders.map(function(o){ return buildActiveCard(o); }).join('');
+    showActiveMap(orders[0]);
+  }
+
+  function buildActiveCard(o) {
+    var st = localStatus[o.id] || 'picking_up';
+    var badge = st === 'picking_up'
+      ? '<span class="badge badge-pickup">Picking Up 🏍</span>'
+      : '<span class="badge badge-onway">On the Way 🚀</span>';
+    var actionBtn = st === 'picking_up'
+      ? '<button class="btn-pickup" onclick="setPickedUp(' + o.id + ')">Picked Up ✓</button>'
+      : '<button class="btn-complete" onclick="completeOrder(' + o.id + ')">Mark as Delivered ✓</button>';
+    var chatBtn = '<a class="btn-chat" href="driver_chat.html?order_ref=' + esc(o.order_ref) + '">💬 Chat with Customer</a>';
+    return '<div class="order-card active-card" id="active-card-' + o.id + '">' +
+      '<div class="card-head"><span class="oref">#' + esc(o.order_ref) + '</span>' + badge + '</div>' +
+      '<div class="rest">' + esc(o.restaurant_name) + '</div>' +
+      '<div class="irow">👤 <span>' + esc(o.customer_name) + '</span></div>' +
+      '<div class="irow">📍 <span>' + esc(o.delivery_address) + '</span></div>' +
+      '<div class="fee-strip"><span class="fee-v">$' + Number(o.delivery_fee).toFixed(2) + '</span><span class="pay-chip">' + esc(o.payment_method) + '</span></div>' +
+      actionBtn +
+      chatBtn +
+    '</div>';
+  }
+
+  function refreshActiveCard(orderId) {
+    var o = localActiveMap[orderId];
+    if (!o) return;
+    var el = document.getElementById('active-card-' + orderId);
+    if (el) el.outerHTML = buildActiveCard(o);
+  }
+
+  // ── Actions ──────────────────────────────────────────────────────────
+  function acceptOrder(id) {
+    var card = document.getElementById('card-' + id);
+    if (card) card.classList.add('accepting');
+
+    fetch(API + '/api/driver/orders/' + id + '/accept/', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' }, body: '{}'
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (d.error) {
+        alert(d.error === 'Order already taken'
+          ? 'This order was just taken by another driver.'
+          : d.error);
+        if (card) card.remove();
+        knownNewIds.delete(id);
+        updateNewCount(-1);
+        return;
+      }
+      // Remove from New Orders immediately
+      if (card) card.remove();
+      knownNewIds.delete(id);
+      updateNewCount(-1);
+
+      // Add to Active Deliveries immediately (no waiting for next poll)
+      if (d.order) {
+        var o = d.order;
+        localStatus[o.id] = 'picking_up';
+        localActiveMap[o.id] = o;
+
+        var activeList = document.getElementById('list-active');
+        var emptyMsg   = activeList.querySelector('.empty');
+        if (emptyMsg) emptyMsg.remove();
+        activeList.insertAdjacentHTML('afterbegin', buildActiveCard(o));
+        updateActiveCount(1);
+        showActiveMap(o);
+      }
+    })
+    .catch(function(){
+      if (card) card.classList.remove('accepting');
+    });
+  }
+
+  function rejectOrder(id) {
+    rejectedIds.add(id);
+    knownNewIds.delete(id);
+    var card = document.getElementById('card-' + id);
+    if (card) card.remove();
+    updateNewCount(-1);
+
+    // Tell backend to add to session so it won't reappear on next poll
+    fetch(API + '/api/driver/orders/' + id + '/reject/', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' }, body: '{}'
+    }).catch(function(){});
+  }
+
+  function setPickedUp(id) {
+    // Update UI immediately (don't wait for backend)
+    localStatus[id] = 'on_way';
+    refreshActiveCard(id);
+    // Persist to backend so customer's order_comfirm.html sees on_the_way status
+    fetch(API + '/api/driver/orders/' + id + '/pickup/', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' }, body: '{}'
+    }).catch(function() {});
+  }
+
+  function completeOrder(id) {
+    var card = document.getElementById('active-card-' + id);
+    if (card) card.classList.add('completing');
+
+    fetch(API + '/api/driver/orders/' + id + '/complete/', {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' }, body: '{}'
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (card) card.remove();
+      delete localStatus[id]; delete localActiveMap[id];
+      updateActiveCount(-1);
+
+      // Increment done counter
+      var done = parseInt(document.getElementById('s-done').textContent, 10) + 1;
+      document.getElementById('s-done').textContent = done;
+
+      // Add fee to today's earnings display immediately
+      if (d.delivery_fee) {
+        var cur = parseFloat(document.getElementById('s-earn').textContent.replace('$','')) || 0;
+        document.getElementById('s-earn').textContent = '$' + (cur + d.delivery_fee).toFixed(2);
+      }
+
+      if (Object.keys(localActiveMap).length === 0) {
+        showMapPlaceholder();
+        document.getElementById('list-active').innerHTML = '<div class="empty">No active deliveries.</div>';
+      }
+    })
+    .catch(function(){
+      if (card) card.classList.remove('completing');
+    });
+  }
+
+  // ── Counter helpers ───────────────────────────────────────────────────
+  function updateNewCount(delta) {
+    var el = document.getElementById('cnt-new');
+    el.textContent = Math.max(0, parseInt(el.textContent, 10) + delta);
+  }
+  function updateActiveCount(delta) {
+    var el  = document.getElementById('cnt-active');
+    var val = Math.max(0, parseInt(el.textContent, 10) + delta);
+    el.textContent = val;
+    document.getElementById('s-active').textContent = val;
+  }
+
+  // ── Map ───────────────────────────────────────────────────────────────
+  function showMapPlaceholder() {
+    document.getElementById('map-area').innerHTML =
+      '<div class="map-placeholder"><div class="big">🗺️</div>' +
+      '<h3>No Active Delivery</h3><p>Accept an order to see the delivery route here</p></div>';
+    document.getElementById('active-panel').classList.remove('visible');
+  }
+
+  function showActiveMap(order) {
+    var pinName  = esc(order.restaurant_name || 'Restaurant');
+    var custName = esc(order.customer_name   || 'Customer');
+    document.getElementById('map-area').innerHTML =
+      '<div class="map-fallback">' +
+        '<div class="fallback-grid"></div>' +
+        '<div class="fallback-road-h" style="top:30%"></div>' +
+        '<div class="fallback-road-h" style="top:55%"></div>' +
+        '<div class="fallback-road-h" style="top:75%"></div>' +
+        '<div class="fallback-road-v" style="left:25%"></div>' +
+        '<div class="fallback-road-v" style="left:55%"></div>' +
+        '<div class="fallback-road-v" style="right:18%"></div>' +
+        '<div class="fallback-bld" style="width:70px;height:50px;background:#8aacbf;top:6%;left:3%"></div>' +
+        '<div class="fallback-bld" style="width:55px;height:40px;background:#7a9cb0;top:6%;left:29%"></div>' +
+        '<div class="fallback-bld" style="width:90px;height:58px;background:#b0c8d8;top:6%;right:4%"></div>' +
+        '<div class="fallback-bld" style="width:65px;height:44px;background:#6a9ab4;top:38%;left:3%"></div>' +
+        '<div class="fallback-bld" style="width:80px;height:48px;background:#85a8bc;top:60%;left:29%"></div>' +
+        '<div class="fallback-bld" style="width:75px;height:50px;background:#90b0c0;top:38%;right:4%"></div>' +
+        '<svg class="route-svg" viewBox="0 0 100 100" preserveAspectRatio="none">' +
+          '<path d="M 82 12 Q 70 30 62 45 Q 50 60 38 72 Q 28 80 18 88" stroke="#0077C8" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-dasharray="4 2" opacity="0.8"/>' +
+          '<path d="M 82 12 Q 70 30 62 45 Q 50 60 38 72 Q 28 80 18 88" stroke="#0077C8" stroke-width="5" fill="none" opacity="0.12" stroke-linecap="round"/>' +
+        '</svg>' +
+        '<div class="fallback-restaurant-pin" style="left:82%;top:12%"><div class="pin-bubble restaurant">🍴 ' + pinName + '</div><div class="pin-tail restaurant"></div></div>' +
+        '<div class="fallback-customer-pin" style="left:18%;top:88%"><div class="pin-bubble customer">🏠 ' + custName + '</div><div class="pin-tail customer"></div></div>' +
+        '<div class="fallback-driver" id="fallback-driver" style="left:82%;top:12%">🛵</div>' +
+      '</div>';
+
+    var panel = document.getElementById('active-panel');
+    panel.classList.add('visible');
+    document.getElementById('ap-customer').textContent = order.customer_name    || '—';
+    document.getElementById('ap-addr').textContent     = order.delivery_address || '—';
+    document.getElementById('ap-rest').textContent     = order.restaurant_name  || '—';
+    document.getElementById('ap-fee').textContent      = '$' + Number(order.delivery_fee).toFixed(2);
+
+    var waypoints = [
+      {left:82,top:12},{left:70,top:30},{left:62,top:45},
+      {left:50,top:60},{left:38,top:72},{left:28,top:80},{left:18,top:88}
+    ];
+    var wi = 0;
+    setInterval(function(){
+      wi = (wi + 1) % waypoints.length;
+      var pin = document.getElementById('fallback-driver');
+      if (pin) { pin.style.left = waypoints[wi].left + '%'; pin.style.top = waypoints[wi].top + '%'; }
+    }, 3000);
+  }
+
+  // ── Logout ────────────────────────────────────────────────────────────
+  function doLogout() {
+    fetch(API + '/api/logout/', { method: 'POST', credentials: 'include' })
+      .finally(function(){
+        try { localStorage.removeItem('dirkmhob_user'); } catch(e) {}
+        window.location.href = 'driver_login.html';
+      });
+  }
+</script>
+</body>
+</html>

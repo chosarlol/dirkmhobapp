@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -394,7 +394,7 @@
 </div>
 
 <script>
-  var API = 'http://127.0.0.1:8000';
+  var API = (location.port==='5500'||location.port==='5501')?'http://127.0.0.1:8000':location.origin;
   var currentUser = null;
   var currentRestaurant = null;
   var menuItems = [];

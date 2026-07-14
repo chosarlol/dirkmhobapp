@@ -6,6 +6,7 @@ class UserProfile(models.Model):
     ROLE_CHOICES = [
         ('customer',   'Customer'),
         ('shop_owner', 'Shop Owner'),
+        ('driver',     'Driver'),
         ('moderator',  'Moderator'),
         ('superadmin', 'Super Admin'),
     ]
@@ -81,6 +82,7 @@ class Order(models.Model):
     payment_method   = models.CharField(max_length=50, default='khqr')
     status           = models.CharField(max_length=20, choices=STATUS_CHOICES, default='confirmed')
     delivery_address = models.CharField(max_length=300, blank=True)
+    assigned_driver  = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name='assigned_deliveries')
     created_at       = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -97,6 +99,21 @@ class OrderItem(models.Model):
 
     def __str__(self):
         return f'{self.quantity}x {self.name}'
+
+
+# ── Chat ───────────────────────────────────────────────────────
+
+class ChatMessage(models.Model):
+    order      = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='messages')
+    sender     = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_messages')
+    body       = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f'{self.sender.username}: {self.body[:40]}'
 
 
 # ── Kept from original schema ─────────────────────────────────

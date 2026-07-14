@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -148,6 +148,7 @@
     .badge-banned   {background:#fee2e2;color:var(--danger);}
     .badge-customer {background:var(--primary-light);color:var(--primary);}
     .badge-shop_owner{background:#f0fdf4;color:var(--success);}
+    .badge-driver   {background:#eff6ff;color:#1d4ed8;}
     .badge-superadmin{background:#fef3c7;color:#92400e;}
     .badge-moderator{background:#ede9fe;color:#5b21b6;}
     .badge-confirmed{background:#dcfce7;color:var(--success);}
@@ -169,6 +170,10 @@
     .act-ban:hover{background:var(--danger);color:#fff;}
     .act-unban{background:#dcfce7;color:var(--success);border-color:#bbf7d0;}
     .act-unban:hover{background:var(--success);color:#fff;}
+    .act-driver{background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe;}
+    .act-driver:hover{background:#1d4ed8;color:#fff;}
+    .act-undriver{background:#f0fdf4;color:var(--success);border-color:#bbf7d0;}
+    .act-undriver:hover{background:var(--success);color:#fff;}
 
     .empty-row td{text-align:center;color:var(--muted);padding:2rem;}
     .loading-row td{text-align:center;color:var(--muted);padding:1.5rem;}
@@ -356,7 +361,7 @@
 </div>
 
 <script>
-  var API = 'http://127.0.0.1:8000';
+  var API = (location.port==='5500'||location.port==='5501')?'http://127.0.0.1:8000':location.origin;
   var currentUser = null;
 
   /* Fix 1 — Role guard: redirect to login.html if not superadmin */
@@ -551,9 +556,13 @@
       tbody.innerHTML = rows.map(function(u){
         var roleBadge   = badge(u.role, u.role);
         var statusBadge = u.is_banned ? badge('banned','Banned') : badge('active','Active');
-        var actions = u.is_banned
-          ? '<button class="act-btn act-unban" onclick="userAction('+u.id+',\'unban\')">Unban</button>'
-          : '<button class="act-btn act-ban"   onclick="userAction('+u.id+',\'ban\')">Ban</button>';
+        var banBtn = u.is_banned
+          ? '<button class="act-btn act-unban"   onclick="userAction('+u.id+',\'unban\')">Unban</button>'
+          : '<button class="act-btn act-ban"     onclick="userAction('+u.id+',\'ban\')">Ban</button>';
+        var driverBtn = u.role === 'driver'
+          ? '<button class="act-btn act-undriver" onclick="userAction('+u.id+',\'set_customer\')" title="Remove Driver">👤 Customer</button>'
+          : '<button class="act-btn act-driver"   onclick="userAction('+u.id+',\'set_driver\')" title="Make Driver">🛵 Driver</button>';
+        var actions = banBtn + ' ' + driverBtn;
         return '<tr><td>'+u.id+'</td><td><strong>'+esc(u.username)+'</strong></td><td>'+esc(u.email||'—')+'</td><td>'+roleBadge+'</td><td>'+statusBadge+'</td><td>'+esc(u.joined)+'</td><td>'+actions+'</td></tr>';
       }).join('');
     }).catch(function(){ tbody.innerHTML = '<tr class="empty-row"><td colspan="7">Error loading data.</td></tr>'; });

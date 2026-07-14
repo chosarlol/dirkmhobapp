@@ -1,0 +1,258 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DirkMhob | Driver Earnings</title>
+  <style>
+    :root{--primary:#1a73e8;--primary-dark:#1558c0;--success:#22c55e;--bg:#f0f2f5;--surface:#fff;--border:#e2e8f0;--text:#1e293b;--muted:#64748b;}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);min-height:100vh;color:var(--text);}
+    a{color:inherit;text-decoration:none;}
+
+    /* ── HEADER ── */
+    .site-header{background:var(--primary);color:#fff;position:sticky;top:0;z-index:100;box-shadow:0 2px 16px rgba(26,115,232,.35);}
+    .header-inner{display:flex;align-items:center;gap:1rem;padding:0 1.5rem;height:64px;}
+    .brand{display:flex;align-items:center;gap:.5rem;flex-shrink:0;}
+    .brand-mark{width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.9rem;}
+    .brand-name{font-weight:800;font-size:1.05rem;}
+    .brand-sep{opacity:.4;margin:0 3px;}
+    .portal-lbl{font-size:.85rem;opacity:.8;font-weight:600;}
+    .header-spacer{flex:1;}
+    .top-nav{display:flex;gap:2px;}
+    .nav-link{padding:7px 14px;border-radius:8px;font-size:.85rem;font-weight:600;color:rgba(255,255,255,.72);transition:background .15s,color .15s;}
+    .nav-link:hover{background:rgba(255,255,255,.12);color:#fff;}
+    .nav-link.active{background:rgba(255,255,255,.22);color:#fff;}
+    .user-chip{display:flex;align-items:center;gap:7px;font-size:.85rem;font-weight:600;}
+    .avatar-sm{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.25);border:2px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.75rem;}
+    .logout-btn{padding:7px 14px;border-radius:8px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.85);font-size:.82rem;font-weight:600;cursor:pointer;transition:background .15s;}
+    .logout-btn:hover{background:rgba(255,255,255,.2);color:#fff;}
+
+    /* ── PAGE BODY ── */
+    .page-body{display:grid;grid-template-columns:340px 1fr;min-height:calc(100vh - 64px);align-items:start;}
+
+    /* ── LEFT: stat cards ── */
+    .left-col{padding:1.5rem 1.25rem;display:flex;flex-direction:column;gap:1rem;background:#f8fafc;border-right:1px solid var(--border);min-height:calc(100vh - 64px);}
+    .col-title{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);}
+    .period-card{background:var(--surface);border-radius:16px;padding:1.25rem 1.5rem;border:1px solid var(--border);box-shadow:0 1px 8px rgba(0,0,0,.05);position:relative;overflow:hidden;}
+    .period-card::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%;border-radius:4px 0 0 4px;}
+    .period-card.today::before{background:#1a73e8;}
+    .period-card.week::before{background:#7c3aed;}
+    .period-card.month::before{background:#0891b2;}
+    .pc-label{font-size:.73rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:.35rem;}
+    .pc-amount{font-size:2rem;font-weight:800;color:var(--text);line-height:1;}
+    .pc-sub{font-size:.82rem;color:var(--muted);margin-top:.4rem;}
+    .pc-deliveries{font-weight:700;color:var(--text);}
+
+    /* ── RIGHT: table ── */
+    .right-col{padding:1.5rem;overflow-x:auto;}
+    .table-header{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:1rem;}
+    .table-title{font-size:1.05rem;font-weight:800;color:var(--text);}
+    .table-sub{font-size:.82rem;color:var(--muted);margin-top:2px;}
+
+    table{width:100%;border-collapse:collapse;background:var(--surface);border-radius:16px;overflow:hidden;box-shadow:0 1px 8px rgba(0,0,0,.06);border:1px solid var(--border);}
+    thead tr{background:#f8fafc;}
+    th{padding:.85rem 1rem;text-align:left;font-size:.73rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);border-bottom:1px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none;}
+    th:hover{background:#f1f5f9;color:var(--text);}
+    th.sorted{color:var(--primary);}
+    th .sort-arrow{margin-left:4px;opacity:.5;font-size:.7rem;}
+    th.sorted .sort-arrow{opacity:1;}
+    td{padding:.8rem 1rem;font-size:.87rem;border-bottom:1px solid #f1f5f9;vertical-align:middle;}
+    tr:last-child td{border-bottom:none;}
+    tr:hover td{background:#f8fafc;}
+    .td-ref{font-weight:700;color:var(--primary);font-size:.82rem;}
+    .td-fee{font-weight:800;color:#16a34a;}
+    .td-pay{font-size:.72rem;background:#f1f5f9;padding:3px 8px;border-radius:5px;text-transform:uppercase;font-weight:600;color:var(--muted);}
+    .td-date{color:var(--muted);font-size:.8rem;}
+
+    @media(max-width:1100px){.page-body{grid-template-columns:280px 1fr;}}
+    @media(max-width:800px){.page-body{grid-template-columns:1fr;}.left-col{min-height:auto;border-right:none;border-bottom:1px solid var(--border);flex-direction:row;flex-wrap:wrap;gap:.75rem;}.period-card{flex:1;min-width:180px;}.portal-lbl{display:none;}}
+    @media(max-width:640px){th:nth-child(4),td:nth-child(4){display:none;}}
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="site-header">
+  <div class="header-inner">
+    <div class="brand">
+      <div class="brand-mark">DM</div>
+      <span class="brand-name">DirkMhob</span>
+      <span class="brand-sep">/</span>
+      <span class="portal-lbl">Driver Portal</span>
+    </div>
+    <div class="header-spacer"></div>
+    <nav class="top-nav">
+      <a class="nav-link" href="driver_orders.html">📦 Orders</a>
+      <a class="nav-link active" href="driver_earning.html">💰 Earnings</a>
+      <a class="nav-link" href="driver_profile.html">👤 Profile</a>
+    </nav>
+    <div class="user-chip">
+      <div class="avatar-sm" id="header-avatar">?</div>
+      <span id="header-name">Driver</span>
+    </div>
+    <button class="logout-btn" onclick="doLogout()">Logout</button>
+  </div>
+</header>
+
+<!-- PAGE BODY -->
+<div class="page-body">
+
+  <!-- LEFT: Summary cards -->
+  <div class="left-col">
+    <div class="col-title">Earnings Summary</div>
+
+    <div class="period-card today">
+      <div class="pc-label">Today</div>
+      <div class="pc-amount" id="today-amt">$0.00</div>
+      <div class="pc-sub"><span class="pc-deliveries" id="today-cnt">0</span> deliveries</div>
+    </div>
+
+    <div class="period-card week">
+      <div class="pc-label">This Week</div>
+      <div class="pc-amount" id="week-amt">$0.00</div>
+      <div class="pc-sub"><span class="pc-deliveries" id="week-cnt">0</span> deliveries</div>
+    </div>
+
+    <div class="period-card month">
+      <div class="pc-label">This Month</div>
+      <div class="pc-amount" id="month-amt">$0.00</div>
+      <div class="pc-sub"><span class="pc-deliveries" id="month-cnt">0</span> deliveries</div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Deliveries table -->
+  <div class="right-col">
+    <div class="table-header">
+      <div>
+        <div class="table-title">Recent Deliveries</div>
+        <div class="table-sub" id="table-sub">Loading…</div>
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th onclick="sortBy('order_ref')">Order # <span class="sort-arrow" id="arr-order_ref">↕</span></th>
+          <th onclick="sortBy('restaurant_name')">Restaurant <span class="sort-arrow" id="arr-restaurant_name">↕</span></th>
+          <th onclick="sortBy('customer_name')">Customer <span class="sort-arrow" id="arr-customer_name">↕</span></th>
+          <th onclick="sortBy('delivery_address')">Address <span class="sort-arrow" id="arr-delivery_address">↕</span></th>
+          <th onclick="sortBy('delivery_fee')">Fee <span class="sort-arrow" id="arr-delivery_fee">↕</span></th>
+          <th onclick="sortBy('payment_method')">Payment <span class="sort-arrow" id="arr-payment_method">↕</span></th>
+          <th onclick="sortBy('completed_at')">Date <span class="sort-arrow" id="arr-completed_at">↕</span></th>
+        </tr>
+      </thead>
+      <tbody id="deliveries-body">
+        <tr><td colspan="7" style="text-align:center;padding:2rem;color:#94a3b8;">Loading earnings…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  var API = (location.port==='5500'||location.port==='5501')?'http://127.0.0.1:8000':location.origin;
+  var allDeliveries = [];
+  var sortCol = 'completed_at';
+  var sortAsc  = false;
+  var SORT_COLS = ['order_ref','restaurant_name','customer_name','delivery_address','delivery_fee','payment_method','completed_at'];
+
+  /* ── Auth guard ── */
+  fetch(API + '/api/me/', { credentials: 'include' })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (!d.is_authenticated || d.role !== 'driver') {
+        window.location.href = 'driver_login.html#denied';
+        return;
+      }
+      var name = d.name || d.username || 'Driver';
+      document.getElementById('header-name').textContent = name;
+      var initials = name.split(' ').map(function(w){ return w[0]; }).join('').toUpperCase().slice(0, 2);
+      document.getElementById('header-avatar').textContent = initials;
+      loadEarnings();
+    })
+    .catch(function(){ window.location.href = 'driver_login.html#denied'; });
+
+  function loadEarnings() {
+    fetch(API + '/api/driver/earnings/', { credentials: 'include' })
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        var today = d.today || {};
+        var week  = d.week  || {};
+        var month = d.month || {};
+
+        document.getElementById('today-amt').textContent = '$' + ((today.earnings || 0)).toFixed(2);
+        document.getElementById('today-cnt').textContent = today.count || 0;
+        document.getElementById('week-amt').textContent  = '$' + ((week.earnings  || 0)).toFixed(2);
+        document.getElementById('week-cnt').textContent  = week.count  || 0;
+        document.getElementById('month-amt').textContent = '$' + ((month.earnings || 0)).toFixed(2);
+        document.getElementById('month-cnt').textContent = month.count || 0;
+
+        allDeliveries = d.recent || [];
+        document.getElementById('table-sub').textContent = allDeliveries.length + ' recent deliveries';
+        renderTable();
+      })
+      .catch(function(){
+        document.getElementById('table-sub').textContent = 'Failed to load earnings';
+      });
+  }
+
+  function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  function fmtDate(s) {
+    if (!s) return '—';
+    try {
+      var d = new Date(s);
+      return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+    } catch(e) { return s; }
+  }
+
+  function renderTable() {
+    var rows = allDeliveries.slice().sort(function(a, b) {
+      var va = a[sortCol] || '', vb = b[sortCol] || '';
+      if (sortCol === 'delivery_fee') { va = parseFloat(va)||0; vb = parseFloat(vb)||0; }
+      if (va < vb) return sortAsc ? -1 : 1;
+      if (va > vb) return sortAsc ?  1 : -1;
+      return 0;
+    });
+
+    var body = document.getElementById('deliveries-body');
+    if (!rows.length) {
+      body.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:3rem;color:#94a3b8;">No deliveries yet. Accept orders to start earning!</td></tr>';
+      return;
+    }
+    body.innerHTML = rows.map(function(r) {
+      return '<tr>' +
+        '<td class="td-ref">#' + esc(r.order_ref) + '</td>' +
+        '<td>' + esc(r.restaurant_name) + '</td>' +
+        '<td>' + esc(r.customer_name) + '</td>' +
+        '<td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + esc(r.delivery_address) + '">' + esc(r.delivery_address) + '</td>' +
+        '<td class="td-fee">$' + Number(r.delivery_fee).toFixed(2) + '</td>' +
+        '<td><span class="td-pay">' + esc(r.payment_method) + '</span></td>' +
+        '<td class="td-date">' + fmtDate(r.completed_at) + '</td>' +
+      '</tr>';
+    }).join('');
+  }
+
+  function sortBy(col) {
+    if (sortCol === col) { sortAsc = !sortAsc; }
+    else { sortCol = col; sortAsc = false; }
+
+    SORT_COLS.forEach(function(c) {
+      var el = document.getElementById('arr-' + c);
+      if (el) { el.textContent = '↕'; el.parentElement.classList.remove('sorted'); }
+    });
+    var arr = document.getElementById('arr-' + col);
+    if (arr) { arr.textContent = sortAsc ? '↑' : '↓'; arr.parentElement.classList.add('sorted'); }
+    renderTable();
+  }
+
+  function doLogout() {
+    fetch(API + '/api/logout/', { method: 'POST', credentials: 'include' })
+      .finally(function(){
+        try { localStorage.removeItem('dirkmhob_user'); } catch(e) {}
+        window.location.href = 'driver_login.html';
+      });
+  }
+</script>
+</body>
+</html>

@@ -1,8 +1,26 @@
+import mimetypes
+import os
 from django.contrib import admin
 from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
+from django.http import FileResponse, Http404
 from api import views
+
+
+def serve_frontend(request, path=''):
+    """Serve any file from the frontend/ directory; default to home_screen.html."""
+    if not path:
+        path = 'home_screen.html'
+    filepath = os.path.join(settings.BASE_DIR, 'frontend', os.path.normpath(path))
+    # Security: make sure the resolved path is still inside frontend/
+    frontend_root = os.path.join(settings.BASE_DIR, 'frontend')
+    if not filepath.startswith(frontend_root):
+        raise Http404
+    if os.path.isfile(filepath):
+        content_type, _ = mimetypes.guess_type(filepath)
+        return FileResponse(open(filepath, 'rb'), content_type=content_type or 'application/octet-stream')
+    raise Http404
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -28,8 +46,16 @@ urlpatterns = [
     path('api/shop/menu/<int:item_id>/image/',    views.shop_menu_item_image, name='shop_menu_item_image'),
     path('api/shop/menu/<int:item_id>/',          views.shop_menu_item,       name='shop_menu_item'),
 
+    # ── Driver ───────────────────────────────────────────
+    path('api/driver/signup/',                              views.driver_signup_api,   name='driver_signup'),
+    path('api/driver/orders/',                              views.driver_orders,       name='driver_orders'),
+    path('api/driver/orders/<int:order_id>/<str:action>/', views.driver_order_action, name='driver_order_action'),
+    path('api/driver/earnings/',                            views.driver_earnings,     name='driver_earnings'),
+
     # ── Orders (submitted by frontend) ────────────────
     path('api/orders/', views.submit_order, name='submit_order'),
+    path('api/orders/<str:order_ref>/status/', views.order_status,   name='order_status'),
+    path('api/chat/<str:order_ref>/',          views.chat_messages,  name='chat_messages'),
 
     # ── Public ────────────────────────────────────────
     path('api/restaurants/',                                  views.restaurants_public,   name='restaurants_public'),
@@ -41,4 +67,8 @@ urlpatterns = [
     path('api/restaurants/<int:restaurant_id>/',              views.restaurant_detail,    name='restaurant_detail'),
     path('api/shop/register/',                                views.shop_register,        name='shop_register'),
 
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) + [
+    # Serve the frontend HTML/PNG/etc. files — must come LAST
+    path('', serve_frontend),
+    path('<path:path>', serve_frontend),
+]

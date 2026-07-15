@@ -383,16 +383,16 @@
                     </div>
                 </div>
                 <div class="float-info">
-                    <div class="float-status">Heading Your Way</div>
-                    <div class="float-sub">Seang is on the way to you</div>
-                    <div class="float-order">Order #CKDCKD-6767</div>
+                    <div class="float-status" id="float-status-text">Heading Your Way</div>
+                    <div class="float-sub" id="float-sub-text">Driver is on the way to you</div>
+                    <div class="float-order" id="float-order-ref">Loading…</div>
                 </div>
                 <div class="float-driver">
                     <div>
-                        <div class="float-avatar">👨</div>
+                        <div class="float-avatar">🛵</div>
                     </div>
                     <div>
-                        <div class="float-driver-name">Seang Cha</div>
+                        <div class="float-driver-name" id="float-driver-name">Loading…</div>
                         <div class="float-driver-sub">⭐ 4.9</div>
                     </div>
                 </div>
@@ -406,12 +406,12 @@
             <div class="sidebar-section">
                 <div class="sidebar-hd">Your Delivery Driver</div>
                 <div class="driver-card">
-                    <div class="driver-avatar">👨</div>
+                    <div class="driver-avatar">🛵</div>
                     <div class="driver-info">
                         <div class="driver-role">Deliverer</div>
-                        <div class="driver-name">Seang Cha</div>
-                        <div class="driver-rating">★ 4.9 <span style="color:var(--muted);font-weight:400">(243 trips)</span></div>
-                        <div class="driver-vehicle">🛵 Honda Wave · KH 1234 AB</div>
+                        <div class="driver-name" id="driver-name-sidebar">Loading…</div>
+                        <div class="driver-rating">★ 4.9</div>
+                        <div class="driver-vehicle" id="driver-vehicle-sidebar">On the way</div>
                     </div>
                 </div>
 
@@ -468,14 +468,14 @@
                             <div class="prog-sub">Driver collected your food</div>
                         </div>
                     </div>
-                    <div class="prog-step active">
+                    <div class="prog-step active" id="step-on-the-way">
                         <div class="prog-icon active">🛵</div>
                         <div class="prog-text">
                             <div class="prog-label">On The Way</div>
                             <div class="prog-sub">ETA ~<span id="eta-sidebar">15</span> minutes</div>
                         </div>
                     </div>
-                    <div class="prog-step">
+                    <div class="prog-step" id="step-delivered">
                         <div class="prog-icon pending">🎉</div>
                         <div class="prog-text">
                             <div class="prog-label pending">Delivered</div>
@@ -501,167 +501,194 @@
 <!-- Load maps config first -->
 <script src="maps-config.js"></script>
 <script>
-    /* ── EXISTING FUNCTIONALITY ─────────────────────────────── */
+    var API       = (location.port==='5500'||location.port==='5501')?'http://127.0.0.1:8000':location.origin;
+    var ORDER_REF = localStorage.getItem('last_order_ref') || '';
+    var pollTimer = null;
+    var wasDelivered = false;
+
     function openOrderDetail() {
         window.location.href = 'order_comfirm.html';
     }
 
     function setDeliveryNotification() {
-        const notification = {
+        localStorage.setItem('deliveryNotification', JSON.stringify({
             title: 'Your food has been delivered',
             body: 'Tap to view delivery details.',
             target: 'order_delivered_screen.html',
             unread: true
-        };
-        localStorage.setItem('deliveryNotification', JSON.stringify(notification));
+        }));
     }
 
     function goToDelivered() {
-        const notification = getDeliveryNotification();
-        if (notification) {
-            localStorage.setItem('deliveryNotification', JSON.stringify({ ...notification, unread: false }));
+        var raw = localStorage.getItem('deliveryNotification');
+        if (raw) {
+            var n = JSON.parse(raw);
+            n.unread = false;
+            localStorage.setItem('deliveryNotification', JSON.stringify(n));
         }
         window.location.href = 'order_delivered_screen.html';
     }
 
-    function getDeliveryNotification() {
-        const raw = localStorage.getItem('deliveryNotification');
-        return raw ? JSON.parse(raw) : null;
-    }
-
     /* ── ETA UPDATE ─────────────────────────────────────────── */
     function updateETA(minutes) {
-        const m = Math.max(0, Math.round(minutes));
-        const etaDisplay  = document.getElementById('eta-display');
-        const etaSidebar  = document.getElementById('eta-sidebar');
+        var m = Math.max(0, Math.round(minutes));
+        var etaDisplay = document.getElementById('eta-display');
+        var etaSidebar = document.getElementById('eta-sidebar');
         if (etaDisplay) etaDisplay.textContent = m;
         if (etaSidebar) etaSidebar.textContent  = m;
 
-        // update conic gradient
-        const ring = document.querySelector('.float-eta-ring');
+        var ring = document.querySelector('.float-eta-ring');
         if (ring) {
-            const pct = Math.min(100, (m / 20) * 100); // base 20 minutes
-            ring.style.background = `conic-gradient(var(--primary) ${100 - pct}%, var(--border) 0%)`;
-        }
-
-        if (m <= 0) {
-            // Show delivery
-            const btn   = document.getElementById('delivery-button');
-            const toast = document.getElementById('delivery-toast');
-            if (btn)   { btn.style.display = 'block'; }
-            if (toast) { toast.style.display = 'flex'; }
-            setDeliveryNotification();
+            var pct = Math.min(100, (m / 20) * 100);
+            ring.style.background = 'conic-gradient(var(--primary) ' + (100 - pct) + '%, var(--border) 0%)';
         }
     }
 
+    /* ── REAL-TIME STATUS POLLING ───────────────────────────── */
+    function pollStatus() {
+        if (!ORDER_REF) return;
+        fetch(API + '/api/orders/' + ORDER_REF + '/status/', { credentials: 'include' })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            if (d.error) return;
+
+            var driverName = d.driver_name || 'Your Driver';
+            var firstName  = driverName.split(' ')[0];
+
+            var el;
+            el = document.getElementById('float-sub-text');
+            if (el) el.textContent = firstName + ' is on the way to you';
+            el = document.getElementById('float-driver-name');
+            if (el) el.textContent = driverName;
+            el = document.getElementById('driver-name-sidebar');
+            if (el) el.textContent = driverName;
+            el = document.getElementById('float-order-ref');
+            if (el) el.textContent = 'Order #' + d.order_ref;
+            el = document.getElementById('track-res-name');
+            if (el && d.restaurant_name) el.textContent = d.restaurant_name;
+            el = document.getElementById('driver-vehicle-sidebar');
+            if (el && d.status === 'on_the_way') el.textContent = '🛵 On the way to you';
+
+            if (d.status === 'delivered' && !wasDelivered) {
+                wasDelivered = true;
+                markDelivered(driverName);
+            }
+        })
+        .catch(function() {});
+    }
+
+    function markDelivered(driverName) {
+        if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+        if (typeof animationTimer !== 'undefined' && animationTimer) {
+            clearInterval(animationTimer); animationTimer = null;
+        }
+
+        // Progress: On The Way → done
+        var stepOTW = document.getElementById('step-on-the-way');
+        if (stepOTW) {
+            stepOTW.className = 'prog-step done';
+            var icon = stepOTW.querySelector('.prog-icon');
+            if (icon) { icon.className = 'prog-icon done'; icon.textContent = '✓'; }
+        }
+
+        // Progress: Delivered → done
+        var stepDel = document.getElementById('step-delivered');
+        if (stepDel) {
+            stepDel.className = 'prog-step done';
+            var icon2 = stepDel.querySelector('.prog-icon');
+            if (icon2) { icon2.className = 'prog-icon done'; icon2.textContent = '✓'; }
+            var lbl = stepDel.querySelector('.prog-label');
+            if (lbl) lbl.className = 'prog-label';
+        }
+
+        // Floating card
+        var fs = document.getElementById('float-status-text');
+        if (fs) fs.textContent = 'Delivered!';
+        var fsub = document.getElementById('float-sub-text');
+        if (fsub) fsub.textContent = 'Your food has arrived. Enjoy!';
+
+        var el = document.getElementById('driver-vehicle-sidebar');
+        if (el) el.textContent = '✓ Delivered';
+
+        updateETA(0);
+        setDeliveryNotification();
+
+        var btn   = document.getElementById('delivery-button');
+        var toast = document.getElementById('delivery-toast');
+        if (btn)   btn.style.display = 'block';
+        if (toast) toast.style.display = 'flex';
+    }
+
     /* ── GOOGLE MAPS INTEGRATION ────────────────────────────── */
-    let map, driverMarker, directionsRenderer;
-    let routePoints = [];
-    let driverIndex = 0;
-    let animationTimer = null;
-    let initialETA = 15; // minutes
+    var map, driverMarker, directionsRenderer;
+    var routePoints = [];
+    var driverIndex = 0;
+    var animationTimer = null;
+    var initialETA = 15;
 
     window.initMap = function () {
-        const cfg = (typeof MAPS_CONFIG !== 'undefined') ? MAPS_CONFIG : {};
-        const restaurant = cfg.restaurant || { lat: 11.5656, lng: 104.9282 };
-        const customer   = cfg.customer   || { lat: 11.5450, lng: 104.9100 };
-        const driverStart= cfg.driver     || { lat: 11.5580, lng: 104.9205 };
+        var cfg = (typeof MAPS_CONFIG !== 'undefined') ? MAPS_CONFIG : {};
+        var restaurant = cfg.restaurant || { lat: 11.5656, lng: 104.9282 };
+        var customer   = cfg.customer   || { lat: 11.5450, lng: 104.9100 };
+        var driverStart= cfg.driver     || { lat: 11.5580, lng: 104.9205 };
 
         map = new google.maps.Map(document.getElementById('tracking-map'), {
             center: { lat: (restaurant.lat + customer.lat) / 2, lng: (restaurant.lng + customer.lng) / 2 },
             zoom: 14,
-            mapTypeControl: false,
-            streetViewControl: false,
-            fullscreenControl: false,
+            mapTypeControl: false, streetViewControl: false, fullscreenControl: false,
             styles: [
-                { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+                { featureType: 'poi',     stylers: [{ visibility: 'off' }] },
                 { featureType: 'transit', stylers: [{ visibility: 'off' }] },
                 { featureType: 'road', elementType: 'labels.icon', stylers: [{ visibility: 'off' }] }
             ]
         });
 
-        // Restaurant marker
         new google.maps.Marker({
             position: restaurant, map,
             label: { text: '🍴', fontSize: '20px' },
-            title: 'KFC TK Avenue (Pickup)',
-            icon: {
-                path: google.maps.SymbolPath.CIRCLE,
-                scale: 18,
-                fillColor: '#FF6B35', fillOpacity: 1,
-                strokeColor: '#FFFFFF', strokeWeight: 3
-            }
+            icon: { path: google.maps.SymbolPath.CIRCLE, scale: 18, fillColor: '#FF6B35', fillOpacity: 1, strokeColor: '#FFFFFF', strokeWeight: 3 }
         });
-
-        // Customer marker
         new google.maps.Marker({
             position: customer, map,
             label: { text: '🏠', fontSize: '18px' },
-            title: 'Your Location (Delivery)',
-            icon: {
-                path: google.maps.SymbolPath.CIRCLE,
-                scale: 18,
-                fillColor: '#0077C8', fillOpacity: 1,
-                strokeColor: '#FFFFFF', strokeWeight: 3
-            }
+            icon: { path: google.maps.SymbolPath.CIRCLE, scale: 18, fillColor: '#0077C8', fillOpacity: 1, strokeColor: '#FFFFFF', strokeWeight: 3 }
         });
-
-        // Driver marker (animated)
         driverMarker = new google.maps.Marker({
             position: driverStart, map,
             label: { text: '🛵', fontSize: '18px' },
-            title: 'Seang Cha (Your Driver)',
             zIndex: 10,
-            icon: {
-                path: google.maps.SymbolPath.CIRCLE,
-                scale: 20,
-                fillColor: '#1E293B', fillOpacity: 1,
-                strokeColor: '#FFFFFF', strokeWeight: 3
-            }
+            icon: { path: google.maps.SymbolPath.CIRCLE, scale: 20, fillColor: '#1E293B', fillOpacity: 1, strokeColor: '#FFFFFF', strokeWeight: 3 }
         });
 
-        // Directions service to draw route
-        const directionsService = new google.maps.DirectionsService();
+        var directionsService = new google.maps.DirectionsService();
         directionsRenderer = new google.maps.DirectionsRenderer({
             suppressMarkers: true,
-            polylineOptions: {
-                strokeColor: '#0077C8',
-                strokeWeight: 5,
-                strokeOpacity: 0.85
-            }
+            polylineOptions: { strokeColor: '#0077C8', strokeWeight: 5, strokeOpacity: 0.85 }
         });
         directionsRenderer.setMap(map);
 
         directionsService.route({
-            origin: restaurant,
-            destination: customer,
+            origin: restaurant, destination: customer,
             travelMode: google.maps.TravelMode.DRIVING
         }, function (result, status) {
             if (status === google.maps.DirectionsStatus.OK) {
                 directionsRenderer.setDirections(result);
                 routePoints = result.routes[0].overview_path;
-
-                // Find nearest point on route to driver's start position
                 driverIndex = findNearestPointIndex(driverStart, routePoints);
                 driverMarker.setPosition(routePoints[driverIndex]);
-
-                // Update initial ETA based on route duration
-                const legDuration = result.routes[0].legs[0].duration.value; // seconds
-                initialETA = Math.ceil(legDuration / 60);
+                initialETA = Math.ceil(result.routes[0].legs[0].duration.value / 60);
                 updateETA(initialETA);
-
                 startDriverAnimation();
             } else {
-                console.warn('Directions failed:', status);
                 startFallbackAnimation();
             }
         });
     };
 
     function findNearestPointIndex(point, path) {
-        let minDist = Infinity, idx = 0;
-        path.forEach((p, i) => {
-            const d = google.maps.geometry.spherical.computeDistanceBetween(
+        var minDist = Infinity, idx = 0;
+        path.forEach(function(p, i) {
+            var d = google.maps.geometry.spherical.computeDistanceBetween(
                 new google.maps.LatLng(point.lat, point.lng), p
             );
             if (d < minDist) { minDist = d; idx = i; }
@@ -671,113 +698,69 @@
 
     function startDriverAnimation() {
         if (!routePoints.length) return;
-        const totalPoints   = routePoints.length;
-        const remainingPts  = totalPoints - driverIndex;
-        const etaSeconds    = initialETA * 60;
-        // Speed: how many seconds per route-point step
-        const stepMs = Math.max(800, Math.min(3000, (etaSeconds * 1000) / remainingPts));
+        var remainingPts = routePoints.length - driverIndex;
+        var stepMs = Math.max(800, Math.min(3000, (initialETA * 60000) / remainingPts));
 
         animationTimer = setInterval(function () {
+            if (wasDelivered) { clearInterval(animationTimer); return; }
             driverIndex++;
-            if (driverIndex >= routePoints.length) {
-                clearInterval(animationTimer);
-                updateETA(0);
-                return;
-            }
+            if (driverIndex >= routePoints.length) { clearInterval(animationTimer); return; }
             driverMarker.setPosition(routePoints[driverIndex]);
-
-            // Smooth map pan to keep driver in view
-            if (driverIndex % 5 === 0) {
-                map.panTo(routePoints[driverIndex]);
-            }
-
-            // ETA = remaining fraction × initial ETA
-            const fraction = (routePoints.length - driverIndex) / routePoints.length;
-            updateETA(initialETA * fraction);
+            if (driverIndex % 5 === 0) map.panTo(routePoints[driverIndex]);
+            updateETA(initialETA * (routePoints.length - driverIndex) / routePoints.length);
         }, stepMs);
     }
 
-    /* ── FALLBACK for when Maps API is not loaded ──────────── */
-    function showMapFallback(reason) {
-        const mapEl   = document.getElementById('tracking-map');
-        const pinName = localStorage.getItem('cart_restaurant_name') || 'Restaurant';
-        mapEl.innerHTML = `
-            <div class="map-fallback">
-                <div class="fallback-grid"></div>
-
-                <!-- Roads -->
-                <div class="fallback-road-h" style="top:30%"></div>
-                <div class="fallback-road-h" style="top:55%"></div>
-                <div class="fallback-road-h" style="top:75%"></div>
-                <div class="fallback-road-v" style="left:25%"></div>
-                <div class="fallback-road-v" style="left:55%"></div>
-                <div class="fallback-road-v" style="right:18%"></div>
-
-                <!-- Buildings -->
-                <div class="fallback-bld" style="width:70px;height:50px;background:#8aacbf;top:6%;left:3%"></div>
-                <div class="fallback-bld" style="width:55px;height:40px;background:#7a9cb0;top:6%;left:29%"></div>
-                <div class="fallback-bld" style="width:90px;height:58px;background:#b0c8d8;top:6%;right:4%"></div>
-                <div class="fallback-bld" style="width:65px;height:44px;background:#6a9ab4;top:38%;left:3%"></div>
-                <div class="fallback-bld" style="width:80px;height:48px;background:#85a8bc;top:60%;left:29%"></div>
-                <div class="fallback-bld" style="width:75px;height:50px;background:#90b0c0;top:38%;right:4%"></div>
-                <div class="fallback-bld" style="width:55px;height:36px;background:#80aa9a;top:80%;left:3%"></div>
-
-                <!-- Route SVG -->
-                <svg class="route-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
-                    <path d="M 82 12 Q 70 30 62 45 Q 50 60 38 72 Q 28 80 18 88"
-                          stroke="#0077C8" stroke-width="1.5" fill="none"
-                          stroke-linecap="round" stroke-dasharray="4 2" opacity="0.8"/>
-                    <path d="M 82 12 Q 70 30 62 45 Q 50 60 38 72 Q 28 80 18 88"
-                          stroke="#0077C8" stroke-width="5" fill="none" opacity="0.12" stroke-linecap="round"/>
-                </svg>
-
-                <!-- Restaurant pin -->
-                <div class="fallback-restaurant-pin" style="left:82%;top:12%">
-                    <div class="pin-bubble restaurant">🍴 ${pinName}</div>
-                    <div class="pin-tail restaurant"></div>
-                </div>
-
-                <!-- Customer pin -->
-                <div class="fallback-customer-pin" style="left:18%;top:88%">
-                    <div class="pin-bubble customer">🏠 Your Location</div>
-                    <div class="pin-tail customer"></div>
-                </div>
-
-                <!-- Driver pin (animated) -->
-                <div class="fallback-driver" id="fallback-driver" style="left:62%;top:45%">🛵</div>
-
-                ${reason ? `
-                <div class="fallback-notice">
-                    <strong>🗺️ Map Preview Mode</strong>
-                    To enable live Google Maps tracking, add your API key to <code>maps-config.js</code>.
-                </div>` : ''}
-            </div>
-        `;
+    /* ── FALLBACK MAP ───────────────────────────────────────── */
+    function showMapFallback(showNotice) {
+        var mapEl   = document.getElementById('tracking-map');
+        var pinName = localStorage.getItem('cart_restaurant_name') || 'Restaurant';
+        mapEl.innerHTML =
+            '<div class="map-fallback">' +
+            '<div class="fallback-grid"></div>' +
+            '<div class="fallback-road-h" style="top:30%"></div>' +
+            '<div class="fallback-road-h" style="top:55%"></div>' +
+            '<div class="fallback-road-h" style="top:75%"></div>' +
+            '<div class="fallback-road-v" style="left:25%"></div>' +
+            '<div class="fallback-road-v" style="left:55%"></div>' +
+            '<div class="fallback-road-v" style="right:18%"></div>' +
+            '<div class="fallback-bld" style="width:70px;height:50px;background:#8aacbf;top:6%;left:3%"></div>' +
+            '<div class="fallback-bld" style="width:55px;height:40px;background:#7a9cb0;top:6%;left:29%"></div>' +
+            '<div class="fallback-bld" style="width:90px;height:58px;background:#b0c8d8;top:6%;right:4%"></div>' +
+            '<div class="fallback-bld" style="width:65px;height:44px;background:#6a9ab4;top:38%;left:3%"></div>' +
+            '<div class="fallback-bld" style="width:80px;height:48px;background:#85a8bc;top:60%;left:29%"></div>' +
+            '<div class="fallback-bld" style="width:75px;height:50px;background:#90b0c0;top:38%;right:4%"></div>' +
+            '<div class="fallback-bld" style="width:55px;height:36px;background:#80aa9a;top:80%;left:3%"></div>' +
+            '<svg class="route-svg" viewBox="0 0 100 100" preserveAspectRatio="none">' +
+            '<path d="M 82 12 Q 70 30 62 45 Q 50 60 38 72 Q 28 80 18 88" stroke="#0077C8" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-dasharray="4 2" opacity="0.8"/>' +
+            '<path d="M 82 12 Q 70 30 62 45 Q 50 60 38 72 Q 28 80 18 88" stroke="#0077C8" stroke-width="5" fill="none" opacity="0.12" stroke-linecap="round"/>' +
+            '</svg>' +
+            '<div class="fallback-restaurant-pin" style="left:82%;top:12%"><div class="pin-bubble restaurant">🍴 ' + pinName + '</div><div class="pin-tail restaurant"></div></div>' +
+            '<div class="fallback-customer-pin" style="left:18%;top:88%"><div class="pin-bubble customer">🏠 Your Location</div><div class="pin-tail customer"></div></div>' +
+            '<div class="fallback-driver" id="fallback-driver" style="left:62%;top:45%">🛵</div>' +
+            (showNotice ? '<div class="fallback-notice"><strong>🗺️ Map Preview Mode</strong>To enable live Google Maps tracking, add your API key to <code>maps-config.js</code>.</div>' : '') +
+            '</div>';
         startFallbackAnimation();
     }
 
     function startFallbackAnimation() {
-        // Animate driver along a CSS path
-        const driver = document.getElementById('fallback-driver');
+        var driver = document.getElementById('fallback-driver');
         if (!driver) return;
-        const waypoints = [
+        var waypoints = [
             { left: 82, top: 12 }, { left: 70, top: 30 }, { left: 62, top: 45 },
             { left: 50, top: 60 }, { left: 38, top: 72 }, { left: 28, top: 80 },
             { left: 18, top: 88 }
         ];
-        let wi = 0;
-        let eta = 15;
-        const timer = setInterval(() => {
+        var wi = 0;
+        var eta = 15;
+        var timer = setInterval(function() {
+            if (wasDelivered) { clearInterval(timer); return; }
             wi++;
-            if (wi >= waypoints.length) {
-                clearInterval(timer);
-                updateETA(0);
-                return;
-            }
+            if (wi >= waypoints.length) { clearInterval(timer); return; }
             driver.style.left = waypoints[wi].left + '%';
             driver.style.top  = waypoints[wi].top  + '%';
             eta -= 2.5;
-            updateETA(eta);
+            updateETA(Math.max(0, eta));
         }, 3000);
     }
 
@@ -785,44 +768,35 @@
     function loadRestaurantInfo() {
         var restName = localStorage.getItem('cart_restaurant_name') || 'Restaurant';
         var restLogo = localStorage.getItem('cart_restaurant_logo') || '🍽️';
-
-        var logoEl    = document.getElementById('track-res-logo');
-        var nameEl    = document.getElementById('track-res-name');
-        var prepEl    = document.getElementById('track-prep-sub');
-
-        if (logoEl)  logoEl.textContent = restLogo;
-        if (nameEl)  nameEl.textContent = restName;
-        if (prepEl)  prepEl.textContent = restName + ' is making your order';
+        var logoEl = document.getElementById('track-res-logo');
+        var nameEl = document.getElementById('track-res-name');
+        var prepEl = document.getElementById('track-prep-sub');
+        if (logoEl) logoEl.textContent = restLogo;
+        if (nameEl) nameEl.textContent = restName;
+        if (prepEl) prepEl.textContent = restName + ' is making your order';
     }
 
-    /* ── BOOTSTRAP ──────────────────────────────────────────── */
     function loadGoogleMaps() {
-        const cfg = (typeof MAPS_CONFIG !== 'undefined') ? MAPS_CONFIG : {};
+        var cfg = (typeof MAPS_CONFIG !== 'undefined') ? MAPS_CONFIG : {};
         if (!cfg.apiKey || cfg.apiKey === 'YOUR_GOOGLE_MAPS_API_KEY_HERE') {
             showMapFallback(true);
             return;
         }
-
-        const script  = document.createElement('script');
-        script.src    = `https://maps.googleapis.com/maps/api/js?key=${cfg.apiKey}&libraries=geometry&callback=initMap`;
-        script.async  = true;
-        script.defer  = true;
-        script.onerror = () => showMapFallback(true);
+        var script = document.createElement('script');
+        script.src = 'https://maps.googleapis.com/maps/api/js?key=' + cfg.apiKey + '&libraries=geometry&callback=initMap';
+        script.async = true; script.defer = true;
+        script.onerror = function() { showMapFallback(true); };
         document.head.appendChild(script);
     }
 
-    /* ── DELIVERY TIMEOUT (30 seconds, keeping original logic) ── */
+    /* ── BOOTSTRAP ──────────────────────────────────────────── */
     document.addEventListener('DOMContentLoaded', function () {
         loadRestaurantInfo();
         loadGoogleMaps();
 
-        setTimeout(function () {
-            const btn   = document.getElementById('delivery-button');
-            const toast = document.getElementById('delivery-toast');
-            if (btn)   { btn.style.display = 'block'; }
-            if (toast) { toast.style.display = 'flex'; }
-            setDeliveryNotification();
-        }, 30000);
+        // Poll backend every 3 seconds for real status
+        pollStatus();
+        pollTimer = setInterval(pollStatus, 3000);
     });
 </script>
 </body>

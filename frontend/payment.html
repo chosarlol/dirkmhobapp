@@ -600,88 +600,46 @@
 
   /* ── Confirm & place order ── */
   function confirmPayment() {
-    var overlay = document.getElementById('pay-overlay');
-    var msg     = document.getElementById('overlay-msg');
-    overlay.classList.add('active');
-    msg.textContent = 'Placing your order…';
-
+    /* Save chosen method */
     localStorage.setItem('chosen_payment', selectedMethod);
 
-    var pending = null;
-    try { pending = JSON.parse(localStorage.getItem('pending_order') || 'null'); } catch(e) {}
+    /* Show processing overlay */
+    document.getElementById('overlay-msg').textContent = 'Order confirmed! Redirecting…';
+    document.getElementById('pay-overlay').classList.add('active');
 
-    if (pending) {
-      pending.paymentMethod = selectedMethod;
-    } else {
-      /* Build a minimal order from cart so the flow always works */
-      var cart = DirkCart.getCart();
-      var subtotal = DirkCart.calculateSubtotal(cart);
-      pending = {
-        id:              'ORD-' + Date.now(),
-        date:            new Date().toISOString(),
-        items:           cart,
-        subtotal:        subtotal,
-        deliveryFee:     2.50,
-        delivery:        2.50,
-        discount:        0,
-        total:           subtotal + 2.50 + 1.00,
-        paymentMethod:   selectedMethod,
-        deliveryAddress: '',
-        restaurantName:  cart.length ? (cart[0].restaurantName || '') : '',
-        customerName:    '',
-        customerEmail:   '',
-        pin:             '',
-        status:          'confirmed'
-      };
-    }
+    /* Fire API in background — don't block navigation */
+    try {
+      var pending = JSON.parse(localStorage.getItem('pending_order') || 'null');
+      if (pending) {
+        pending.paymentMethod = selectedMethod;
+        var orderRef = pending.id || ('ORD-' + Date.now());
+        localStorage.setItem('last_order_ref', orderRef);
+        localStorage.setItem('currentOrder', JSON.stringify({
+          items: pending.items, total: { totalUSD: pending.total },
+          pin: pending.pin || '', paymentMethod: selectedMethod, status: 'confirmed'
+        }));
+        DirkCart.clearCart();
+        localStorage.removeItem('pending_order');
+        fetch(API + '/api/orders/', {
+          method:'POST', credentials:'include',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({
+            id: pending.id, items: pending.items,
+            subtotal: pending.subtotal, deliveryFee: pending.deliveryFee || 2.50,
+            discount: pending.discount || 0, total: pending.total,
+            promoCode: pending.promoCode || '', paymentMethod: selectedMethod,
+            deliveryAddress: pending.deliveryAddress || pending.pin || '',
+            restaurantName: pending.restaurantName || '',
+            customerName: pending.customerName || '', customerEmail: pending.customerEmail || ''
+          })
+        }).then(function(r){return r.json();})
+          .then(function(d){if(d.order_ref)localStorage.setItem('last_order_ref',d.order_ref);})
+          .catch(function(){});
+      }
+    } catch(e) {}
 
-    var orderRef = pending.id || ('ORD-' + Date.now());
-
-    /* 1. Save everything to localStorage immediately — navigation never waits on API */
-    localStorage.setItem('last_order_ref', orderRef);
-    localStorage.setItem('currentOrder', JSON.stringify({
-      items:         pending.items,
-      total:         { totalUSD: pending.total },
-      pin:           pending.pin || pending.deliveryAddress || '',
-      paymentMethod: pending.paymentMethod,
-      promoCode:     pending.promoCode || null,
-      status:        'confirmed'
-    }));
-    var hist = [];
-    try { hist = JSON.parse(localStorage.getItem('orderHistory')) || []; } catch(e) {}
-    hist.unshift(pending);
-    if (hist.length > 30) hist = hist.slice(0, 30);
-    localStorage.setItem('orderHistory', JSON.stringify(hist));
-    DirkCart.clearCart();
-    localStorage.removeItem('pending_order');
-
-    /* 2. Fire API call in the background — don't wait for it */
-    fetch(API + '/api/orders/', {
-      method: 'POST',
-      credentials: 'include',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({
-        id:              pending.id,
-        items:           pending.items,
-        subtotal:        pending.subtotal,
-        deliveryFee:     pending.deliveryFee || pending.delivery || 2.50,
-        discount:        pending.discount || 0,
-        total:           pending.total,
-        promoCode:       pending.promoCode || '',
-        paymentMethod:   pending.paymentMethod,
-        deliveryAddress: pending.deliveryAddress || pending.pin || '',
-        restaurantName:  pending.restaurantName  || '',
-        customerName:    pending.customerName    || '',
-        customerEmail:   pending.customerEmail   || '',
-      })
-    })
-    .then(function(r) { return r.json(); })
-    .then(function(d) { if (d.order_ref) localStorage.setItem('last_order_ref', d.order_ref); })
-    .catch(function() {});   /* silent — we already navigated */
-
-    /* 3. Always navigate after 2 seconds — no waiting for the API */
-    msg.textContent = 'Order confirmed! Redirecting…';
-    setTimeout(function() { window.location.href = 'order_comfirm.html'; }, 2000);
+    /* Always redirect after 1.5 s — never blocked by API */
+    setTimeout(function() { window.location.href = 'order_comfirm.html'; }, 1500);
   }
 
   /* ── Init ── */

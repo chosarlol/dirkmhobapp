@@ -490,7 +490,7 @@
     });
     var btn = document.getElementById('pay-btn');
     if (method === 'khqr') {
-      btn.textContent = 'I've Paid — Confirm Order →';
+      btn.textContent = "I've Paid — Confirm Order →";
       startQRTimer();
     } else if (method === 'cash') {
       btn.textContent = 'Place Order (Pay on Delivery) →';
@@ -548,27 +548,42 @@
     var delivery = 2.50;
     var discount = 0;
     var restName = '';
+    var items    = [];
 
-    if (pending) {
+    if (pending && (pending.subtotal > 0 || (pending.items && pending.items.length))) {
+      /* Came from check_out2 normally */
       subtotal = pending.subtotal || 0;
-      delivery = pending.delivery || 2.50;
+      delivery = pending.delivery || pending.deliveryFee || 2.50;
       discount = pending.discount || 0;
       restName = pending.restaurantName || '';
-      if (pending.items) {
-        var itemsEl = document.getElementById('sum-items');
-        itemsEl.innerHTML = pending.items.map(function(i) {
-          return '<div class="sum-item"><span><span class="qty">' + i.quantity + 'x</span>' + i.name + '</span><span>$' + (i.price * i.quantity).toFixed(2) + '</span></div>';
-        }).join('');
-      }
+      items    = pending.items || [];
     } else if (cart.length) {
+      /* Cart still has items (e.g. direct page load while shopping) */
       subtotal = DirkCart.calculateSubtotal(cart);
       discount = DirkCart.calculateDiscount(subtotal);
       restName = cart[0].restaurantName || '';
-      var itemsEl = document.getElementById('sum-items');
-      itemsEl.innerHTML = cart.map(function(i) {
-        return '<div class="sum-item"><span><span class="qty">' + i.quantity + 'x</span>' + i.name + '</span><span>$' + (i.price * i.quantity).toFixed(2) + '</span></div>';
-      }).join('');
+      items    = cart;
+    } else {
+      /* Last resort: pull from the most recent order in history */
+      try {
+        var hist = JSON.parse(localStorage.getItem('orderHistory') || '[]');
+        if (hist.length) {
+          var last = hist[0];
+          subtotal = last.subtotal || 0;
+          delivery = last.deliveryFee || last.delivery || 2.50;
+          discount = last.discount || 0;
+          restName = last.restaurantName || '';
+          items    = last.items || [];
+          /* Re-populate pending_order so confirmPayment can submit it */
+          localStorage.setItem('pending_order', JSON.stringify(last));
+        }
+      } catch(e) {}
     }
+
+    var itemsEl = document.getElementById('sum-items');
+    itemsEl.innerHTML = items.map(function(i) {
+      return '<div class="sum-item"><span><span class="qty">' + i.quantity + 'x</span>' + i.name + '</span><span>$' + (i.price * i.quantity).toFixed(2) + '</span></div>';
+    }).join('');
 
     var total = subtotal + delivery + 1 - discount;
     document.getElementById('sum-restaurant').textContent = restName || 'Your order';

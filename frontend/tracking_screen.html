@@ -544,34 +544,64 @@
     }
 
     /* ── REAL-TIME STATUS POLLING ───────────────────────────── */
-    function pollStatus() {
-        if (!ORDER_REF) return;
-        fetch(API + '/api/orders/' + ORDER_REF + '/status/', { credentials: 'include' })
-        .then(function(r) { return r.json(); })
-        .then(function(d) {
-            if (d.error) return;
+    function applyStatus(d) {
+        /* Called with a valid (non-error) status response */
+        if (d.order_ref && d.order_ref !== ORDER_REF) {
+            /* Sync the in-memory ref so subsequent polls hit the right order */
+            ORDER_REF = d.order_ref;
+            localStorage.setItem('last_order_ref', ORDER_REF);
+        }
 
-            var driverName = d.driver_name || 'Your Driver';
-            var firstName  = driverName.split(' ')[0];
+        var driverName = d.driver_name || 'Your Driver';
+        var firstName  = driverName.split(' ')[0];
 
-            var el;
+        var el;
+        el = document.getElementById('float-driver-name');
+        if (el) el.textContent = driverName;
+        el = document.getElementById('driver-name-sidebar');
+        if (el) el.textContent = driverName;
+        el = document.getElementById('float-order-ref');
+        if (el) el.textContent = 'Order #' + d.order_ref;
+        el = document.getElementById('track-res-name');
+        if (el && d.restaurant_name) el.textContent = d.restaurant_name;
+
+        if (d.status === 'delivered') {
+            el = document.getElementById('float-sub-text');
+            if (el) el.textContent = 'Your food has arrived!';
+            el = document.getElementById('driver-vehicle-sidebar');
+            if (el) el.textContent = '✓ Delivered';
+        } else {
             el = document.getElementById('float-sub-text');
             if (el) el.textContent = firstName + ' is on the way to you';
-            el = document.getElementById('float-driver-name');
-            if (el) el.textContent = driverName;
-            el = document.getElementById('driver-name-sidebar');
-            if (el) el.textContent = driverName;
-            el = document.getElementById('float-order-ref');
-            if (el) el.textContent = 'Order #' + d.order_ref;
-            el = document.getElementById('track-res-name');
-            if (el && d.restaurant_name) el.textContent = d.restaurant_name;
             el = document.getElementById('driver-vehicle-sidebar');
             if (el && d.status === 'on_the_way') el.textContent = '🛵 On the way to you';
+        }
 
-            if (d.status === 'delivered' && !wasDelivered) {
-                wasDelivered = true;
-                markDelivered(driverName);
+        if (d.status === 'delivered' && !wasDelivered) {
+            wasDelivered = true;
+            markDelivered(driverName);
+        }
+    }
+
+    function pollStatus() {
+        var url = ORDER_REF
+            ? API + '/api/orders/' + ORDER_REF + '/status/'
+            : API + '/api/orders/my-latest/status/';
+
+        fetch(url, { credentials: 'include' })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            if (d.error) {
+                /* Specific order not found — fall back to latest */
+                if (ORDER_REF) {
+                    fetch(API + '/api/orders/my-latest/status/', { credentials: 'include' })
+                    .then(function(r2) { return r2.json(); })
+                    .then(function(d2) { if (!d2.error) applyStatus(d2); })
+                    .catch(function() {});
+                }
+                return;
             }
+            applyStatus(d);
         })
         .catch(function() {});
     }

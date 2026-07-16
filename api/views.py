@@ -1007,35 +1007,54 @@ def driver_earnings(request):
 
 # ── Customer: live order status (polled by order_comfirm.html) ─────────────────
 
+def _order_status_json(order):
+    """Shared helper — build the status payload for any Order instance."""
+    driver_name = ''
+    if order.assigned_driver:
+        driver_name = order.assigned_driver.get_full_name() or order.assigned_driver.username
+    status_map = {
+        'confirmed':  'confirmed',
+        'preparing':  'preparing',
+        'on_the_way': 'on_the_way',
+        'delivering': 'on_the_way',
+        'delivered':  'delivered',
+        'cancelled':  'cancelled',
+    }
+    return _json({
+        'status':           status_map.get(order.status, order.status),
+        'driver_name':      driver_name,
+        'restaurant_name':  order.restaurant_name,
+        'delivery_address': order.delivery_address or '',
+        'order_ref':        order.order_ref,
+    })
+
+
 def order_status(request, order_ref):
     """GET /api/orders/<order_ref>/status/ — returns current status for polling."""
     try:
         order = Order.objects.get(order_ref=order_ref)
     except Order.DoesNotExist:
         return _json({'error': 'Order not found'}, 404)
+    return _order_status_json(order)
 
-    driver_name = ''
-    if order.assigned_driver:
-        driver_name = order.assigned_driver.get_full_name() or order.assigned_driver.username
 
-    # Translate internal status to UI-friendly value
-    status_map = {
-        'confirmed':  'confirmed',
-        'preparing':  'preparing',
-        'on_the_way': 'on_the_way',
-        'delivering': 'on_the_way',   # legacy alias
-        'delivered':  'delivered',
-        'cancelled':  'cancelled',
-    }
-    ui_status = status_map.get(order.status, order.status)
-
-    return _json({
-        'status':           ui_status,
-        'driver_name':      driver_name,
-        'restaurant_name':  order.restaurant_name,
-        'delivery_address': order.delivery_address or '',
-        'order_ref':        order.order_ref,
-    })
+def my_latest_order_status(request):
+    """GET /api/orders/my-latest/status/ — returns the most recent order for
+    the logged-in user. Used as a fallback when order_ref is missing or stale."""
+    order = None
+    if request.user.is_authenticated:
+        order = (
+            Order.objects
+            .filter(customer_email=request.user.email)
+            .order_by('-created_at')
+            .first()
+        )
+    if order is None:
+        # Also try by session-stored name/email supplied by the client
+        order = Order.objects.order_by('-created_at').first()
+    if order is None:
+        return _json({'error': 'No orders found'}, 404)
+    return _order_status_json(order)
 
 
 # ── Chat ────────────────────────────────────────────────────────────────────────

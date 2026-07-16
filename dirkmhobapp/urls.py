@@ -64,6 +64,7 @@ urlpatterns = [
 
     # ── Orders (submitted by frontend) ────────────────
     path('api/orders/', views.submit_order, name='submit_order'),
+    path('api/orders/my-latest/status/', views.my_latest_order_status, name='my_latest_order_status'),
     path('api/orders/<str:order_ref>/status/', views.order_status,   name='order_status'),
     path('api/chat/<str:order_ref>/',          views.chat_messages,  name='chat_messages'),
 

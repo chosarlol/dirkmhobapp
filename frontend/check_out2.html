@@ -327,6 +327,8 @@
             <span class="bc-arrow">›</span>
             <span class="bc-step active">Delivery &amp; Payment</span>
             <span class="bc-arrow">›</span>
+            <span class="bc-step next">Payment</span>
+            <span class="bc-arrow">›</span>
             <span class="bc-step next">Confirm</span>
         </div>
     </div>
@@ -455,7 +457,7 @@
                     <div class="pay-logo khqr-logo">KHQR</div>
                     <div>
                         <div class="pay-name">KHQR</div>
-                        <div class="pay-sub">Scan QR to pay</div>
+                        <div class="pay-sub">Scan QR with any Cambodian bank app</div>
                     </div>
                     <div class="radio-outer selected" id="radio-khqr">
                         <div class="radio-inner"></div>
@@ -463,10 +465,10 @@
                 </div>
 
                 <div class="payment-opt" id="opt-wing" onclick="selectPayment('wing')">
-                    <div class="pay-logo wing-logo">XXX</div>
+                    <div class="pay-logo wing-logo" style="font-size:11px">Wing</div>
                     <div>
-                        <div class="pay-name">XXX-6747</div>
-                        <div class="pay-sub">Mobile banking</div>
+                        <div class="pay-name">Wing Money</div>
+                        <div class="pay-sub">Mobile wallet</div>
                     </div>
                     <div class="radio-outer" id="radio-wing"></div>
                 </div>
@@ -474,10 +476,19 @@
                 <div class="payment-opt" id="opt-card" onclick="selectPayment('card')">
                     <div class="pay-logo card-logo">💳</div>
                     <div>
-                        <div class="pay-name">Add new card</div>
+                        <div class="pay-name">Credit / Debit Card</div>
                         <div class="pay-sub">Visa / Mastercard</div>
                     </div>
                     <div class="radio-outer" id="radio-card"></div>
+                </div>
+
+                <div class="payment-opt" id="opt-cash" onclick="selectPayment('cash')">
+                    <div class="pay-logo" style="background:#dcfce7;font-size:18px">💵</div>
+                    <div>
+                        <div class="pay-name">Cash on Delivery</div>
+                        <div class="pay-sub">Pay when your order arrives</div>
+                    </div>
+                    <div class="radio-outer" id="radio-cash"></div>
                 </div>
             </div>
 
@@ -507,7 +518,7 @@
             </div>
 
             <div class="cta-wrap">
-                <button class="place-order-btn" onclick="placeOrder()">🛵 Place Order</button>
+                <button class="place-order-btn" onclick="placeOrder()">Continue to Payment →</button>
                 <div class="secure-note">🔒 Your order is secure &amp; encrypted</div>
             </div>
         </div>
@@ -522,19 +533,17 @@
     var currentPin = 'Portola Drive';
 
     function selectPayment(method) {
-        ['khqr', 'wing', 'card'].forEach(function(m) {
+        ['khqr', 'wing', 'card', 'cash'].forEach(function(m) {
             var radio = document.getElementById('radio-' + m);
             var opt   = document.getElementById('opt-' + m);
-            radio.classList.remove('selected');
-            radio.innerHTML = '';
-            opt.classList.remove('selected');
+            if (radio) { radio.classList.remove('selected'); radio.innerHTML = ''; }
+            if (opt)   opt.classList.remove('selected');
         });
         selectedPayment = method;
         var radio = document.getElementById('radio-' + method);
         var opt   = document.getElementById('opt-' + method);
-        radio.classList.add('selected');
-        radio.innerHTML = '<div class="radio-inner"></div>';
-        opt.classList.add('selected');
+        if (radio) { radio.classList.add('selected'); radio.innerHTML = '<div class="radio-inner"></div>'; }
+        if (opt)   opt.classList.add('selected');
     }
 
     function loadCheckoutInfo() {
@@ -590,92 +599,34 @@
         var serviceFee = 1.00;
         var total      = subtotal + delivery + serviceFee - discount;
         var activePromo = DirkPromo.getActivePromo();
-
-        console.log('[CHECKOUT2] placeOrder() subtotal=$' + subtotal.toFixed(2) +
-                    ' delivery=$' + delivery.toFixed(2) +
-                    ' discount=$' + discount.toFixed(2) +
-                    ' total=$' + total.toFixed(2) +
-                    ' promo=' + (activePromo ? activePromo.code : 'none'));
-
-        var orderRef = 'ORD-' + Date.now();
-
-        var order = {
-            id:            orderRef,
-            date:          new Date().toISOString(),
-            items:         cart,
-            subtotal:      subtotal,
-            deliveryFee:   delivery,
-            discount:      discount,
-            total:         total,
-            paymentMethod: selectedPayment,
-            promoCode:     activePromo ? activePromo.code  : null,
-            promoLabel:    activePromo ? activePromo.label : null,
-            status:        'confirmed'
-        };
-
-        /* Save order ref for live status polling on order_comfirm.html */
-        localStorage.setItem('last_order_ref', orderRef);
-
-        /* Save as current order for tracking page */
-        localStorage.setItem('currentOrder', JSON.stringify({
-            items: cart,
-            total: { totalUSD: total },
-            pin: currentPin,
-            paymentMethod: selectedPayment,
-            promoCode: activePromo ? activePromo.code : null,
-            status: 'confirmed'
-        }));
-
-        /* Append to order history (newest first, keep last 30) */
-        var history = [];
-        try { history = JSON.parse(localStorage.getItem('orderHistory')) || []; } catch(e) {}
-        history.unshift(order);
-        if (history.length > 30) history = history.slice(0, 30);
-        localStorage.setItem('orderHistory', JSON.stringify(history));
-
-        /* Clear cart and active promo after order placed */
-        DirkCart.clearCart();
-        DirkPromo.clearPromo();
-        console.log('[CHECKOUT2] Order placed, ref=' + orderRef + ', cart cleared');
-
-        /* Persist order to backend then navigate — if backend fails, navigate anyway */
         var user = null;
         try { user = JSON.parse(localStorage.getItem('dirkmhob_user')); } catch(e) {}
 
-        function goToConfirm() { window.location.href = 'order_comfirm.html'; }
+        /* Save pending order for payment.html to submit */
+        localStorage.setItem('pending_order', JSON.stringify({
+            id:              'ORD-' + Date.now(),
+            date:            new Date().toISOString(),
+            items:           cart,
+            subtotal:        subtotal,
+            delivery:        delivery,
+            deliveryFee:     delivery,
+            discount:        discount,
+            total:           total,
+            paymentMethod:   selectedPayment,
+            promoCode:       activePromo ? activePromo.code  : null,
+            promoLabel:      activePromo ? activePromo.label : null,
+            deliveryAddress: currentPin,
+            restaurantName:  cart.length ? (cart[0].restaurantName || '') : '',
+            customerName:    user ? (user.name || user.username || '') : '',
+            customerEmail:   user ? (user.email || '') : '',
+            pin:             currentPin,
+            status:          'confirmed'
+        }));
 
-        var _API = (location.port==='5500'||location.port==='5501')?'http://127.0.0.1:8000':location.origin;
-        fetch(_API + '/api/orders/', {
-            method: 'POST',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                id:              orderRef,
-                items:           order.items,
-                subtotal:        order.subtotal,
-                deliveryFee:     order.deliveryFee,
-                discount:        order.discount,
-                total:           order.total,
-                promoCode:       order.promoCode || '',
-                paymentMethod:   order.paymentMethod,
-                deliveryAddress: currentPin,
-                restaurantName:  cart.length ? (cart[0].restaurantName || '') : '',
-                customerName:    user ? (user.name || user.username || '') : '',
-                customerEmail:   user ? (user.email || '') : '',
-            })
-        })
-        .then(function(r) { return r.json(); })
-        .then(function(d) {
-            /* Backend may return a different ref — keep it consistent */
-            if (d.order_ref) localStorage.setItem('last_order_ref', d.order_ref);
-            console.log('[CHECKOUT2] Backend saved order:', d.order_ref || d.db_id);
-            goToConfirm();
-        })
-        .catch(function() {
-            console.log('[CHECKOUT2] Backend not reachable — proceeding with client ref');
-            goToConfirm();
-        });
-        return; /* navigation happens inside .then/.catch */
+        /* Pre-select the method chosen here */
+        localStorage.setItem('chosen_payment', selectedPayment);
+
+        window.location.href = 'payment.html';
     }
 
     document.addEventListener('DOMContentLoaded', loadCheckoutInfo);

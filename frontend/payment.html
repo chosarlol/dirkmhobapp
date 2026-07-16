@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DirkMhob | Payment</title>
+  <style>
+    :root {
+      --primary:#0077C8; --primary-dark:#005fa0; --secondary:#FF6B35;
+      --bg:#F8FAFC; --surface:#FFFFFF; --text:#0f172a; --muted:#64748b;
+      --border:#E2E8F0; --success:#16a34a; --radius:16px; --radius-sm:10px;
+      --shadow:0 4px 24px rgba(15,23,42,0.08);
+    }
+    *{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
+    body{background:var(--bg);color:var(--text);min-height:100vh;}
+    a{text-decoration:none;color:inherit;}
+
+    /* ── NAVBAR ── */
+    .navbar{background:var(--surface);border-bottom:1px solid var(--border);box-shadow:0 1px 4px rgba(0,0,0,0.05);position:sticky;top:0;z-index:50;}
+    .nav-inner{max-width:1100px;margin:0 auto;padding:0 24px;height:60px;display:flex;align-items:center;gap:16px;}
+    .back-btn{background:none;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:7px 14px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .2s;}
+    .back-btn:hover{border-color:var(--primary);color:var(--primary);}
+    .breadcrumb{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);margin-left:auto;}
+    .bc-step{font-weight:600;}.bc-step.done{color:var(--success);}.bc-step.active{color:var(--primary);}
+    .bc-arrow{color:var(--border);}
+
+    /* ── LAYOUT ── */
+    .page{max-width:980px;margin:0 auto;padding:32px 24px;display:grid;grid-template-columns:1fr 360px;gap:24px;align-items:start;}
+    @media(max-width:820px){.page{grid-template-columns:1fr;}.bc-step:not(.active){display:none;}.bc-arrow{display:none;}}
+
+    /* ── LEFT: payment methods ── */
+    .left-col h1{font-size:1.5rem;font-weight:800;margin-bottom:6px;}
+    .left-col p{font-size:0.9rem;color:var(--muted);margin-bottom:24px;}
+
+    .method-group{margin-bottom:20px;}
+    .group-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;}
+
+    .method-card{
+      background:var(--surface);border:2px solid var(--border);border-radius:var(--radius);
+      padding:16px 18px;display:flex;align-items:center;gap:14px;cursor:pointer;
+      transition:border-color .18s,box-shadow .18s;margin-bottom:8px;position:relative;
+    }
+    .method-card:hover{border-color:#bcd9f0;box-shadow:var(--shadow);}
+    .method-card.selected{border-color:var(--primary);box-shadow:0 0 0 3px rgba(0,119,200,0.12);}
+    .method-card.selected::after{
+      content:'✓';position:absolute;top:12px;right:14px;
+      width:22px;height:22px;border-radius:50%;background:var(--primary);
+      color:white;font-size:12px;font-weight:900;display:flex;align-items:center;justify-content:center;
+    }
+
+    .method-logo{
+      width:52px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;
+      font-size:11px;font-weight:800;flex-shrink:0;letter-spacing:-.3px;
+    }
+    .logo-khqr  {background:#e8002d;color:#fff;}
+    .logo-aba   {background:#003087;color:#fff;font-size:13px;}
+    .logo-acleda{background:#006633;color:#fff;font-size:10px;}
+    .logo-wing  {background:#1a3a6b;color:#f59e0b;font-size:13px;}
+    .logo-true  {background:#ff6600;color:#fff;font-size:10px;}
+    .logo-card  {background:linear-gradient(135deg,#1a1a2e,#16213e);color:#fff;font-size:18px;letter-spacing:0;}
+    .logo-cash  {background:#dcfce7;color:#16a34a;font-size:20px;letter-spacing:0;}
+
+    .method-info{flex:1;min-width:0;}
+    .method-name{font-size:14px;font-weight:700;color:var(--text);}
+    .method-sub {font-size:12px;color:var(--muted);margin-top:2px;}
+    .method-badge{
+      font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;
+      margin-left:6px;vertical-align:middle;
+    }
+    .badge-popular{background:#fef3c7;color:#92400e;}
+    .badge-instant{background:#dcfce7;color:#15803d;}
+    .badge-free   {background:#e0f2fe;color:#0369a1;}
+
+    /* ── QR Code panel ── */
+    .qr-panel{
+      display:none;background:#fafafa;border:1.5px solid var(--border);
+      border-radius:var(--radius);padding:20px;margin-top:8px;text-align:center;
+    }
+    .qr-panel.active{display:block;}
+    .qr-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;}
+    .qr-img{width:180px;height:180px;margin:0 auto 12px;display:block;border-radius:12px;border:4px solid white;box-shadow:var(--shadow);}
+    .qr-sub{font-size:12px;color:var(--muted);}
+    .qr-amount{font-size:20px;font-weight:800;color:var(--primary);margin:8px 0 4px;}
+    .qr-timer{font-size:12px;color:#ef4444;font-weight:600;}
+
+    /* ── Card input panel ── */
+    .card-panel{display:none;margin-top:8px;}
+    .card-panel.active{display:block;}
+    .card-visual{
+      height:160px;border-radius:16px;padding:20px 24px;
+      background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);
+      color:white;position:relative;overflow:hidden;margin-bottom:16px;
+      box-shadow:0 8px 32px rgba(0,0,0,0.3);
+    }
+    .card-chip{width:34px;height:26px;border-radius:5px;background:linear-gradient(135deg,#d4a843,#f5d379);margin-bottom:16px;}
+    .card-number-display{font-size:17px;font-weight:700;letter-spacing:3px;margin-bottom:12px;font-family:monospace;}
+    .card-bottom{display:flex;justify-content:space-between;font-size:11px;opacity:.8;}
+    .card-brand{font-size:22px;position:absolute;top:20px;right:24px;}
+    .card-field{margin-bottom:14px;}
+    .card-field label{display:block;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;}
+    .card-field input{
+      width:100%;border:1.5px solid var(--border);border-radius:var(--radius-sm);
+      padding:10px 14px;font-size:14px;outline:none;background:var(--surface);color:var(--text);
+      transition:border-color .2s;
+    }
+    .card-field input:focus{border-color:var(--primary);}
+    .card-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+
+    /* ── Phone input panel ── */
+    .phone-panel{display:none;margin-top:8px;}
+    .phone-panel.active{display:block;}
+    .phone-field label{display:block;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;}
+    .phone-input-wrap{display:flex;gap:8px;}
+    .phone-prefix{
+      border:1.5px solid var(--border);border-radius:var(--radius-sm);
+      padding:10px 14px;font-size:14px;font-weight:700;background:var(--bg);color:var(--muted);
+    }
+    .phone-field input{
+      flex:1;border:1.5px solid var(--border);border-radius:var(--radius-sm);
+      padding:10px 14px;font-size:14px;outline:none;background:var(--surface);color:var(--text);
+      transition:border-color .2s;
+    }
+    .phone-field input:focus{border-color:var(--primary);}
+
+    /* ── RIGHT: Order Summary ── */
+    .summary-card{
+      background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+      box-shadow:var(--shadow);overflow:hidden;position:sticky;top:80px;
+    }
+    .summary-head{background:var(--primary);padding:16px 20px;color:white;}
+    .summary-head h3{font-size:15px;font-weight:700;}
+    .summary-head p{font-size:12px;opacity:.8;margin-top:2px;}
+    .summary-body{padding:16px 20px;}
+    .sum-row{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;color:var(--muted);}
+    .sum-row.total{font-size:16px;font-weight:800;color:var(--text);border-top:1px solid var(--border);margin-top:8px;padding-top:12px;}
+    .sum-divider{height:1px;background:var(--border);margin:8px 0;}
+    .sum-items{max-height:140px;overflow-y:auto;margin-bottom:8px;}
+    .sum-item{display:flex;justify-content:space-between;font-size:12px;padding:4px 0;color:var(--muted);}
+    .sum-item .qty{color:var(--primary);font-weight:700;margin-right:4px;}
+
+    .pay-btn{
+      display:block;width:100%;padding:15px;margin-top:16px;
+      background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+      color:white;font-size:15px;font-weight:700;border:none;border-radius:var(--radius);
+      cursor:pointer;box-shadow:0 8px 20px rgba(0,119,200,0.3);
+      transition:transform .18s,box-shadow .18s;
+    }
+    .pay-btn:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(0,119,200,0.35);}
+    .pay-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+    .secure-note{text-align:center;font-size:11px;color:var(--muted);margin-top:10px;}
+
+    /* ── Loading overlay ── */
+    .pay-overlay{
+      display:none;position:fixed;inset:0;background:rgba(15,23,42,0.6);z-index:999;
+      align-items:center;justify-content:center;flex-direction:column;gap:16px;
+    }
+    .pay-overlay.active{display:flex;}
+    .pay-spinner{
+      width:56px;height:56px;border-radius:50%;
+      border:4px solid rgba(255,255,255,0.2);border-top-color:white;
+      animation:spin .8s linear infinite;
+    }
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .pay-overlay p{color:white;font-size:15px;font-weight:600;}
+  </style>
+</head>
+<body>
+
+<!-- ── NAVBAR ── -->
+<nav class="navbar">
+  <div class="nav-inner">
+    <button class="back-btn" onclick="history.back()">← Back</button>
+    <a href="home_screen.html"><img src="logo.png" alt="DirkMhob" style="height:32px;width:auto;"></a>
+    <div class="breadcrumb">
+      <span class="bc-step done">Cart</span><span class="bc-arrow">›</span>
+      <span class="bc-step done">Checkout</span><span class="bc-arrow">›</span>
+      <span class="bc-step done">Delivery</span><span class="bc-arrow">›</span>
+      <span class="bc-step active">Payment</span>
+    </div>
+  </div>
+</nav>
+
+<!-- ── MAIN ── -->
+<div class="page">
+
+  <!-- LEFT -->
+  <div class="left-col">
+    <h1>Choose Payment Method</h1>
+    <p>Select how you'd like to pay for your order.</p>
+
+    <!-- QR Payments -->
+    <div class="method-group">
+      <div class="group-label">QR & Mobile Payments</div>
+
+      <div class="method-card selected" id="m-khqr" onclick="select('khqr')">
+        <div class="method-logo logo-khqr">KHQR</div>
+        <div class="method-info">
+          <div class="method-name">KHQR <span class="method-badge badge-popular">Popular</span></div>
+          <div class="method-sub">Scan QR with any Cambodian banking app</div>
+        </div>
+      </div>
+      <div class="qr-panel active" id="panel-khqr">
+        <div class="qr-title">Scan to Pay with KHQR</div>
+        <svg class="qr-img" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+          <rect width="200" height="200" fill="white"/>
+          <!-- finder top-left -->
+          <rect x="10" y="10" width="60" height="60" rx="6" fill="#e8002d"/>
+          <rect x="20" y="20" width="40" height="40" rx="3" fill="white"/>
+          <rect x="28" y="28" width="24" height="24" rx="2" fill="#e8002d"/>
+          <!-- finder top-right -->
+          <rect x="130" y="10" width="60" height="60" rx="6" fill="#e8002d"/>
+          <rect x="140" y="20" width="40" height="40" rx="3" fill="white"/>
+          <rect x="148" y="28" width="24" height="24" rx="2" fill="#e8002d"/>
+          <!-- finder bottom-left -->
+          <rect x="10" y="130" width="60" height="60" rx="6" fill="#e8002d"/>
+          <rect x="20" y="140" width="40" height="40" rx="3" fill="white"/>
+          <rect x="28" y="148" width="24" height="24" rx="2" fill="#e8002d"/>
+          <!-- data dots -->
+          <rect x="80" y="10" width="8" height="8" fill="#e8002d"/>
+          <rect x="92" y="10" width="8" height="8" fill="#e8002d"/>
+          <rect x="104" y="10" width="8" height="8" fill="#e8002d"/>
+          <rect x="80" y="22" width="8" height="8" fill="#e8002d"/>
+          <rect x="104" y="22" width="8" height="8" fill="#e8002d"/>
+          <rect x="92" y="34" width="8" height="8" fill="#e8002d"/>
+          <rect x="80" y="46" width="8" height="8" fill="#e8002d"/>
+          <rect x="92" y="46" width="8" height="8" fill="#e8002d"/>
+          <rect x="104" y="46" width="8" height="8" fill="#e8002d"/>
+          <rect x="80" y="58" width="8" height="8" fill="#e8002d"/>
+          <rect x="104" y="58" width="8" height="8" fill="#e8002d"/>
+          <!-- middle data -->
+          <rect x="10" y="80" width="8" height="8" fill="#e8002d"/>
+          <rect x="22" y="80" width="8" height="8" fill="#e8002d"/>
+          <rect x="34" y="80" width="8" height="8" fill="#e8002d"/>
+          <rect x="46" y="80" width="8" height="8" fill="#e8002d"/>
+          <rect x="58" y="80" width="8" height="8" fill="#e8002d"/>
+          <rect x="80" y="80" width="8" height="8" fill="#e8002d"/>
+          <rect x="92" y="80" width="8" height="8" fill="#e8002d"/>
+          <rect x="116" y="80" width="8" height="8" fill="#e8002d"/>
+          <rect x="128" y="80" width="8" height="8" fill="#e8002d"/>
+          <rect x="152" y="80" width="8" height="8" fill="#e8002d"/>
+          <rect x="164" y="80" width="8" height="8" fill="#e8002d"/>
+          <rect x="176" y="80" width="8" height="8" fill="#e8002d"/>
+          <rect x="10" y="92" width="8" height="8" fill="#e8002d"/>
+          <rect x="34" y="92" width="8" height="8" fill="#e8002d"/>
+          <rect x="58" y="92" width="8" height="8" fill="#e8002d"/>
+          <rect x="80" y="92" width="8" height="8" fill="#e8002d"/>
+          <rect x="104" y="92" width="8" height="8" fill="#e8002d"/>
+          <rect x="128" y="92" width="8" height="8" fill="#e8002d"/>
+          <rect x="152" y="92" width="8" height="8" fill="#e8002d"/>
+          <rect x="176" y="92" width="8" height="8" fill="#e8002d"/>
+          <rect x="10" y="104" width="8" height="8" fill="#e8002d"/>
+          <rect x="22" y="104" width="8" height="8" fill="#e8002d"/>
+          <rect x="46" y="104" width="8" height="8" fill="#e8002d"/>
+          <rect x="80" y="104" width="8" height="8" fill="#e8002d"/>
+          <rect x="92" y="104" width="8" height="8" fill="#e8002d"/>
+          <rect x="116" y="104" width="8" height="8" fill="#e8002d"/>
+          <rect x="140" y="104" width="8" height="8" fill="#e8002d"/>
+          <rect x="164" y="104" width="8" height="8" fill="#e8002d"/>
+          <rect x="10" y="116" width="8" height="8" fill="#e8002d"/>
+          <rect x="34" y="116" width="8" height="8" fill="#e8002d"/>
+          <rect x="58" y="116" width="8" height="8" fill="#e8002d"/>
+          <rect x="80" y="116" width="8" height="8" fill="#e8002d"/>
+          <rect x="104" y="116" width="8" height="8" fill="#e8002d"/>
+          <rect x="128" y="116" width="8" height="8" fill="#e8002d"/>
+          <rect x="152" y="116" width="8" height="8" fill="#e8002d"/>
+          <rect x="176" y="116" width="8" height="8" fill="#e8002d"/>
+          <rect x="10" y="128" width="8" height="8" fill="#e8002d"/>
+          <rect x="22" y="128" width="8" height="8" fill="#e8002d"/>
+          <rect x="46" y="128" width="8" height="8" fill="#e8002d"/>
+          <rect x="104" y="128" width="8" height="8" fill="#e8002d"/>
+          <rect x="116" y="128" width="8" height="8" fill="#e8002d"/>
+          <rect x="140" y="128" width="8" height="8" fill="#e8002d"/>
+          <rect x="152" y="128" width="8" height="8" fill="#e8002d"/>
+          <rect x="176" y="128" width="8" height="8" fill="#e8002d"/>
+          <!-- bottom row data -->
+          <rect x="80" y="140" width="8" height="8" fill="#e8002d"/>
+          <rect x="104" y="140" width="8" height="8" fill="#e8002d"/>
+          <rect x="116" y="140" width="8" height="8" fill="#e8002d"/>
+          <rect x="140" y="140" width="8" height="8" fill="#e8002d"/>
+          <rect x="164" y="140" width="8" height="8" fill="#e8002d"/>
+          <rect x="80" y="152" width="8" height="8" fill="#e8002d"/>
+          <rect x="92" y="152" width="8" height="8" fill="#e8002d"/>
+          <rect x="116" y="152" width="8" height="8" fill="#e8002d"/>
+          <rect x="128" y="152" width="8" height="8" fill="#e8002d"/>
+          <rect x="152" y="152" width="8" height="8" fill="#e8002d"/>
+          <rect x="176" y="152" width="8" height="8" fill="#e8002d"/>
+          <rect x="80" y="164" width="8" height="8" fill="#e8002d"/>
+          <rect x="104" y="164" width="8" height="8" fill="#e8002d"/>
+          <rect x="128" y="164" width="8" height="8" fill="#e8002d"/>
+          <rect x="140" y="164" width="8" height="8" fill="#e8002d"/>
+          <rect x="164" y="164" width="8" height="8" fill="#e8002d"/>
+          <rect x="80" y="176" width="8" height="8" fill="#e8002d"/>
+          <rect x="92" y="176" width="8" height="8" fill="#e8002d"/>
+          <rect x="116" y="176" width="8" height="8" fill="#e8002d"/>
+          <rect x="152" y="176" width="8" height="8" fill="#e8002d"/>
+          <rect x="176" y="176" width="8" height="8" fill="#e8002d"/>
+          <!-- center KHQR logo area -->
+          <rect x="84" y="84" width="32" height="32" rx="4" fill="white" stroke="#e8002d" stroke-width="2"/>
+          <text x="100" y="105" text-anchor="middle" fill="#e8002d" font-size="9" font-weight="900">KHQR</text>
+        </svg>
+        <div class="qr-amount" id="qr-amount">$0.00</div>
+        <div class="qr-sub">Open your ABA, ACLEDA, Wing, or any bank app<br>and scan this code to complete payment</div>
+        <div class="qr-timer" id="qr-timer">⏱ Expires in 4:59</div>
+      </div>
+
+      <div class="method-card" id="m-aba" onclick="select('aba')">
+        <div class="method-logo logo-aba">ABA</div>
+        <div class="method-info">
+          <div class="method-name">ABA Bank <span class="method-badge badge-instant">Instant</span></div>
+          <div class="method-sub">Pay with your ABA mobile number</div>
+        </div>
+      </div>
+      <div class="phone-panel" id="panel-aba">
+        <div class="phone-field">
+          <label>ABA Registered Phone Number</label>
+          <div class="phone-input-wrap">
+            <div class="phone-prefix">🇰🇭 +855</div>
+            <input type="tel" placeholder="012 345 678" maxlength="12" id="aba-phone" />
+          </div>
+        </div>
+      </div>
+
+      <div class="method-card" id="m-acleda" onclick="select('acleda')">
+        <div class="method-logo logo-acleda">ACLEDA</div>
+        <div class="method-info">
+          <div class="method-name">ACLEDA Bank</div>
+          <div class="method-sub">Pay with your ACLEDA mobile number</div>
+        </div>
+      </div>
+      <div class="phone-panel" id="panel-acleda">
+        <div class="phone-field">
+          <label>ACLEDA Registered Phone Number</label>
+          <div class="phone-input-wrap">
+            <div class="phone-prefix">🇰🇭 +855</div>
+            <input type="tel" placeholder="012 345 678" maxlength="12" id="acleda-phone" />
+          </div>
+        </div>
+      </div>
+
+      <div class="method-card" id="m-wing" onclick="select('wing')">
+        <div class="method-logo logo-wing">Wing</div>
+        <div class="method-info">
+          <div class="method-name">Wing Money</div>
+          <div class="method-sub">Pay with Wing mobile wallet</div>
+        </div>
+      </div>
+      <div class="phone-panel" id="panel-wing">
+        <div class="phone-field">
+          <label>Wing Account Phone Number</label>
+          <div class="phone-input-wrap">
+            <div class="phone-prefix">🇰🇭 +855</div>
+            <input type="tel" placeholder="012 345 678" maxlength="12" id="wing-phone" />
+          </div>
+        </div>
+      </div>
+
+      <div class="method-card" id="m-truemoney" onclick="select('truemoney')">
+        <div class="method-logo logo-true">TRUE</div>
+        <div class="method-info">
+          <div class="method-name">TrueMoney</div>
+          <div class="method-sub">Pay with TrueMoney wallet</div>
+        </div>
+      </div>
+      <div class="phone-panel" id="panel-truemoney">
+        <div class="phone-field">
+          <label>TrueMoney Phone Number</label>
+          <div class="phone-input-wrap">
+            <div class="phone-prefix">🇰🇭 +855</div>
+            <input type="tel" placeholder="012 345 678" maxlength="12" id="truemoney-phone" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card -->
+    <div class="method-group">
+      <div class="group-label">Credit / Debit Card</div>
+      <div class="method-card" id="m-card" onclick="select('card')">
+        <div class="method-logo logo-card">💳</div>
+        <div class="method-info">
+          <div class="method-name">Credit / Debit Card</div>
+          <div class="method-sub">Visa · Mastercard · UnionPay</div>
+        </div>
+      </div>
+      <div class="card-panel" id="panel-card">
+        <div class="card-visual">
+          <div class="card-brand" id="card-brand-icon">💳</div>
+          <div class="card-chip"></div>
+          <div class="card-number-display" id="card-num-display">•••• •••• •••• ••••</div>
+          <div class="card-bottom">
+            <div><div style="font-size:9px;opacity:.6;margin-bottom:2px;">CARDHOLDER</div><span id="card-name-display">YOUR NAME</span></div>
+            <div><div style="font-size:9px;opacity:.6;margin-bottom:2px;">EXPIRES</div><span id="card-exp-display">MM/YY</span></div>
+          </div>
+        </div>
+        <div class="card-field">
+          <label>Card Number</label>
+          <input type="text" placeholder="1234 5678 9012 3456" maxlength="19" id="card-number"
+                 oninput="formatCardNum(this)" autocomplete="cc-number" />
+        </div>
+        <div class="card-field">
+          <label>Cardholder Name</label>
+          <input type="text" placeholder="Name on card" id="card-name"
+                 oninput="document.getElementById('card-name-display').textContent=this.value.toUpperCase()||'YOUR NAME'" />
+        </div>
+        <div class="card-row">
+          <div class="card-field">
+            <label>Expiry Date</label>
+            <input type="text" placeholder="MM/YY" maxlength="5" id="card-exp"
+                   oninput="formatExpiry(this);document.getElementById('card-exp-display').textContent=this.value||'MM/YY'" />
+          </div>
+          <div class="card-field">
+            <label>CVV</label>
+            <input type="password" placeholder="•••" maxlength="4" id="card-cvv" autocomplete="cc-csc" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cash -->
+    <div class="method-group">
+      <div class="group-label">Other</div>
+      <div class="method-card" id="m-cash" onclick="select('cash')">
+        <div class="method-logo logo-cash">💵</div>
+        <div class="method-info">
+          <div class="method-name">Cash on Delivery <span class="method-badge badge-free">Free</span></div>
+          <div class="method-sub">Pay the driver when your order arrives</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Summary -->
+  <div>
+    <div class="summary-card">
+      <div class="summary-head">
+        <h3>Order Summary</h3>
+        <p id="sum-restaurant">Loading…</p>
+      </div>
+      <div class="summary-body">
+        <div class="sum-items" id="sum-items"></div>
+        <div class="sum-divider"></div>
+        <div class="sum-row"><span>Subtotal</span><span id="sum-subtotal">$0.00</span></div>
+        <div class="sum-row"><span>Delivery fee</span><span id="sum-delivery">$2.50</span></div>
+        <div class="sum-row"><span>Service fee</span><span>$1.00</span></div>
+        <div class="sum-row" id="sum-promo-row" style="display:none;color:#16a34a;font-weight:700;">
+          <span id="sum-promo-label">Promo</span><span id="sum-promo-val">-$0.00</span>
+        </div>
+        <div class="sum-row total"><span>Total</span><span id="sum-total">$0.00</span></div>
+
+        <button class="pay-btn" id="pay-btn" onclick="confirmPayment()">Pay Now →</button>
+        <div class="secure-note">🔒 Secured by 256-bit encryption</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── PROCESSING OVERLAY ── -->
+<div class="pay-overlay" id="pay-overlay">
+  <div class="pay-spinner"></div>
+  <p id="overlay-msg">Processing payment…</p>
+</div>
+
+<script src="cart.js"></script>
+<script>
+  var API = (location.port==='5500'||location.port==='5501')?'http://127.0.0.1:8000':location.origin;
+  var selectedMethod = 'khqr';
+  var allMethods = ['khqr','aba','acleda','wing','truemoney','card','cash'];
+  var timerInterval = null;
+  var timerSeconds  = 299;
+
+  /* ── Method selection ── */
+  function select(method) {
+    selectedMethod = method;
+    allMethods.forEach(function(m) {
+      var card  = document.getElementById('m-' + m);
+      var panel = document.getElementById('panel-' + m);
+      if (card)  card.classList.toggle('selected', m === method);
+      if (panel) {
+        var isQR    = panel.classList.contains('qr-panel');
+        var isPhone = panel.classList.contains('phone-panel');
+        var isCard  = panel.classList.contains('card-panel');
+        if (m === method) {
+          if (isQR)    panel.classList.add('active');
+          if (isPhone) panel.classList.add('active');
+          if (isCard)  panel.classList.add('active');
+        } else {
+          panel.classList.remove('active');
+        }
+      }
+    });
+    var btn = document.getElementById('pay-btn');
+    if (method === 'khqr') {
+      btn.textContent = 'I've Paid — Confirm Order →';
+      startQRTimer();
+    } else if (method === 'cash') {
+      btn.textContent = 'Place Order (Pay on Delivery) →';
+      clearInterval(timerInterval);
+    } else {
+      btn.textContent = 'Pay Now →';
+      clearInterval(timerInterval);
+    }
+  }
+
+  /* ── QR Timer ── */
+  function startQRTimer() {
+    clearInterval(timerInterval);
+    timerSeconds = 299;
+    updateTimer();
+    timerInterval = setInterval(function() {
+      timerSeconds--;
+      if (timerSeconds < 0) { timerSeconds = 299; } // reset demo
+      updateTimer();
+    }, 1000);
+  }
+  function updateTimer() {
+    var m = Math.floor(timerSeconds / 60);
+    var s = timerSeconds % 60;
+    var el = document.getElementById('qr-timer');
+    if (el) el.textContent = '⏱ Expires in ' + m + ':' + (s < 10 ? '0' : '') + s;
+  }
+
+  /* ── Card formatting ── */
+  function formatCardNum(el) {
+    var v = el.value.replace(/\D/g,'').slice(0,16);
+    el.value = v.match(/.{1,4}/g)?.join(' ') || v;
+    var display = el.value || '•••• •••• •••• ••••';
+    document.getElementById('card-num-display').textContent = display;
+    // Detect brand
+    var icon = document.getElementById('card-brand-icon');
+    if (v.startsWith('4')) icon.textContent = '💳 Visa';
+    else if (v.startsWith('5') || v.startsWith('2')) icon.textContent = '💳 MC';
+    else if (v.startsWith('6')) icon.textContent = '💳 Union';
+    else icon.textContent = '💳';
+  }
+  function formatExpiry(el) {
+    var v = el.value.replace(/\D/g,'').slice(0,4);
+    if (v.length >= 3) el.value = v.slice(0,2) + '/' + v.slice(2);
+    else el.value = v;
+  }
+
+  /* ── Load order summary ── */
+  function loadSummary() {
+    var pending = null;
+    try { pending = JSON.parse(localStorage.getItem('pending_order') || 'null'); } catch(e) {}
+
+    var cart     = DirkCart.getCart();
+    var subtotal = 0;
+    var delivery = 2.50;
+    var discount = 0;
+    var restName = '';
+
+    if (pending) {
+      subtotal = pending.subtotal || 0;
+      delivery = pending.delivery || 2.50;
+      discount = pending.discount || 0;
+      restName = pending.restaurantName || '';
+      if (pending.items) {
+        var itemsEl = document.getElementById('sum-items');
+        itemsEl.innerHTML = pending.items.map(function(i) {
+          return '<div class="sum-item"><span><span class="qty">' + i.quantity + 'x</span>' + i.name + '</span><span>$' + (i.price * i.quantity).toFixed(2) + '</span></div>';
+        }).join('');
+      }
+    } else if (cart.length) {
+      subtotal = DirkCart.calculateSubtotal(cart);
+      discount = DirkCart.calculateDiscount(subtotal);
+      restName = cart[0].restaurantName || '';
+      var itemsEl = document.getElementById('sum-items');
+      itemsEl.innerHTML = cart.map(function(i) {
+        return '<div class="sum-item"><span><span class="qty">' + i.quantity + 'x</span>' + i.name + '</span><span>$' + (i.price * i.quantity).toFixed(2) + '</span></div>';
+      }).join('');
+    }
+
+    var total = subtotal + delivery + 1 - discount;
+    document.getElementById('sum-restaurant').textContent = restName || 'Your order';
+    document.getElementById('sum-subtotal').textContent  = '$' + subtotal.toFixed(2);
+    document.getElementById('sum-delivery').textContent  = '$' + delivery.toFixed(2);
+    document.getElementById('sum-total').textContent     = '$' + Math.max(0, total).toFixed(2);
+    document.getElementById('qr-amount').textContent     = '$' + Math.max(0, total).toFixed(2);
+
+    if (discount > 0) {
+      document.getElementById('sum-promo-row').style.display = 'flex';
+      document.getElementById('sum-promo-val').textContent   = '-$' + discount.toFixed(2);
+    }
+  }
+
+  /* ── Confirm & place order ── */
+  function confirmPayment() {
+    var overlay = document.getElementById('pay-overlay');
+    var msg     = document.getElementById('overlay-msg');
+    overlay.classList.add('active');
+
+    var labels = {
+      khqr:'Verifying KHQR payment…', aba:'Contacting ABA Bank…',
+      acleda:'Contacting ACLEDA Bank…', wing:'Contacting Wing Money…',
+      truemoney:'Contacting TrueMoney…', card:'Processing card payment…',
+      cash:'Placing your order…'
+    };
+    msg.textContent = labels[selectedMethod] || 'Processing…';
+
+    // Store chosen payment method for the checkout submit
+    localStorage.setItem('chosen_payment', selectedMethod);
+
+    // Try to submit order from pending_order or existing cart flow
+    var pending = null;
+    try { pending = JSON.parse(localStorage.getItem('pending_order') || 'null'); } catch(e) {}
+
+    if (pending) {
+      pending.paymentMethod = selectedMethod;
+      submitOrder(pending);
+    } else {
+      // Fall back: go to order_comfirm if order already submitted from check_out2
+      setTimeout(function() {
+        overlay.classList.remove('active');
+        window.location.href = 'order_comfirm.html';
+      }, 1800);
+    }
+  }
+
+  function submitOrder(data) {
+    var orderRef = data.id || ('ORD-' + Date.now());
+
+    /* Write to localStorage before the network call so tracking works even offline */
+    localStorage.setItem('last_order_ref', orderRef);
+    localStorage.setItem('currentOrder', JSON.stringify({
+      items:         data.items,
+      total:         { totalUSD: data.total },
+      pin:           data.pin || data.deliveryAddress || '',
+      paymentMethod: data.paymentMethod,
+      promoCode:     data.promoCode || null,
+      status:        'confirmed'
+    }));
+    var hist = [];
+    try { hist = JSON.parse(localStorage.getItem('orderHistory')) || []; } catch(e) {}
+    hist.unshift(data);
+    if (hist.length > 30) hist = hist.slice(0, 30);
+    localStorage.setItem('orderHistory', JSON.stringify(hist));
+
+    fetch(API + '/api/orders/', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        id:              data.id,
+        items:           data.items,
+        subtotal:        data.subtotal,
+        deliveryFee:     data.deliveryFee || data.delivery || 2.50,
+        discount:        data.discount || 0,
+        total:           data.total,
+        promoCode:       data.promoCode || '',
+        paymentMethod:   data.paymentMethod,
+        deliveryAddress: data.deliveryAddress || data.pin || '',
+        restaurantName:  data.restaurantName  || '',
+        customerName:    data.customerName    || '',
+        customerEmail:   data.customerEmail   || '',
+      })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.order_ref) localStorage.setItem('last_order_ref', d.order_ref);
+      DirkCart.clearCart();
+      localStorage.removeItem('pending_order');
+      document.getElementById('overlay-msg').textContent = 'Payment confirmed! Redirecting…';
+      setTimeout(function() { window.location.href = 'order_comfirm.html'; }, 900);
+    })
+    .catch(function() {
+      /* Backend unreachable — still go to confirm, data is saved locally */
+      DirkCart.clearCart();
+      localStorage.removeItem('pending_order');
+      document.getElementById('overlay-msg').textContent = 'Order placed! Redirecting…';
+      setTimeout(function() { window.location.href = 'order_comfirm.html'; }, 900);
+    });
+  }
+
+  /* ── Init ── */
+  document.addEventListener('DOMContentLoaded', function() {
+    loadSummary();
+    startQRTimer();
+    // Apply pre-selected method from check_out2
+    var pre = localStorage.getItem('chosen_payment');
+    if (pre && allMethods.indexOf(pre) !== -1) select(pre);
+  });
+</script>
+</body>
+</html>

@@ -68,6 +68,10 @@ urlpatterns = [
     path('api/orders/<str:order_ref>/status/', views.order_status,   name='order_status'),
     path('api/chat/<str:order_ref>/',          views.chat_messages,  name='chat_messages'),
 
+    # ── Reviews ──────────────────────────────────────
+    path('api/reviews/',                                         views.submit_review,       name='submit_review'),
+    path('api/restaurants/<int:restaurant_id>/reviews/',         views.restaurant_reviews,  name='restaurant_reviews'),
+
     # ── Public ────────────────────────────────────────
     path('api/restaurants/',                                  views.restaurants_public,   name='restaurants_public'),
     path('api/restaurants/register/',                         views.shop_register,        name='restaurants_register'),

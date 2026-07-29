@@ -101,6 +101,24 @@ class OrderItem(models.Model):
         return f'{self.quantity}x {self.name}'
 
 
+# ── Review ─────────────────────────────────────────────────────
+
+class Review(models.Model):
+    restaurant    = models.ForeignKey(Restaurant, on_delete=models.CASCADE, related_name='reviews')
+    customer      = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name='my_reviews')
+    order         = models.ForeignKey('Order', null=True, blank=True, on_delete=models.SET_NULL, related_name='review')
+    rating        = models.PositiveSmallIntegerField()  # 1-5
+    comment       = models.TextField(blank=True)
+    customer_name = models.CharField(max_length=200, blank=True)
+    created_at    = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('restaurant', 'order')
+
+    def __str__(self):
+        return f'{self.customer_name} → {self.restaurant.name} ({self.rating}★)'
+
+
 # ── Chat ───────────────────────────────────────────────────────
 
 class ChatMessage(models.Model):

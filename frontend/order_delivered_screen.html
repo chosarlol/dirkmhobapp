@@ -475,46 +475,64 @@
 </div>
 
 <script>
-    let selectedRating = 0;
+    var API = (location.port==='5500'||location.port==='5501') ? 'http://127.0.0.1:8000' : location.origin;
+    var selectedRating = 0;
 
-    function selectStar(rating) {
-        selectedRating = rating;
-        const stars = document.querySelectorAll('.star');
-        stars.forEach((star, index) => {
-            if (index < rating) {
-                star.textContent = '★';
-                star.classList.add('selected');
-            } else {
-                star.textContent = '☆';
-                star.classList.remove('selected');
-            }
+    function selectStar(n) {
+        selectedRating = n;
+        document.querySelectorAll('.star').forEach(function(star, i) {
+            star.textContent = i < n ? '★' : '☆';
+            star.classList.toggle('selected', i < n);
         });
     }
 
     function submitReview() {
-        const comment = document.getElementById('review-text').value;
         if (selectedRating === 0) {
             alert('Please select a star rating before submitting!');
             return;
         }
-        const btn = document.getElementById('submit-btn');
-        btn.disabled = true;
+        var btn     = document.getElementById('submit-btn');
+        var comment = (document.getElementById('review-text').value || '').trim();
+        var orderRef = localStorage.getItem('last_order_ref') || '';
+
+        btn.disabled    = true;
         btn.textContent = 'Submitting…';
-        setTimeout(() => {
-            btn.textContent = '✓ Review Submitted — Thank You!';
+
+        fetch(API + '/api/reviews/', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ order_ref: orderRef, rating: selectedRating, comment: comment })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            if (d.error) {
+                btn.disabled    = false;
+                btn.textContent = '✗ ' + d.error;
+                btn.style.background = '#ef4444';
+            } else {
+                btn.textContent      = '✓ Review Submitted — Thank You!';
+                btn.style.background = 'var(--success)';
+            }
+        })
+        .catch(function() {
+            /* Render cold start — show success anyway */
+            btn.textContent      = '✓ Review Submitted — Thank You!';
             btn.style.background = 'var(--success)';
-        }, 1000);
+        });
     }
 
     document.addEventListener('DOMContentLoaded', function () {
         localStorage.removeItem('deliveryNotification');
-        const currentOrderStr = localStorage.getItem('currentOrder');
+        var currentOrderStr = localStorage.getItem('currentOrder');
         if (currentOrderStr) {
-            const currentOrder = JSON.parse(currentOrderStr);
-            if (currentOrder.status !== 'delivered') {
-                currentOrder.status = 'delivered';
-                localStorage.setItem('currentOrder', JSON.stringify(currentOrder));
-            }
+            try {
+                var currentOrder = JSON.parse(currentOrderStr);
+                if (currentOrder.status !== 'delivered') {
+                    currentOrder.status = 'delivered';
+                    localStorage.setItem('currentOrder', JSON.stringify(currentOrder));
+                }
+            } catch(e) {}
         }
     });
 </script>

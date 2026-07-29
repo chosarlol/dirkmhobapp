@@ -74,6 +74,25 @@
     .checkout-btn:hover { transform:translateY(-2px); box-shadow:0 16px 36px rgba(0,119,200,0.25); }
     .checkout-btn:disabled { opacity:0.45; cursor:not-allowed; transform:none; }
 
+    /* ── Reviews ── */
+    .reviews-section { margin-top:1.5rem; }
+    .reviews-header { display:flex; justify-content:space-between; align-items:center; padding:1.25rem 1.25rem 0; }
+    .reviews-avg { display:flex; align-items:center; gap:.6rem; }
+    .reviews-avg .big-star { font-size:1.8rem; line-height:1; color:#f59e0b; }
+    .reviews-avg .avg-num { font-size:1.6rem; font-weight:900; color:var(--text); }
+    .reviews-avg .avg-sub { color:var(--muted); font-size:.88rem; }
+    .review-list { display:grid; gap:0; padding:0 1.25rem 1.25rem; }
+    .review-item { border-bottom:1px solid var(--border); padding:1rem 0; }
+    .review-item:last-child { border-bottom:none; }
+    .review-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:.35rem; }
+    .reviewer-name { font-weight:700; font-size:.95rem; }
+    .review-meta { display:flex; align-items:center; gap:.6rem; }
+    .review-stars { color:#f59e0b; font-size:1rem; letter-spacing:1px; }
+    .review-date { color:var(--muted); font-size:.8rem; }
+    .review-comment { color:var(--muted); font-size:.9rem; line-height:1.55; }
+    .reviews-empty { text-align:center; padding:2rem; color:var(--muted); font-size:.9rem; }
+    .reviews-loading { text-align:center; padding:2rem; color:var(--muted); }
+
     /* ── Footer ── */
     .footer { margin-top:2rem; padding:2.2rem 0; background:#0f172a; color:#cbd5e1; }
     .footer-grid { display:grid; grid-template-columns:1.2fr 1fr 1fr 1fr; gap:1.5rem; }
@@ -175,6 +194,25 @@
       </div>
     </section>
   </main>
+
+  <!-- Reviews -->
+  <section class="section reviews-section">
+    <div class="container">
+      <div class="panel">
+        <div class="reviews-header">
+          <h2 class="panel-title">Customer Reviews</h2>
+          <div class="reviews-avg" id="reviews-avg" style="display:none">
+            <span class="big-star">★</span>
+            <span class="avg-num" id="avg-num">0.0</span>
+            <span class="avg-sub" id="avg-sub">0 reviews</span>
+          </div>
+        </div>
+        <div class="review-list" id="review-list">
+          <div class="reviews-loading">Loading reviews…</div>
+        </div>
+      </div>
+    </div>
+  </section>
 
   <footer class="footer">
     <div class="container footer-grid">
@@ -394,6 +432,51 @@
     document.addEventListener('DOMContentLoaded', function() {
       renderCartPanel();
     });
+
+    /* ── Reviews ───────────────────────────────────────── */
+    function starsHtml(n) {
+      var s = '';
+      for (var i = 1; i <= 5; i++) s += i <= n ? '★' : '☆';
+      return s;
+    }
+
+    function loadReviews() {
+      if (!REST_ID) return;
+      fetch(API + '/api/restaurants/' + REST_ID + '/reviews/', { credentials: 'include' })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        var list = document.getElementById('review-list');
+        var avg  = document.getElementById('reviews-avg');
+
+        if (data.total && data.total > 0) {
+          document.getElementById('avg-num').textContent = Number(data.average).toFixed(1);
+          document.getElementById('avg-sub').textContent = data.total + ' review' + (data.total !== 1 ? 's' : '');
+          avg.style.display = 'flex';
+
+          list.innerHTML = data.reviews.map(function(r) {
+            return '<div class="review-item">' +
+              '<div class="review-top">' +
+                '<span class="reviewer-name">' + esc(r.customer_name) + '</span>' +
+                '<div class="review-meta">' +
+                  '<span class="review-stars">' + starsHtml(r.rating) + '</span>' +
+                  '<span class="review-date">' + esc(r.created_at) + '</span>' +
+                '</div>' +
+              '</div>' +
+              (r.comment ? '<div class="review-comment">' + esc(r.comment) + '</div>' : '') +
+            '</div>';
+          }).join('');
+        } else {
+          list.innerHTML = '<div class="reviews-empty">No reviews yet — be the first to review this restaurant!</div>';
+        }
+      })
+      .catch(function() {
+        document.getElementById('review-list').innerHTML =
+          '<div class="reviews-empty">Could not load reviews.</div>';
+      });
+    }
+
+    /* Load reviews after restaurant details have loaded (REST_ID is ready) */
+    setTimeout(loadReviews, 800);
   </script>
 </body>
 </html>

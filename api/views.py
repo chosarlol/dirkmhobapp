@@ -2,12 +2,12 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.db.models import Sum
+from django.db.models import Sum, Avg
 import json
 import re
 import time
 
-from .models import UserProfile, Restaurant, MenuItem, Order, OrderItem, ChatMessage
+from .models import UserProfile, Restaurant, MenuItem, Order, OrderItem, ChatMessage, Review
 
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
@@ -588,6 +588,96 @@ def submit_order(request):
             restaurant_name = it.get('restaurantName', '') or restaurant_name,
         )
     return _json({'status': 'saved', 'db_id': order.id, 'order_ref': order.order_ref}, 201)
+
+
+# ── Reviews ────────────────────────────────────────────────────────────────────
+
+@csrf_exempt
+def submit_review(request):
+    """POST { order_ref, rating, comment } — one review per order."""
+    if request.method != 'POST':
+        return _json({'error': 'POST only'}, 405)
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return _json({'error': 'Invalid JSON'}, 400)
+
+    order_ref = (data.get('order_ref') or '').strip()
+    try:
+        rating = int(data.get('rating', 0))
+    except (TypeError, ValueError):
+        rating = 0
+    comment = (data.get('comment') or '').strip()
+
+    if not 1 <= rating <= 5:
+        return _json({'error': 'Rating must be between 1 and 5.'}, 400)
+
+    try:
+        order = Order.objects.get(order_ref=order_ref)
+    except Order.DoesNotExist:
+        return _json({'error': 'Order not found.'}, 404)
+
+    if Review.objects.filter(order=order).exists():
+        return _json({'error': 'You have already reviewed this order.'}, 400)
+
+    restaurant = None
+    if order.restaurant_name:
+        try:
+            restaurant = Restaurant.objects.get(name=order.restaurant_name)
+        except Restaurant.DoesNotExist:
+            pass
+        except Restaurant.MultipleObjectsReturned:
+            restaurant = Restaurant.objects.filter(name=order.restaurant_name).first()
+
+    if restaurant is None:
+        return _json({'error': 'Restaurant not found.'}, 404)
+
+    customer = request.user if request.user.is_authenticated else None
+    customer_name = order.customer_name or (request.user.get_full_name() if customer else '') or 'Anonymous'
+
+    review = Review.objects.create(
+        restaurant=restaurant,
+        customer=customer,
+        order=order,
+        rating=rating,
+        comment=comment,
+        customer_name=customer_name,
+    )
+
+    # Recalculate restaurant's average rating
+    avg = Review.objects.filter(restaurant=restaurant).aggregate(avg=Avg('rating'))['avg']
+    if avg is not None:
+        restaurant.rating = round(avg, 1)
+        restaurant.save(update_fields=['rating'])
+
+    return _json({'status': 'saved', 'id': review.id}, 201)
+
+
+def restaurant_reviews(request, restaurant_id):
+    """GET — returns up to 20 recent reviews for a restaurant."""
+    try:
+        restaurant = Restaurant.objects.get(id=restaurant_id)
+    except Restaurant.DoesNotExist:
+        return _json({'error': 'Restaurant not found.'}, 404)
+
+    qs = Review.objects.filter(restaurant=restaurant).order_by('-created_at')
+    total = qs.count()
+    page  = qs[:20]
+
+    return _json({
+        'total':   total,
+        'average': float(restaurant.rating),
+        'reviews': [
+            {
+                'id':            r.id,
+                'customer_name': r.customer_name or 'Anonymous',
+                'rating':        r.rating,
+                'comment':       r.comment,
+                'created_at':    r.created_at.strftime('%b %d, %Y'),
+            }
+            for r in page
+        ],
+    })
 
 
 # ── Public: approved restaurant list (for home_screen.html) ────────────────────

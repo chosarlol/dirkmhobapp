@@ -509,7 +509,15 @@
     })
     .then(function(r) { return r.json(); })
     .then(function(d) {
-      if (d.error) { showToast('Error: ' + d.error, 'error'); return; }
+      if (d.error && d.error !== 'Authentication required') {
+        showToast('Error: ' + d.error, 'error'); return;
+      }
+      applyProfileLocally(name, email, phone, addr);
+    })
+    .catch(function() { applyProfileLocally(name, email, phone, addr); });
+  }
+
+  function applyProfileLocally(name, email, phone, addr) {
       DirkAuth.updateUser({ name: name, email: email, phone: phone, address: addr });
       var sn = document.getElementById('sidebar-name');
       var se = document.getElementById('sidebar-email');
@@ -517,17 +525,6 @@
       if (se) se.textContent = email;
       DirkAuth.mountNavAuth();
       showToast('Profile updated!', 'success');
-    })
-    .catch(function() {
-      /* Fallback: save to localStorage only */
-      DirkAuth.updateUser({ name: name, email: email, phone: phone, address: addr });
-      var sn = document.getElementById('sidebar-name');
-      var se = document.getElementById('sidebar-email');
-      if (sn) sn.textContent = name;
-      if (se) se.textContent = email;
-      DirkAuth.mountNavAuth();
-      showToast('Profile updated (offline).', 'success');
-    });
   }
 
   function saveAvatar() {
@@ -556,7 +553,8 @@
     })
     .then(function(r) { return r.json(); })
     .then(function(d) {
-      if (d.error) { errEl.textContent = d.error; return; }
+      if (d.error && d.error !== 'Authentication required') { errEl.textContent = d.error; return; }
+      if (d.error === 'Authentication required') { errEl.textContent = 'Please log in again to change your password.'; return; }
       document.getElementById('f-pw').value  = '';
       document.getElementById('f-pw2').value = '';
       showToast('Password updated!', 'success');

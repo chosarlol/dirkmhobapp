@@ -372,14 +372,8 @@
             </div>
 
             <!-- Promo Code Input -->
-            <div class="promo-input-wrap">
-                <div class="promo-input-row">
-                    <input type="text" id="promo-code-input" class="promo-code-field"
-                           placeholder="Enter promo code…" autocomplete="off" autocapitalize="characters"
-                           oninput="this.value=this.value.toUpperCase()" />
-                    <button class="promo-apply-btn" onclick="applyPromoInput()">Apply</button>
-                </div>
-                <div id="promo-feedback" class="promo-feedback"></div>
+            <div class="promo-input-wrap" id="promo-section">
+                <!-- filled by renderPromoSection() -->
             </div>
 
             <!-- Price Summary -->
@@ -424,15 +418,45 @@
     var selectedPayment = 'khqr';
     var currentPin = 'Phnom Penh';
 
+    function renderPromoSection() {
+        var sec   = document.getElementById('promo-section');
+        var promo = DirkPromo.getActivePromo();
+        if (promo) {
+            sec.innerHTML =
+                '<div style="display:flex;align-items:center;justify-content:space-between;' +
+                'background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px;padding:10px 14px;gap:8px;">' +
+                '<span style="font-weight:700;color:#16a34a;font-size:0.92rem;">✓ ' + promo.label + ' applied</span>' +
+                '<button onclick="removePromoCheckout()" style="background:none;border:none;color:#ef4444;' +
+                'font-weight:700;cursor:pointer;font-size:0.85rem;padding:0;">Remove ×</button>' +
+                '</div>';
+        } else {
+            sec.innerHTML =
+                '<div class="promo-input-row">' +
+                '<input type="text" id="promo-code-input" class="promo-code-field" ' +
+                'placeholder="Enter promo code…" autocomplete="off" autocapitalize="characters" ' +
+                'oninput="this.value=this.value.toUpperCase()" />' +
+                '<button class="promo-apply-btn" onclick="applyPromoInput()">Apply</button>' +
+                '</div>' +
+                '<div id="promo-feedback" class="promo-feedback"></div>';
+        }
+    }
+
+    function removePromoCheckout() {
+        DirkPromo.clearPromo();
+        renderPromoSection();
+        loadCheckoutInfo();
+    }
+
     function applyPromoInput() {
         var code = (document.getElementById('promo-code-input').value || '').trim().toUpperCase();
         var fb   = document.getElementById('promo-feedback');
         var result = DirkPromo.applyByCode(code);
-        fb.className = 'promo-feedback ' + (result.success ? 'ok' : 'err');
-        fb.textContent = result.success ? ('✓ ' + result.message) : ('✗ ' + result.message);
         if (result.success) {
-            document.getElementById('promo-code-input').value = '';
+            renderPromoSection();
             loadCheckoutInfo();
+        } else {
+            fb.className = 'promo-feedback err';
+            fb.textContent = '✗ ' + result.message;
         }
     }
 
@@ -672,6 +696,7 @@
     }
 
     document.addEventListener('DOMContentLoaded', function() {
+        renderPromoSection();
         loadCheckoutInfo();
         initCheckoutMap();
     });

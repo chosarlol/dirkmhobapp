@@ -101,6 +101,26 @@ class OrderItem(models.Model):
         return f'{self.quantity}x {self.name}'
 
 
+# ── Password Reset ─────────────────────────────────────────────
+
+class PasswordResetToken(models.Model):
+    user       = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reset_tokens')
+    token      = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+    used       = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def is_valid(self):
+        from django.utils import timezone
+        age = (timezone.now() - self.created_at).total_seconds()
+        return not self.used and age < 900  # 15 minutes
+
+    def __str__(self):
+        return f'{self.user.email} — {self.token} ({"used" if self.used else "valid"})'
+
+
 # ── Review ─────────────────────────────────────────────────────
 
 class Review(models.Model):

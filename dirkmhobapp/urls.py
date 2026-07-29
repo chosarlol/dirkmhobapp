@@ -68,6 +68,10 @@ urlpatterns = [
     path('api/orders/<str:order_ref>/status/', views.order_status,   name='order_status'),
     path('api/chat/<str:order_ref>/',          views.chat_messages,  name='chat_messages'),
 
+    # ── Password Reset ────────────────────────────────
+    path('api/password-reset/request/', views.request_password_reset, name='password_reset_request'),
+    path('api/password-reset/confirm/', views.confirm_password_reset, name='password_reset_confirm'),
+
     # ── Reviews ──────────────────────────────────────
     path('api/reviews/',                                         views.submit_review,       name='submit_review'),
     path('api/restaurants/<int:restaurant_id>/reviews/',         views.restaurant_reviews,  name='restaurant_reviews'),

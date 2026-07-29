@@ -4,10 +4,11 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Sum, Avg
 import json
+import random
 import re
 import time
 
-from .models import UserProfile, Restaurant, MenuItem, Order, OrderItem, ChatMessage, Review
+from .models import UserProfile, Restaurant, MenuItem, Order, OrderItem, ChatMessage, Review, PasswordResetToken
 
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
@@ -588,6 +589,95 @@ def submit_order(request):
             restaurant_name = it.get('restaurantName', '') or restaurant_name,
         )
     return _json({'status': 'saved', 'db_id': order.id, 'order_ref': order.order_ref}, 201)
+
+
+# ── Password Reset ─────────────────────────────────────────────────────────────
+
+@csrf_exempt
+def request_password_reset(request):
+    """POST { email } — generate 6-digit OTP and email it to the user."""
+    if request.method != 'POST':
+        return _json({'error': 'POST only'}, 405)
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return _json({'error': 'Invalid JSON'}, 400)
+
+    email = (data.get('email') or '').strip().lower()
+    if not email:
+        return _json({'error': 'Email is required.'}, 400)
+
+    # Always return "sent" so attackers can't enumerate which emails exist
+    try:
+        user = User.objects.get(email__iexact=email)
+    except User.DoesNotExist:
+        return _json({'status': 'sent'})
+
+    # Invalidate any existing unused tokens
+    PasswordResetToken.objects.filter(user=user, used=False).update(used=True)
+
+    otp = str(random.randint(100000, 999999))
+    PasswordResetToken.objects.create(user=user, token=otp)
+
+    from django.core.mail import send_mail
+    from django.conf import settings
+
+    subject = 'DirkMhob — Your Password Reset Code'
+    body = (
+        f'Hello {user.get_full_name() or user.username},\n\n'
+        f'Your 6-digit password reset code is:\n\n'
+        f'        {otp}\n\n'
+        f'This code expires in 15 minutes.\n'
+        f'If you did not request a password reset, you can safely ignore this email.\n\n'
+        f'— The DirkMhob Team'
+    )
+
+    try:
+        send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, [user.email], fail_silently=False)
+    except Exception:
+        return _json({'error': 'Could not send email. Please try again later.'}, 500)
+
+    return _json({'status': 'sent'})
+
+
+@csrf_exempt
+def confirm_password_reset(request):
+    """POST { email, otp, password } — verify OTP and set new password."""
+    if request.method != 'POST':
+        return _json({'error': 'POST only'}, 405)
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return _json({'error': 'Invalid JSON'}, 400)
+
+    email    = (data.get('email') or '').strip().lower()
+    otp      = (data.get('otp') or '').strip()
+    password = (data.get('password') or '').strip()
+
+    if not email or not otp or not password:
+        return _json({'error': 'All fields are required.'}, 400)
+    if len(password) < 8:
+        return _json({'error': 'Password must be at least 8 characters.'}, 400)
+
+    try:
+        user = User.objects.get(email__iexact=email)
+    except User.DoesNotExist:
+        return _json({'error': 'Invalid or expired code.'}, 400)
+
+    try:
+        token = PasswordResetToken.objects.filter(user=user, token=otp, used=False).latest('created_at')
+    except PasswordResetToken.DoesNotExist:
+        return _json({'error': 'Invalid or expired code. Please request a new one.'}, 400)
+
+    if not token.is_valid():
+        return _json({'error': 'This code has expired. Please request a new one.'}, 400)
+
+    user.set_password(password)
+    user.save()
+    token.used = True
+    token.save()
+
+    return _json({'status': 'reset'})
 
 
 # ── Reviews ────────────────────────────────────────────────────────────────────

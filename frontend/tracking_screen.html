@@ -499,6 +499,7 @@
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="restaurant-coords.js"></script>
 <script>
     var API       = (location.port==='5500'||location.port==='5501')?'http://127.0.0.1:8000':location.origin;
     var ORDER_REF = localStorage.getItem('last_order_ref') || '';
@@ -781,13 +782,15 @@
     }
 
     function loadLeafletMap() {
-        /* Leaflet is already loaded via CDN link in <head> */
         if (typeof L === 'undefined') {
-            /* CDN failed — show CSS fallback */
             startFallbackAnimation();
             return;
         }
-        initLeafletMap(DEFAULT_RESTAURANT, DEFAULT_CUSTOMER);
+        /* Use real coords for known restaurants */
+        var restName    = localStorage.getItem('cart_restaurant_name') || '';
+        var knownCoords = (typeof getKnownRestCoords !== 'undefined') ? getKnownRestCoords(restName) : null;
+        var restaurant  = knownCoords ? knownCoords : DEFAULT_RESTAURANT;
+        initLeafletMap(restaurant, DEFAULT_CUSTOMER);
     }
 
     /* ── BOOTSTRAP ──────────────────────────────────────────── */

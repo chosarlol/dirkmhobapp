@@ -616,8 +616,10 @@
     document.getElementById('map-area').innerHTML =
       '<div id="driver-leaflet-map" style="width:100%;height:100%"></div>';
 
-    /* Mutable coords — updated by geocoding callbacks, shared via closure */
-    var REST_LAT = 11.5720, REST_LNG = 104.9160;
+    /* Mutable coords — start with known real coords if available, else default */
+    var knownRest = (typeof getKnownRestCoords !== 'undefined') ? getKnownRestCoords(order.restaurant_name) : null;
+    var REST_LAT = knownRest ? knownRest.lat : 11.5720;
+    var REST_LNG = knownRest ? knownRest.lng : 104.9160;
     var CUST_LAT = 11.5500, CUST_LNG = 104.8980;
 
     driverLeafletMap = L.map('driver-leaflet-map')
@@ -698,8 +700,8 @@
     /* Initial route with default Phnom Penh coords */
     fetchRoute(REST_LAT, REST_LNG, CUST_LAT, CUST_LNG);
 
-    /* Geocode restaurant name → move restaurant marker + restart route */
-    if (order.restaurant_name) {
+    /* Geocode restaurant name via Nominatim only if coords are not already known */
+    if (!knownRest && order.restaurant_name) {
       fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' +
         encodeURIComponent(order.restaurant_name + ' Phnom Penh'),
         { headers: { 'Accept-Language': 'en' } })
@@ -742,5 +744,6 @@
   }
 </script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="restaurant-coords.js"></script>
 </body>
 </html>

@@ -417,6 +417,7 @@
 </main>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="restaurant-coords.js"></script>
 <script src="cart.js"></script>
 <script src="promo.js"></script>
 <script>
@@ -488,12 +489,39 @@
     var checkoutMap = null;
     var customerMarker = null;
     var routeLine = null;
-    var RESTAURANT_LAT = 11.5720, RESTAURANT_LNG = 104.9160; /* TK Avenue default */
+    var RESTAURANT_LAT = 11.5720, RESTAURANT_LNG = 104.9160; /* fallback default */
     var CUSTOMER_LAT   = 11.5500, CUSTOMER_LNG   = 104.8980; /* BKK default */
 
+    /* Distance → delivery fee: $1.00 base + $0.50/km, min $1.50, max $15 */
+    function distanceToFee(meters) {
+        var km  = meters / 1000;
+        return Math.min(Math.max(1.00 + km * 0.50, 1.50), 15.00);
+    }
+
+    function updateDeliveryFeeDisplay(fee) {
+        var delivEl = document.getElementById('delivery-value');
+        if (delivEl) delivEl.textContent = '$ ' + fee.toFixed(2);
+        /* Recalculate total */
+        var subtotal   = DirkCart.calculateSubtotal(DirkCart.getCart());
+        var promoCalc  = DirkPromo.calculateDiscount(subtotal, fee);
+        var serviceFee = 1.00;
+        var discount   = promoCalc.discount;
+        var delivery   = promoCalc.delivery !== undefined ? promoCalc.delivery : fee;
+        var total      = subtotal + delivery + serviceFee - discount;
+        var totalEl    = document.getElementById('total-amount');
+        if (totalEl) totalEl.textContent = '$ ' + total.toFixed(2);
+        if (delivEl) delivEl.textContent = '$ ' + delivery.toFixed(2);
+    }
+
     function initCheckoutMap() {
-        /* Resolve restaurant coords from name if possible (best effort geocode) */
         var restName = localStorage.getItem('cart_restaurant_name') || 'Restaurant';
+
+        /* Use known real coordinates if available */
+        var knownCoords = getKnownRestCoords(restName);
+        if (knownCoords) {
+            RESTAURANT_LAT = knownCoords.lat;
+            RESTAURANT_LNG = knownCoords.lng;
+        }
 
         checkoutMap = L.map('delivery-map').setView(
             [(RESTAURANT_LAT + CUSTOMER_LAT) / 2, (RESTAURANT_LNG + CUSTOMER_LNG) / 2], 14
@@ -549,8 +577,11 @@
         .then(function(r) { return r.json(); })
         .then(function(data) {
             if (!data.routes || !data.routes.length) return;
-            var coords = data.routes[0].geometry.coordinates.map(function(c) { return [c[1], c[0]]; });
+            var route  = data.routes[0];
+            var coords = route.geometry.coordinates.map(function(c) { return [c[1], c[0]]; });
             routeLine.setLatLngs(coords);
+            /* Update delivery fee and total based on real road distance */
+            updateDeliveryFeeDisplay(distanceToFee(route.distance));
         })
         .catch(function() {});
     }

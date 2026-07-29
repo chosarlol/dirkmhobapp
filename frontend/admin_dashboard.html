@@ -559,10 +559,13 @@
         var banBtn = u.is_banned
           ? '<button class="act-btn act-unban"   onclick="userAction('+u.id+',\'unban\')">Unban</button>'
           : '<button class="act-btn act-ban"     onclick="userAction('+u.id+',\'ban\')">Ban</button>';
-        var driverBtn = u.role === 'driver'
-          ? '<button class="act-btn act-undriver" onclick="userAction('+u.id+',\'set_customer\')" title="Remove Driver">👤 Customer</button>'
-          : '<button class="act-btn act-driver"   onclick="userAction('+u.id+',\'set_driver\')" title="Make Driver">🛵 Driver</button>';
-        var actions = banBtn + ' ' + driverBtn;
+        var roleSelect = '<select onchange="setUserRole('+u.id+',this)" style="border:1px solid #e2e8f0;border-radius:8px;padding:3px 6px;font-size:0.8rem;cursor:pointer;">'
+          + ['customer','driver','shop_owner','moderator'].map(function(r){
+              return '<option value="'+r+'"'+(u.role===r?' selected':'')+'>'+r.replace('_',' ')+'</option>';
+            }).join('')
+          + '</select>';
+        var deleteBtn = '<button class="act-btn act-delete" onclick="deleteUser('+u.id+',\''+esc(u.username)+'\')">Delete</button>';
+        var actions = banBtn + ' ' + roleSelect + ' ' + deleteBtn;
         return '<tr><td>'+u.id+'</td><td><strong>'+esc(u.username)+'</strong></td><td>'+esc(u.email||'—')+'</td><td>'+roleBadge+'</td><td>'+statusBadge+'</td><td>'+esc(u.joined)+'</td><td>'+actions+'</td></tr>';
       }).join('');
     }).catch(function(){ tbody.innerHTML = '<tr class="empty-row"><td colspan="7">Error loading data.</td></tr>'; });
@@ -573,6 +576,27 @@
     .then(function(data){
       if(data.error){ toast('Error: '+data.error, false); return; }
       toast('User '+data.status+'.', true);
+      loadUsers();
+    }).catch(function(){ toast('Request failed.', false); });
+  }
+
+  function setUserRole(id, sel){
+    var role = sel.value;
+    var action = 'set_' + role;
+    api('/api/admin/users/'+id+'/'+action+'/', { method:'POST', body:'{}' })
+    .then(function(data){
+      if(data.error){ toast('Error: '+data.error, false); loadUsers(); return; }
+      toast('Role updated to '+role.replace('_',' ')+'.', true);
+      loadUsers();
+    }).catch(function(){ toast('Request failed.', false); loadUsers(); });
+  }
+
+  function deleteUser(id, username){
+    if(!confirm('Delete user "'+username+'"? This cannot be undone.')) return;
+    api('/api/admin/users/'+id+'/delete/', { method:'POST', body:'{}' })
+    .then(function(data){
+      if(data.error){ toast('Error: '+data.error, false); return; }
+      toast('User deleted.', true);
       loadUsers();
     }).catch(function(){ toast('Request failed.', false); });
   }

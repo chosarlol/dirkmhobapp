@@ -228,6 +228,20 @@ def admin_user_action(request, user_id, action):
         target = User.objects.get(pk=user_id)
     except User.DoesNotExist:
         return _json({'error': 'User not found'}, 404)
+    if action == 'delete':
+        target.delete()
+        return _json({'status': 'deleted'})
+    if action == 'set_email':
+        try:
+            body = json.loads(request.body)
+            new_email = (body.get('email') or '').strip()
+        except Exception:
+            return _json({'error': 'Invalid JSON'}, 400)
+        if not new_email:
+            return _json({'error': 'Email required'}, 400)
+        target.email = new_email
+        target.save()
+        return _json({'status': 'email updated'})
     profile, _ = UserProfile.objects.get_or_create(user=target)
     if action == 'ban':
         profile.is_banned = True
@@ -245,6 +259,14 @@ def admin_user_action(request, user_id, action):
         profile.role = 'customer'
         profile.save()
         return _json({'status': 'set as customer'})
+    if action == 'set_shop_owner':
+        profile.role = 'shop_owner'
+        profile.save()
+        return _json({'status': 'set as shop owner'})
+    if action == 'set_moderator':
+        profile.role = 'moderator'
+        profile.save()
+        return _json({'status': 'set as moderator'})
     return _json({'error': 'Unknown action'}, 400)
 
 

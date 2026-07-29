@@ -6,6 +6,7 @@
     <title>Live Tracking — DirkMhob</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         :root {
             --primary: #0077C8;
@@ -497,8 +498,7 @@
 
 </div>
 
-<!-- Load maps config first -->
-<script src="maps-config.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
     var API       = (location.port==='5500'||location.port==='5501')?'http://127.0.0.1:8000':location.origin;
     var ORDER_REF = localStorage.getItem('last_order_ref') || '';
@@ -648,130 +648,106 @@
         if (toast) toast.style.display = 'flex';
     }
 
-    /* ── GOOGLE MAPS INTEGRATION ────────────────────────────── */
-    var map, driverMarker, directionsRenderer;
-    var routePoints = [];
-    var driverIndex = 0;
+    /* ── LEAFLET MAP (OpenStreetMap — free, no API key) ─────── */
+    var leafletMap = null;
+    var leafletDriver = null;
+    var routeCoords = [];   /* [[lat,lng], ...] from OSRM */
+    var routeIndex  = 0;
     var animationTimer = null;
     var initialETA = 15;
 
-    window.initMap = function () {
-        var cfg = (typeof MAPS_CONFIG !== 'undefined') ? MAPS_CONFIG : {};
-        var restaurant = cfg.restaurant || { lat: 11.5656, lng: 104.9282 };
-        var customer   = cfg.customer   || { lat: 11.5450, lng: 104.9100 };
-        var driverStart= cfg.driver     || { lat: 11.5580, lng: 104.9205 };
+    /* Default Phnom Penh locations — restaurant → customer */
+    var DEFAULT_RESTAURANT = { lat: 11.5720, lng: 104.9160 }; /* TK Avenue area */
+    var DEFAULT_CUSTOMER   = { lat: 11.5500, lng: 104.8980 }; /* Boeung Keng Kang */
 
-        map = new google.maps.Map(document.getElementById('tracking-map'), {
-            center: { lat: (restaurant.lat + customer.lat) / 2, lng: (restaurant.lng + customer.lng) / 2 },
-            zoom: 14,
-            mapTypeControl: false, streetViewControl: false, fullscreenControl: false,
-            styles: [
-                { featureType: 'poi',     stylers: [{ visibility: 'off' }] },
-                { featureType: 'transit', stylers: [{ visibility: 'off' }] },
-                { featureType: 'road', elementType: 'labels.icon', stylers: [{ visibility: 'off' }] }
-            ]
+    function makeEmojiIcon(emoji, size) {
+        size = size || 36;
+        return L.divIcon({
+            html: '<div style="font-size:' + size + 'px;line-height:1;filter:drop-shadow(0 2px 4px rgba(0,0,0,.4))">' + emoji + '</div>',
+            className: '',
+            iconSize:   [size, size],
+            iconAnchor: [size / 2, size / 2]
         });
-
-        new google.maps.Marker({
-            position: restaurant, map,
-            label: { text: '🍴', fontSize: '20px' },
-            icon: { path: google.maps.SymbolPath.CIRCLE, scale: 18, fillColor: '#FF6B35', fillOpacity: 1, strokeColor: '#FFFFFF', strokeWeight: 3 }
-        });
-        new google.maps.Marker({
-            position: customer, map,
-            label: { text: '🏠', fontSize: '18px' },
-            icon: { path: google.maps.SymbolPath.CIRCLE, scale: 18, fillColor: '#0077C8', fillOpacity: 1, strokeColor: '#FFFFFF', strokeWeight: 3 }
-        });
-        driverMarker = new google.maps.Marker({
-            position: driverStart, map,
-            label: { text: '🛵', fontSize: '18px' },
-            zIndex: 10,
-            icon: { path: google.maps.SymbolPath.CIRCLE, scale: 20, fillColor: '#1E293B', fillOpacity: 1, strokeColor: '#FFFFFF', strokeWeight: 3 }
-        });
-
-        var directionsService = new google.maps.DirectionsService();
-        directionsRenderer = new google.maps.DirectionsRenderer({
-            suppressMarkers: true,
-            polylineOptions: { strokeColor: '#0077C8', strokeWeight: 5, strokeOpacity: 0.85 }
-        });
-        directionsRenderer.setMap(map);
-
-        directionsService.route({
-            origin: restaurant, destination: customer,
-            travelMode: google.maps.TravelMode.DRIVING
-        }, function (result, status) {
-            if (status === google.maps.DirectionsStatus.OK) {
-                directionsRenderer.setDirections(result);
-                routePoints = result.routes[0].overview_path;
-                driverIndex = findNearestPointIndex(driverStart, routePoints);
-                driverMarker.setPosition(routePoints[driverIndex]);
-                initialETA = Math.ceil(result.routes[0].legs[0].duration.value / 60);
-                updateETA(initialETA);
-                startDriverAnimation();
-            } else {
-                startFallbackAnimation();
-            }
-        });
-    };
-
-    function findNearestPointIndex(point, path) {
-        var minDist = Infinity, idx = 0;
-        path.forEach(function(p, i) {
-            var d = google.maps.geometry.spherical.computeDistanceBetween(
-                new google.maps.LatLng(point.lat, point.lng), p
-            );
-            if (d < minDist) { minDist = d; idx = i; }
-        });
-        return idx;
     }
 
-    function startDriverAnimation() {
-        if (!routePoints.length) return;
-        var remainingPts = routePoints.length - driverIndex;
-        var stepMs = Math.max(800, Math.min(3000, (initialETA * 60000) / remainingPts));
+    function initLeafletMap(restaurant, customer) {
+        restaurant = restaurant || DEFAULT_RESTAURANT;
+        customer   = customer   || DEFAULT_CUSTOMER;
 
-        animationTimer = setInterval(function () {
+        var center = [
+            (restaurant.lat + customer.lat) / 2,
+            (restaurant.lng + customer.lng) / 2
+        ];
+
+        leafletMap = L.map('tracking-map', {
+            center: center, zoom: 14,
+            zoomControl: true,
+            attributionControl: true
+        });
+
+        /* OpenStreetMap tiles — free, no key */
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+            maxZoom: 19
+        }).addTo(leafletMap);
+
+        /* Restaurant pin */
+        L.marker([restaurant.lat, restaurant.lng], { icon: makeEmojiIcon('🍴', 30) })
+            .addTo(leafletMap)
+            .bindPopup('<b>' + (localStorage.getItem('cart_restaurant_name') || 'Restaurant') + '</b>');
+
+        /* Customer pin */
+        L.marker([customer.lat, customer.lng], { icon: makeEmojiIcon('🏠', 30) })
+            .addTo(leafletMap)
+            .bindPopup('<b>Your Location</b>');
+
+        /* Driver marker — starts at restaurant */
+        leafletDriver = L.marker([restaurant.lat, restaurant.lng], { icon: makeEmojiIcon('🛵', 34), zIndexOffset: 1000 })
+            .addTo(leafletMap);
+
+        /* Fetch real road route from OSRM (free, no key) */
+        var osrmUrl = 'https://router.project-osrm.org/route/v1/driving/' +
+            restaurant.lng + ',' + restaurant.lat + ';' +
+            customer.lng   + ',' + customer.lat +
+            '?overview=full&geometries=geojson';
+
+        fetch(osrmUrl)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (!data.routes || !data.routes.length) { startFallbackAnimation(); return; }
+            var coords = data.routes[0].geometry.coordinates; /* [lng,lat] pairs */
+            routeCoords = coords.map(function(c) { return [c[1], c[0]]; }); /* flip to [lat,lng] */
+            initialETA  = Math.round(data.routes[0].duration / 60);
+            updateETA(initialETA);
+
+            /* Draw blue dashed route line */
+            L.polyline(routeCoords, {
+                color: '#0077C8', weight: 5, opacity: 0.8, dashArray: '10 6'
+            }).addTo(leafletMap);
+
+            routeIndex = 0;
+            startLeafletDriverAnimation();
+        })
+        .catch(function() { startFallbackAnimation(); });
+    }
+
+    function startLeafletDriverAnimation() {
+        if (!routeCoords.length) return;
+        var total  = routeCoords.length;
+        var stepMs = Math.max(600, Math.min(2500, (initialETA * 60000) / total));
+
+        animationTimer = setInterval(function() {
             if (wasDelivered) { clearInterval(animationTimer); return; }
-            driverIndex++;
-            if (driverIndex >= routePoints.length) { clearInterval(animationTimer); return; }
-            driverMarker.setPosition(routePoints[driverIndex]);
-            if (driverIndex % 5 === 0) map.panTo(routePoints[driverIndex]);
-            updateETA(initialETA * (routePoints.length - driverIndex) / routePoints.length);
+            routeIndex++;
+            if (routeIndex >= total) { clearInterval(animationTimer); return; }
+            var pos = routeCoords[routeIndex];
+            leafletDriver.setLatLng(pos);
+            if (routeIndex % 8 === 0) leafletMap.panTo(pos);
+            updateETA(Math.round(initialETA * (total - routeIndex) / total));
         }, stepMs);
     }
 
-    /* ── FALLBACK MAP ───────────────────────────────────────── */
-    function showMapFallback(showNotice) {
-        var mapEl   = document.getElementById('tracking-map');
-        var pinName = localStorage.getItem('cart_restaurant_name') || 'Restaurant';
-        mapEl.innerHTML =
-            '<div class="map-fallback">' +
-            '<div class="fallback-grid"></div>' +
-            '<div class="fallback-road-h" style="top:30%"></div>' +
-            '<div class="fallback-road-h" style="top:55%"></div>' +
-            '<div class="fallback-road-h" style="top:75%"></div>' +
-            '<div class="fallback-road-v" style="left:25%"></div>' +
-            '<div class="fallback-road-v" style="left:55%"></div>' +
-            '<div class="fallback-road-v" style="right:18%"></div>' +
-            '<div class="fallback-bld" style="width:70px;height:50px;background:#8aacbf;top:6%;left:3%"></div>' +
-            '<div class="fallback-bld" style="width:55px;height:40px;background:#7a9cb0;top:6%;left:29%"></div>' +
-            '<div class="fallback-bld" style="width:90px;height:58px;background:#b0c8d8;top:6%;right:4%"></div>' +
-            '<div class="fallback-bld" style="width:65px;height:44px;background:#6a9ab4;top:38%;left:3%"></div>' +
-            '<div class="fallback-bld" style="width:80px;height:48px;background:#85a8bc;top:60%;left:29%"></div>' +
-            '<div class="fallback-bld" style="width:75px;height:50px;background:#90b0c0;top:38%;right:4%"></div>' +
-            '<div class="fallback-bld" style="width:55px;height:36px;background:#80aa9a;top:80%;left:3%"></div>' +
-            '<svg class="route-svg" viewBox="0 0 100 100" preserveAspectRatio="none">' +
-            '<path d="M 82 12 Q 70 30 62 45 Q 50 60 38 72 Q 28 80 18 88" stroke="#0077C8" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-dasharray="4 2" opacity="0.8"/>' +
-            '<path d="M 82 12 Q 70 30 62 45 Q 50 60 38 72 Q 28 80 18 88" stroke="#0077C8" stroke-width="5" fill="none" opacity="0.12" stroke-linecap="round"/>' +
-            '</svg>' +
-            '<div class="fallback-restaurant-pin" style="left:82%;top:12%"><div class="pin-bubble restaurant">🍴 ' + pinName + '</div><div class="pin-tail restaurant"></div></div>' +
-            '<div class="fallback-customer-pin" style="left:18%;top:88%"><div class="pin-bubble customer">🏠 Your Location</div><div class="pin-tail customer"></div></div>' +
-            '<div class="fallback-driver" id="fallback-driver" style="left:62%;top:45%">🛵</div>' +
-            (showNotice ? '<div class="fallback-notice"><strong>🗺️ Map Preview Mode</strong>To enable live Google Maps tracking, add your API key to <code>maps-config.js</code>.</div>' : '') +
-            '</div>';
-        startFallbackAnimation();
-    }
-
+    /* CSS fallback — shown only if Leaflet itself fails to load */
     function startFallbackAnimation() {
         var driver = document.getElementById('fallback-driver');
         if (!driver) return;
@@ -780,8 +756,7 @@
             { left: 50, top: 60 }, { left: 38, top: 72 }, { left: 28, top: 80 },
             { left: 18, top: 88 }
         ];
-        var wi = 0;
-        var eta = 15;
+        var wi = 0, eta = 15;
         var timer = setInterval(function() {
             if (wasDelivered) { clearInterval(timer); return; }
             wi++;
@@ -805,25 +780,22 @@
         if (prepEl) prepEl.textContent = restName + ' is making your order';
     }
 
-    function loadGoogleMaps() {
-        var cfg = (typeof MAPS_CONFIG !== 'undefined') ? MAPS_CONFIG : {};
-        if (!cfg.apiKey || cfg.apiKey === 'YOUR_GOOGLE_MAPS_API_KEY_HERE') {
-            showMapFallback(true);
+    function loadLeafletMap() {
+        /* Leaflet is already loaded via CDN link in <head> */
+        if (typeof L === 'undefined') {
+            /* CDN failed — show CSS fallback */
+            startFallbackAnimation();
             return;
         }
-        var script = document.createElement('script');
-        script.src = 'https://maps.googleapis.com/maps/api/js?key=' + cfg.apiKey + '&libraries=geometry&callback=initMap';
-        script.async = true; script.defer = true;
-        script.onerror = function() { showMapFallback(true); };
-        document.head.appendChild(script);
+        initLeafletMap(DEFAULT_RESTAURANT, DEFAULT_CUSTOMER);
     }
 
     /* ── BOOTSTRAP ──────────────────────────────────────────── */
     document.addEventListener('DOMContentLoaded', function () {
         loadRestaurantInfo();
-        loadGoogleMaps();
+        loadLeafletMap();
 
-        // Poll backend every 3 seconds for real status
+        /* Poll backend every 3 seconds for real status */
         pollStatus();
         pollTimer = setInterval(pollStatus, 3000);
     });

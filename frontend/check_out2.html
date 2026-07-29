@@ -431,7 +431,7 @@
         fb.textContent = result.success ? ('✓ ' + result.message) : ('✗ ' + result.message);
         if (result.success) {
             document.getElementById('promo-code-input').value = '';
-            updateSummary();
+            loadCheckoutInfo();
         }
     }
 

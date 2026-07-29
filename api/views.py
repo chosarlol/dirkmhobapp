@@ -172,6 +172,50 @@ def me_api(request):
     })
 
 
+@csrf_exempt
+def update_profile(request):
+    """PUT /api/profile/ — update name, email, phone for the logged-in user."""
+    if not request.user.is_authenticated:
+        return _json({'error': 'Authentication required'}, 401)
+    if request.method not in ('POST', 'PUT'):
+        return _json({'error': 'POST/PUT only'}, 405)
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return _json({'error': 'Invalid JSON'}, 400)
+
+    user = request.user
+    name = (data.get('name') or '').strip()
+    email = (data.get('email') or '').strip()
+    password = (data.get('password') or '').strip()
+
+    if name:
+        parts = name.split(' ', 1)
+        user.first_name = parts[0]
+        user.last_name  = parts[1] if len(parts) > 1 else ''
+    if email:
+        if User.objects.filter(email__iexact=email).exclude(pk=user.pk).exists():
+            return _json({'error': 'That email is already used by another account.'}, 400)
+        user.email = email
+    if password:
+        if len(password) < 6:
+            return _json({'error': 'Password must be at least 6 characters.'}, 400)
+        user.set_password(password)
+
+    user.save()
+
+    profile, _ = UserProfile.objects.get_or_create(user=user)
+    if 'phone' in data:
+        profile.phone = (data.get('phone') or '').strip()
+        profile.save()
+
+    return _json({
+        'status': 'updated',
+        'name':  user.get_full_name() or user.username,
+        'email': user.email,
+    })
+
+
 # ── Super Admin — Stats ────────────────────────────────────────────────────────
 
 def admin_stats(request):

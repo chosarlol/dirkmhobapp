@@ -474,16 +474,18 @@
     if (picker) picker.querySelectorAll('.av-opt').forEach(function(el) { el.classList.remove('selected'); });
   }
 
+  var API = (location.port==='5500'||location.port==='5501') ? 'http://127.0.0.1:8000' : location.origin;
+
   function saveProfile() {
     var name  = document.getElementById('f-name').value.trim();
     var email = document.getElementById('f-email').value.trim();
     var phone = document.getElementById('f-phone').value.trim();
     var addr  = document.getElementById('f-address').value.trim();
 
-    var valid = true;
     document.getElementById('err-name').textContent  = '';
     document.getElementById('err-email').textContent = '';
 
+    var valid = true;
     if (!name) {
       document.getElementById('err-name').textContent = 'Name is required.';
       document.getElementById('f-name').classList.add('error');
@@ -498,17 +500,34 @@
 
     if (!valid) return;
 
-    DirkAuth.updateUser({ name: name, email: email, phone: phone, address: addr });
-
-    /* update sidebar live */
-    var sn = document.getElementById('sidebar-name');
-    var se = document.getElementById('sidebar-email');
-    if (sn) sn.textContent = name;
-    if (se) se.textContent = email;
-
-    /* re-mount navbar to reflect new name */
-    DirkAuth.mountNavAuth();
-    showToast('✅ Profile updated!', 'success');
+    /* Try to save to backend first */
+    fetch(API + '/api/profile/', {
+      method: 'PUT',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: name, email: email, phone: phone })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.error) { showToast('Error: ' + d.error, 'error'); return; }
+      DirkAuth.updateUser({ name: name, email: email, phone: phone, address: addr });
+      var sn = document.getElementById('sidebar-name');
+      var se = document.getElementById('sidebar-email');
+      if (sn) sn.textContent = name;
+      if (se) se.textContent = email;
+      DirkAuth.mountNavAuth();
+      showToast('Profile updated!', 'success');
+    })
+    .catch(function() {
+      /* Fallback: save to localStorage only */
+      DirkAuth.updateUser({ name: name, email: email, phone: phone, address: addr });
+      var sn = document.getElementById('sidebar-name');
+      var se = document.getElementById('sidebar-email');
+      if (sn) sn.textContent = name;
+      if (se) se.textContent = email;
+      DirkAuth.mountNavAuth();
+      showToast('Profile updated (offline).', 'success');
+    });
   }
 
   function saveAvatar() {
@@ -526,18 +545,23 @@
     var errEl = document.getElementById('err-pw');
     errEl.textContent = '';
 
-    if (pw.length < 6) {
-      errEl.textContent = 'Password must be at least 6 characters.';
-      return;
-    }
-    if (pw !== pw2) {
-      errEl.textContent = 'Passwords do not match.';
-      return;
-    }
-    /* In a real app, this would call an API. Here we just show confirmation. */
-    document.getElementById('f-pw').value  = '';
-    document.getElementById('f-pw2').value = '';
-    showToast('✅ Password updated!', 'success');
+    if (pw.length < 6) { errEl.textContent = 'Password must be at least 6 characters.'; return; }
+    if (pw !== pw2)    { errEl.textContent = 'Passwords do not match.'; return; }
+
+    fetch(API + '/api/profile/', {
+      method: 'PUT',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: pw })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.error) { errEl.textContent = d.error; return; }
+      document.getElementById('f-pw').value  = '';
+      document.getElementById('f-pw2').value = '';
+      showToast('Password updated!', 'success');
+    })
+    .catch(function() { errEl.textContent = 'Could not connect. Try again.'; });
   }
 
   function resetForm() {

@@ -40,6 +40,7 @@ urlpatterns = [
     path('api/login/',  views.admin_login_api, name='login'),
     path('api/logout/', views.logout_api,      name='logout'),
     path('api/me/',     views.me_api,          name='me'),
+    path('api/profile/', views.update_profile,  name='update_profile'),
 
     # ── Super Admin ───────────────────────────────────
     path('api/admin/stats/',                                    views.admin_stats,             name='admin_stats'),

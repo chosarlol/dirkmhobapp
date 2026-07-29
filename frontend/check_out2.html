@@ -661,10 +661,11 @@
         /* Pre-select the method chosen here */
         localStorage.setItem('chosen_payment', selectedPayment);
 
-        /* Record promo usage so it can't be reused */
+        /* Record promo usage so it can't be reused, then clear it */
         var activePromo = DirkPromo.getActivePromo();
         if (activePromo && activePromo.code) {
             DirkPromo.recordPromoUse(activePromo.code);
+            DirkPromo.clearPromo();
         }
 
         window.location.href = 'payment.html';

@@ -168,7 +168,7 @@
       if (labelEl) {
         var activePromo = DirkPromo.getActivePromo();
         if (activePromo && (discount > 0 || activePromo.type === 'FREE_DELIVERY')) {
-          labelEl.innerHTML = escHtml(activePromo.label) + ' <span class="badge-applied">APPLIED</span>';
+          labelEl.innerHTML = escHtml(activePromo.label) + ' <span class="badge-applied">APPLIED</span> <button onclick="removePromo()" style="background:none;border:none;color:#ef4444;font-size:0.8rem;cursor:pointer;font-weight:700;padding:0 4px;" title="Remove promo">×</button>';
         } else {
           labelEl.innerHTML = 'Discount';
         }
@@ -210,6 +210,12 @@
         DirkCart.removeFromCart(item.restaurantId, item.name);
         renderCart();
       }, 300);
+    }
+
+    function removePromo() {
+      DirkPromo.clearPromo();
+      renderCart();
+      showCartToast('Promo removed.', '#64748b');
     }
 
     function applyPromo() {

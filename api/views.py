@@ -610,9 +610,8 @@ def request_password_reset(request):
 
     try:
         # Always return "sent" so attackers can't enumerate which emails exist
-        try:
-            user = User.objects.get(email__iexact=email)
-        except User.DoesNotExist:
+        user = User.objects.filter(email__iexact=email).first()
+        if not user:
             return _json({'status': 'sent'})
 
         # Invalidate any existing unused tokens

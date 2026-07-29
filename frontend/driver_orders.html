@@ -601,91 +601,132 @@
   }
 
   function showActiveMap(order) {
-    /* Update bottom info panel */
+    /* Update info panel — fee shows "Calculating…" until route is fetched */
     var panel = document.getElementById('active-panel');
     panel.classList.add('visible');
     document.getElementById('ap-customer').textContent = order.customer_name    || '—';
     document.getElementById('ap-addr').textContent     = order.delivery_address || '—';
     document.getElementById('ap-rest').textContent     = order.restaurant_name  || '—';
-    document.getElementById('ap-fee').textContent      = '$' + Number(order.delivery_fee).toFixed(2);
+    document.getElementById('ap-fee').textContent      = 'Calculating…';
 
-    /* Destroy old map instance if exists */
+    /* Destroy old map + animation */
     if (driverLeafletMap) { driverLeafletMap.remove(); driverLeafletMap = null; }
     if (driverAnimTimer)  { clearInterval(driverAnimTimer); driverAnimTimer = null; }
 
-    /* Replace placeholder with a plain div Leaflet can bind to */
-    document.getElementById('map-area').innerHTML = '<div id="driver-leaflet-map" style="width:100%;height:100%"></div>';
+    document.getElementById('map-area').innerHTML =
+      '<div id="driver-leaflet-map" style="width:100%;height:100%"></div>';
 
+    /* Mutable coords — updated by geocoding callbacks, shared via closure */
     var REST_LAT = 11.5720, REST_LNG = 104.9160;
     var CUST_LAT = 11.5500, CUST_LNG = 104.8980;
 
-    driverLeafletMap = L.map('driver-leaflet-map').setView(
-      [(REST_LAT + CUST_LAT) / 2, (REST_LNG + CUST_LNG) / 2], 14
-    );
+    driverLeafletMap = L.map('driver-leaflet-map')
+      .setView([(REST_LAT + CUST_LAT) / 2, (REST_LNG + CUST_LNG) / 2], 14);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>',
       maxZoom: 19
     }).addTo(driverLeafletMap);
 
-    /* Restaurant pin */
-    var restLabel = L.divIcon({
-      html: '<div style="background:#FF6B35;color:white;padding:5px 10px;border-radius:20px;font-size:12px;font-weight:700;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.3)">🍴 ' + esc(order.restaurant_name || 'Restaurant') + '</div>',
-      className: '', iconAnchor: [40, 14]
-    });
-    L.marker([REST_LAT, REST_LNG], { icon: restLabel }).addTo(driverLeafletMap);
+    /* Restaurant marker — keep a reference so geocoding can move it */
+    var restMarker = L.marker([REST_LAT, REST_LNG], {
+      icon: L.divIcon({
+        html: '<div style="background:#FF6B35;color:white;padding:5px 10px;border-radius:20px;font-size:12px;font-weight:700;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.3)">🍴 ' + esc(order.restaurant_name || 'Restaurant') + '</div>',
+        className: '', iconAnchor: [40, 14]
+      })
+    }).addTo(driverLeafletMap);
 
-    /* Customer pin */
-    var custLabel = L.divIcon({
-      html: '<div style="background:#0077C8;color:white;padding:5px 10px;border-radius:20px;font-size:12px;font-weight:700;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.3)">🏠 ' + esc(order.customer_name || 'Customer') + '</div>',
-      className: '', iconAnchor: [40, 14]
-    });
-    L.marker([CUST_LAT, CUST_LNG], { icon: custLabel }).addTo(driverLeafletMap);
+    /* Customer marker — keep reference; geocoding calls setLatLng, NOT a new marker */
+    var custMarker = L.marker([CUST_LAT, CUST_LNG], {
+      icon: L.divIcon({
+        html: '<div style="background:#0077C8;color:white;padding:5px 10px;border-radius:20px;font-size:12px;font-weight:700;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.3)">🏠 ' + esc(order.customer_name || 'Customer') + '</div>',
+        className: '', iconAnchor: [40, 14]
+      })
+    }).addTo(driverLeafletMap);
 
     /* Driver marker — starts at restaurant */
-    var driverMarker = L.marker([REST_LAT, REST_LNG], { icon: makeDriverIcon('🛵', 34), zIndexOffset: 1000 })
-      .addTo(driverLeafletMap);
+    var driverMarker = L.marker([REST_LAT, REST_LNG], {
+      icon: makeDriverIcon('🛵', 34), zIndexOffset: 1000
+    }).addTo(driverLeafletMap);
 
-    /* Route line */
-    var routeLine = L.polyline([], { color: '#0077C8', weight: 5, opacity: 0.8, dashArray: '10 6' }).addTo(driverLeafletMap);
+    var routeLine = L.polyline([], {
+      color: '#0077C8', weight: 5, opacity: 0.8, dashArray: '10 6'
+    }).addTo(driverLeafletMap);
 
-    /* Fetch real road route via OSRM */
-    var osrmUrl = 'https://router.project-osrm.org/route/v1/driving/' +
-      REST_LNG + ',' + REST_LAT + ';' + CUST_LNG + ',' + CUST_LAT +
-      '?overview=full&geometries=geojson';
+    /* Distance → delivery fee: $1.00 base + $0.50/km, min $1.50, max $15.00 */
+    function calcFee(distanceMeters) {
+      var km  = distanceMeters / 1000;
+      var fee = 1.00 + km * 0.50;
+      return Math.min(Math.max(fee, 1.50), 15.00);
+    }
 
-    fetch(osrmUrl)
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      if (!data.routes || !data.routes.length) return;
-      var coords = data.routes[0].geometry.coordinates.map(function(c) { return [c[1], c[0]]; });
-      routeLine.setLatLngs(coords);
+    /* Fetch OSRM route, draw it, recalculate fee, restart driver animation */
+    function fetchRoute(rLat, rLng, cLat, cLng) {
+      if (!driverLeafletMap) return;
+      var url = 'https://router.project-osrm.org/route/v1/driving/' +
+        rLng + ',' + rLat + ';' + cLng + ',' + cLat +
+        '?overview=full&geometries=geojson';
+      fetch(url)
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (!data.routes || !data.routes.length || !driverLeafletMap) return;
+        var route  = data.routes[0];
+        var coords = route.geometry.coordinates.map(function(c) { return [c[1], c[0]]; });
+        routeLine.setLatLngs(coords);
 
-      /* Animate driver along route */
-      var idx = 0, total = coords.length;
-      var eta = Math.round(data.routes[0].duration / 60);
-      var stepMs = Math.max(600, Math.min(2500, (eta * 60000) / total));
+        /* Distance-based fee */
+        var fee = calcFee(route.distance);
+        document.getElementById('ap-fee').textContent = '$' + fee.toFixed(2);
 
-      driverAnimTimer = setInterval(function() {
-        idx++;
-        if (idx >= total) { clearInterval(driverAnimTimer); return; }
-        driverMarker.setLatLng(coords[idx]);
-        if (idx % 8 === 0 && driverLeafletMap) driverLeafletMap.panTo(coords[idx]);
-      }, stepMs);
-    })
-    .catch(function() {});
+        /* Restart driver animation from route start */
+        if (driverAnimTimer) { clearInterval(driverAnimTimer); driverAnimTimer = null; }
+        driverMarker.setLatLng(coords[0]);
+        var idx = 0, total = coords.length;
+        var stepMs = Math.max(600, Math.min(2500, (route.duration * 1000) / total));
+        driverAnimTimer = setInterval(function() {
+          idx++;
+          if (idx >= total) { clearInterval(driverAnimTimer); driverAnimTimer = null; return; }
+          driverMarker.setLatLng(coords[idx]);
+          if (idx % 8 === 0 && driverLeafletMap) driverLeafletMap.panTo(coords[idx]);
+        }, stepMs);
 
-    /* Geocode delivery_address string to move customer pin (best effort) */
-    if (order.delivery_address) {
-      fetch('https://nominatim.openstreetmap.org/search?format=json&q=' +
-        encodeURIComponent(order.delivery_address + ' Phnom Penh'), { headers: {'Accept-Language':'en'} })
+        try { driverLeafletMap.fitBounds(routeLine.getBounds(), { padding: [50, 50] }); } catch(e) {}
+      })
+      .catch(function() {});
+    }
+
+    /* Initial route with default Phnom Penh coords */
+    fetchRoute(REST_LAT, REST_LNG, CUST_LAT, CUST_LNG);
+
+    /* Geocode restaurant name → move restaurant marker + restart route */
+    if (order.restaurant_name) {
+      fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' +
+        encodeURIComponent(order.restaurant_name + ' Phnom Penh'),
+        { headers: { 'Accept-Language': 'en' } })
       .then(function(r) { return r.json(); })
       .then(function(data) {
         if (!data.length || !driverLeafletMap) return;
-        var lat = parseFloat(data[0].lat), lng = parseFloat(data[0].lon);
-        custLabel.options && true; /* already added */
-        L.marker([lat, lng], { icon: custLabel }).addTo(driverLeafletMap);
-        driverLeafletMap.fitBounds([[REST_LAT, REST_LNG], [lat, lng]], { padding: [40, 40] });
+        REST_LAT = parseFloat(data[0].lat);
+        REST_LNG = parseFloat(data[0].lon);
+        restMarker.setLatLng([REST_LAT, REST_LNG]);
+        driverMarker.setLatLng([REST_LAT, REST_LNG]);
+        fetchRoute(REST_LAT, REST_LNG, CUST_LAT, CUST_LNG);
+      })
+      .catch(function() {});
+    }
+
+    /* Geocode delivery address → move customer marker + restart route */
+    if (order.delivery_address) {
+      fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' +
+        encodeURIComponent(order.delivery_address + ' Phnom Penh'),
+        { headers: { 'Accept-Language': 'en' } })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (!data.length || !driverLeafletMap) return;
+        CUST_LAT = parseFloat(data[0].lat);
+        CUST_LNG = parseFloat(data[0].lon);
+        custMarker.setLatLng([CUST_LAT, CUST_LNG]);
+        fetchRoute(REST_LAT, REST_LNG, CUST_LAT, CUST_LNG);
       })
       .catch(function() {});
     }

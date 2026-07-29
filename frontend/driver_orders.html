@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DirkMhob | Driver Orders</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
     :root{--primary:#1a73e8;--primary-dark:#1558c0;--success:#22c55e;--success-dark:#16a34a;--danger:#ef4444;--bg:#f0f2f5;--surface:#fff;--border:#e2e8f0;--text:#1e293b;--muted:#64748b;}
     *{box-sizing:border-box;margin:0;padding:0;}
@@ -580,40 +581,27 @@
   }
 
   // ── Map ───────────────────────────────────────────────────────────────
+  var driverLeafletMap = null;
+  var driverAnimTimer  = null;
+
   function showMapPlaceholder() {
+    if (driverLeafletMap) { driverLeafletMap.remove(); driverLeafletMap = null; }
+    if (driverAnimTimer)  { clearInterval(driverAnimTimer); driverAnimTimer = null; }
     document.getElementById('map-area').innerHTML =
       '<div class="map-placeholder"><div class="big">🗺️</div>' +
       '<h3>No Active Delivery</h3><p>Accept an order to see the delivery route here</p></div>';
     document.getElementById('active-panel').classList.remove('visible');
   }
 
-  function showActiveMap(order) {
-    var pinName  = esc(order.restaurant_name || 'Restaurant');
-    var custName = esc(order.customer_name   || 'Customer');
-    document.getElementById('map-area').innerHTML =
-      '<div class="map-fallback">' +
-        '<div class="fallback-grid"></div>' +
-        '<div class="fallback-road-h" style="top:30%"></div>' +
-        '<div class="fallback-road-h" style="top:55%"></div>' +
-        '<div class="fallback-road-h" style="top:75%"></div>' +
-        '<div class="fallback-road-v" style="left:25%"></div>' +
-        '<div class="fallback-road-v" style="left:55%"></div>' +
-        '<div class="fallback-road-v" style="right:18%"></div>' +
-        '<div class="fallback-bld" style="width:70px;height:50px;background:#8aacbf;top:6%;left:3%"></div>' +
-        '<div class="fallback-bld" style="width:55px;height:40px;background:#7a9cb0;top:6%;left:29%"></div>' +
-        '<div class="fallback-bld" style="width:90px;height:58px;background:#b0c8d8;top:6%;right:4%"></div>' +
-        '<div class="fallback-bld" style="width:65px;height:44px;background:#6a9ab4;top:38%;left:3%"></div>' +
-        '<div class="fallback-bld" style="width:80px;height:48px;background:#85a8bc;top:60%;left:29%"></div>' +
-        '<div class="fallback-bld" style="width:75px;height:50px;background:#90b0c0;top:38%;right:4%"></div>' +
-        '<svg class="route-svg" viewBox="0 0 100 100" preserveAspectRatio="none">' +
-          '<path d="M 82 12 Q 70 30 62 45 Q 50 60 38 72 Q 28 80 18 88" stroke="#0077C8" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-dasharray="4 2" opacity="0.8"/>' +
-          '<path d="M 82 12 Q 70 30 62 45 Q 50 60 38 72 Q 28 80 18 88" stroke="#0077C8" stroke-width="5" fill="none" opacity="0.12" stroke-linecap="round"/>' +
-        '</svg>' +
-        '<div class="fallback-restaurant-pin" style="left:82%;top:12%"><div class="pin-bubble restaurant">🍴 ' + pinName + '</div><div class="pin-tail restaurant"></div></div>' +
-        '<div class="fallback-customer-pin" style="left:18%;top:88%"><div class="pin-bubble customer">🏠 ' + custName + '</div><div class="pin-tail customer"></div></div>' +
-        '<div class="fallback-driver" id="fallback-driver" style="left:82%;top:12%">🛵</div>' +
-      '</div>';
+  function makeDriverIcon(emoji, size) {
+    return L.divIcon({
+      html: '<div style="font-size:' + (size||28) + 'px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.4))">' + emoji + '</div>',
+      className: '', iconSize: [size||28, size||28], iconAnchor: [(size||28)/2, (size||28)/2]
+    });
+  }
 
+  function showActiveMap(order) {
+    /* Update bottom info panel */
     var panel = document.getElementById('active-panel');
     panel.classList.add('visible');
     document.getElementById('ap-customer').textContent = order.customer_name    || '—';
@@ -621,16 +609,86 @@
     document.getElementById('ap-rest').textContent     = order.restaurant_name  || '—';
     document.getElementById('ap-fee').textContent      = '$' + Number(order.delivery_fee).toFixed(2);
 
-    var waypoints = [
-      {left:82,top:12},{left:70,top:30},{left:62,top:45},
-      {left:50,top:60},{left:38,top:72},{left:28,top:80},{left:18,top:88}
-    ];
-    var wi = 0;
-    setInterval(function(){
-      wi = (wi + 1) % waypoints.length;
-      var pin = document.getElementById('fallback-driver');
-      if (pin) { pin.style.left = waypoints[wi].left + '%'; pin.style.top = waypoints[wi].top + '%'; }
-    }, 3000);
+    /* Destroy old map instance if exists */
+    if (driverLeafletMap) { driverLeafletMap.remove(); driverLeafletMap = null; }
+    if (driverAnimTimer)  { clearInterval(driverAnimTimer); driverAnimTimer = null; }
+
+    /* Replace placeholder with a plain div Leaflet can bind to */
+    document.getElementById('map-area').innerHTML = '<div id="driver-leaflet-map" style="width:100%;height:100%"></div>';
+
+    var REST_LAT = 11.5720, REST_LNG = 104.9160;
+    var CUST_LAT = 11.5500, CUST_LNG = 104.8980;
+
+    driverLeafletMap = L.map('driver-leaflet-map').setView(
+      [(REST_LAT + CUST_LAT) / 2, (REST_LNG + CUST_LNG) / 2], 14
+    );
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>',
+      maxZoom: 19
+    }).addTo(driverLeafletMap);
+
+    /* Restaurant pin */
+    var restLabel = L.divIcon({
+      html: '<div style="background:#FF6B35;color:white;padding:5px 10px;border-radius:20px;font-size:12px;font-weight:700;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.3)">🍴 ' + esc(order.restaurant_name || 'Restaurant') + '</div>',
+      className: '', iconAnchor: [40, 14]
+    });
+    L.marker([REST_LAT, REST_LNG], { icon: restLabel }).addTo(driverLeafletMap);
+
+    /* Customer pin */
+    var custLabel = L.divIcon({
+      html: '<div style="background:#0077C8;color:white;padding:5px 10px;border-radius:20px;font-size:12px;font-weight:700;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.3)">🏠 ' + esc(order.customer_name || 'Customer') + '</div>',
+      className: '', iconAnchor: [40, 14]
+    });
+    L.marker([CUST_LAT, CUST_LNG], { icon: custLabel }).addTo(driverLeafletMap);
+
+    /* Driver marker — starts at restaurant */
+    var driverMarker = L.marker([REST_LAT, REST_LNG], { icon: makeDriverIcon('🛵', 34), zIndexOffset: 1000 })
+      .addTo(driverLeafletMap);
+
+    /* Route line */
+    var routeLine = L.polyline([], { color: '#0077C8', weight: 5, opacity: 0.8, dashArray: '10 6' }).addTo(driverLeafletMap);
+
+    /* Fetch real road route via OSRM */
+    var osrmUrl = 'https://router.project-osrm.org/route/v1/driving/' +
+      REST_LNG + ',' + REST_LAT + ';' + CUST_LNG + ',' + CUST_LAT +
+      '?overview=full&geometries=geojson';
+
+    fetch(osrmUrl)
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (!data.routes || !data.routes.length) return;
+      var coords = data.routes[0].geometry.coordinates.map(function(c) { return [c[1], c[0]]; });
+      routeLine.setLatLngs(coords);
+
+      /* Animate driver along route */
+      var idx = 0, total = coords.length;
+      var eta = Math.round(data.routes[0].duration / 60);
+      var stepMs = Math.max(600, Math.min(2500, (eta * 60000) / total));
+
+      driverAnimTimer = setInterval(function() {
+        idx++;
+        if (idx >= total) { clearInterval(driverAnimTimer); return; }
+        driverMarker.setLatLng(coords[idx]);
+        if (idx % 8 === 0 && driverLeafletMap) driverLeafletMap.panTo(coords[idx]);
+      }, stepMs);
+    })
+    .catch(function() {});
+
+    /* Geocode delivery_address string to move customer pin (best effort) */
+    if (order.delivery_address) {
+      fetch('https://nominatim.openstreetmap.org/search?format=json&q=' +
+        encodeURIComponent(order.delivery_address + ' Phnom Penh'), { headers: {'Accept-Language':'en'} })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (!data.length || !driverLeafletMap) return;
+        var lat = parseFloat(data[0].lat), lng = parseFloat(data[0].lon);
+        custLabel.options && true; /* already added */
+        L.marker([lat, lng], { icon: custLabel }).addTo(driverLeafletMap);
+        driverLeafletMap.fitBounds([[REST_LAT, REST_LNG], [lat, lng]], { padding: [40, 40] });
+      })
+      .catch(function() {});
+    }
   }
 
   // ── Logout ────────────────────────────────────────────────────────────
@@ -642,5 +700,6 @@
       });
   }
 </script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </body>
 </html>

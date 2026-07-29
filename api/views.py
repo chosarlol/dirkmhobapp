@@ -596,6 +596,7 @@ def submit_order(request):
 @csrf_exempt
 def request_password_reset(request):
     """POST { email } — generate 6-digit OTP and email it to the user."""
+    import traceback, sys
     if request.method != 'POST':
         return _json({'error': 'POST only'}, 405)
     try:
@@ -607,40 +608,39 @@ def request_password_reset(request):
     if not email:
         return _json({'error': 'Email is required.'}, 400)
 
-    # Always return "sent" so attackers can't enumerate which emails exist
     try:
-        user = User.objects.get(email__iexact=email)
-    except User.DoesNotExist:
+        # Always return "sent" so attackers can't enumerate which emails exist
+        try:
+            user = User.objects.get(email__iexact=email)
+        except User.DoesNotExist:
+            return _json({'status': 'sent'})
+
+        # Invalidate any existing unused tokens
+        PasswordResetToken.objects.filter(user=user, used=False).update(used=True)
+
+        otp = str(random.randint(100000, 999999))
+        PasswordResetToken.objects.create(user=user, token=otp)
+
+        from django.core.mail import send_mail
+        from django.conf import settings
+
+        subject = 'DirkMhob — Your Password Reset Code'
+        body = (
+            f'Hello {user.get_full_name() or user.username},\n\n'
+            f'Your 6-digit password reset code is:\n\n'
+            f'        {otp}\n\n'
+            f'This code expires in 15 minutes.\n'
+            f'If you did not request a password reset, you can safely ignore this email.\n\n'
+            f'— The DirkMhob Team'
+        )
+
+        send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, [user.email], fail_silently=False)
         return _json({'status': 'sent'})
 
-    # Invalidate any existing unused tokens
-    PasswordResetToken.objects.filter(user=user, used=False).update(used=True)
-
-    otp = str(random.randint(100000, 999999))
-    PasswordResetToken.objects.create(user=user, token=otp)
-
-    from django.core.mail import send_mail
-    from django.conf import settings
-
-    subject = 'DirkMhob — Your Password Reset Code'
-    body = (
-        f'Hello {user.get_full_name() or user.username},\n\n'
-        f'Your 6-digit password reset code is:\n\n'
-        f'        {otp}\n\n'
-        f'This code expires in 15 minutes.\n'
-        f'If you did not request a password reset, you can safely ignore this email.\n\n'
-        f'— The DirkMhob Team'
-    )
-
-    try:
-        send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, [user.email], fail_silently=False)
     except Exception as e:
-        import traceback, sys
-        print('[EMAIL ERROR]', repr(e), file=sys.stderr)
+        print('[RESET ERROR]', repr(e), file=sys.stderr)
         traceback.print_exc(file=sys.stderr)
-        return _json({'error': 'Could not send email: ' + str(e)}, 500)
-
-    return _json({'status': 'sent'})
+        return _json({'error': str(e)}, 500)
 
 
 @csrf_exempt

@@ -634,8 +634,11 @@ def request_password_reset(request):
 
     try:
         send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, [user.email], fail_silently=False)
-    except Exception:
-        return _json({'error': 'Could not send email. Please try again later.'}, 500)
+    except Exception as e:
+        import traceback, sys
+        print('[EMAIL ERROR]', repr(e), file=sys.stderr)
+        traceback.print_exc(file=sys.stderr)
+        return _json({'error': 'Could not send email: ' + str(e)}, 500)
 
     return _json({'status': 'sent'})
 

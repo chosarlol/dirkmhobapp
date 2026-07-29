@@ -88,6 +88,8 @@
         }
     };
 
+    var USAGE_KEY = 'promoUsage';
+
     /* ── Core read / write ───────────────────────────── */
 
     function getActivePromo() {
@@ -100,12 +102,10 @@
 
     function setActivePromo(promo) {
         localStorage.setItem(PROMO_KEY, JSON.stringify(promo));
-        console.log('[PROMO] Stored active promo:', promo.code, promo.label);
     }
 
     function clearPromo() {
         localStorage.removeItem(PROMO_KEY);
-        console.log('[PROMO] Active promotion cleared');
     }
 
     function isExpired(promo) {
@@ -113,17 +113,41 @@
         return new Date(promo.expires + 'T23:59:59') < new Date();
     }
 
+    /* ── Per-user usage tracking (one use per code per account) ── */
+
+    function _getUserEmail() {
+        try {
+            var u = JSON.parse(localStorage.getItem('dirkmhob_user') || 'null');
+            return (u && (u.email || u.username)) ? (u.email || u.username) : '__guest__';
+        } catch (e) { return '__guest__'; }
+    }
+
+    function hasUsedPromo(code) {
+        try {
+            var usage = JSON.parse(localStorage.getItem(USAGE_KEY) || '{}');
+            var users = usage[code] || [];
+            return users.indexOf(_getUserEmail()) !== -1;
+        } catch (e) { return false; }
+    }
+
+    function recordPromoUse(code) {
+        try {
+            var usage = JSON.parse(localStorage.getItem(USAGE_KEY) || '{}');
+            if (!usage[code]) usage[code] = [];
+            var email = _getUserEmail();
+            if (usage[code].indexOf(email) === -1) usage[code].push(email);
+            localStorage.setItem(USAGE_KEY, JSON.stringify(usage));
+        } catch (e) {}
+    }
+
     /* ── Apply by catalog key (promo card clicks) ────── */
 
     function applyByKey(key) {
         var promo = CATALOG[key];
-        console.log('[PROMO] applyByKey()', key, '→', promo ? 'found' : 'not found');
-        if (!promo) {
-            return { success: false, message: 'Unknown promotion.' };
-        }
-        if (isExpired(promo)) {
-            console.warn('[PROMO] Promo expired:', key, 'expires:', promo.expires);
-            return { success: false, message: 'This promotion has expired.' };
+        if (!promo) return { success: false, message: 'Unknown promotion.' };
+        if (isExpired(promo)) return { success: false, message: 'This promotion has expired.' };
+        if (hasUsedPromo(key)) {
+            return { success: false, alreadyUsed: true, message: 'You have already used this promo code.' };
         }
         setActivePromo(promo);
         return { success: true, promo: promo, message: promo.description + ' applied!' };
@@ -133,18 +157,12 @@
 
     function applyByCode(code) {
         code = (code || '').trim().toUpperCase();
-        console.log('[PROMO] applyByCode()', JSON.stringify(code));
-        if (!code) {
-            return { success: false, message: 'Please enter a promo code.' };
-        }
+        if (!code) return { success: false, message: 'Please enter a promo code.' };
         var promo = CATALOG[code];
-        if (!promo) {
-            console.warn('[PROMO] Invalid code:', code);
-            return { success: false, message: 'Invalid promo code "' + code + '".' };
-        }
-        if (isExpired(promo)) {
-            console.warn('[PROMO] Expired code:', code, 'expires:', promo.expires);
-            return { success: false, message: 'Promo code "' + code + '" has expired.' };
+        if (!promo) return { success: false, message: 'Invalid promo code "' + code + '".' };
+        if (isExpired(promo)) return { success: false, message: 'Promo code "' + code + '" has expired.' };
+        if (hasUsedPromo(code)) {
+            return { success: false, alreadyUsed: true, message: 'You have already used this promo code.' };
         }
         setActivePromo(promo);
         return { success: true, promo: promo, message: promo.description + ' applied!' };
@@ -219,6 +237,8 @@
         setActivePromo:    setActivePromo,
         clearPromo:        clearPromo,
         isExpired:         isExpired,
+        hasUsedPromo:      hasUsedPromo,
+        recordPromoUse:    recordPromoUse,
         applyByKey:        applyByKey,
         applyByCode:       applyByCode,
         calculateDiscount: calculateDiscount

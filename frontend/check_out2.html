@@ -206,6 +206,27 @@
         .total-lbl { font-size: 15px; font-weight: 700; }
         .total-amt { font-size: 24px; font-weight: 800; color: var(--primary); }
 
+        .promo-input-wrap { padding: 16px 24px 0; }
+        .promo-input-row { display: flex; gap: 8px; }
+        .promo-code-field {
+            flex: 1; border: 2px solid var(--border); border-radius: var(--radius-sm);
+            padding: 10px 14px; font-size: 15px; font-weight: 700; letter-spacing: .08em;
+            color: var(--primary); outline: none; font-family: monospace;
+            transition: border-color .2s;
+        }
+        .promo-code-field:focus { border-color: var(--primary); }
+        .promo-apply-btn {
+            background: var(--primary); color: #fff; border: none;
+            border-radius: var(--radius-sm); padding: 10px 18px;
+            font-size: 14px; font-weight: 700; cursor: pointer; white-space: nowrap;
+        }
+        .promo-apply-btn:active { opacity: .85; }
+        .promo-feedback {
+            margin-top: 7px; font-size: 13px; font-weight: 600; min-height: 18px;
+        }
+        .promo-feedback.ok  { color: #16a34a; }
+        .promo-feedback.err { color: #dc2626; }
+
         .cta-wrap { padding: 20px 24px; }
         .place-order-btn {
             display: block; width: 100%; padding: 16px;
@@ -350,6 +371,17 @@
                 </div>
             </div>
 
+            <!-- Promo Code Input -->
+            <div class="promo-input-wrap">
+                <div class="promo-input-row">
+                    <input type="text" id="promo-code-input" class="promo-code-field"
+                           placeholder="Enter promo code…" autocomplete="off" autocapitalize="characters"
+                           oninput="this.value=this.value.toUpperCase()" />
+                    <button class="promo-apply-btn" onclick="applyPromoInput()">Apply</button>
+                </div>
+                <div id="promo-feedback" class="promo-feedback"></div>
+            </div>
+
             <!-- Price Summary -->
             <div class="price-section">
                 <div class="price-row">
@@ -390,6 +422,18 @@
 <script>
     var selectedPayment = 'khqr';
     var currentPin = 'Phnom Penh';
+
+    function applyPromoInput() {
+        var code = (document.getElementById('promo-code-input').value || '').trim().toUpperCase();
+        var fb   = document.getElementById('promo-feedback');
+        var result = DirkPromo.applyByCode(code);
+        fb.className = 'promo-feedback ' + (result.success ? 'ok' : 'err');
+        fb.textContent = result.success ? ('✓ ' + result.message) : ('✗ ' + result.message);
+        if (result.success) {
+            document.getElementById('promo-code-input').value = '';
+            updateSummary();
+        }
+    }
 
     function selectPayment(method) {
         ['khqr', 'wing', 'card', 'cash'].forEach(function(m) {
@@ -585,6 +629,12 @@
 
         /* Pre-select the method chosen here */
         localStorage.setItem('chosen_payment', selectedPayment);
+
+        /* Record promo usage so it can't be reused */
+        var activePromo = DirkPromo.getActivePromo();
+        if (activePromo && activePromo.code) {
+            DirkPromo.recordPromoUse(activePromo.code);
+        }
 
         window.location.href = 'payment.html';
     }

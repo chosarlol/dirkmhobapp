@@ -552,6 +552,16 @@ def submit_order(request):
 
     delivery_address = (data.get('deliveryAddress') or data.get('delivery_address') or '').strip()
     payment_method   = (data.get('paymentMethod')   or data.get('payment_method')   or 'khqr').strip()
+    promo_code       = (data.get('promoCode') or data.get('promo_code') or '').strip()
+
+    # One-use-per-user enforcement: reject if this email already used this promo
+    if promo_code and customer_email:
+        already_used = Order.objects.filter(
+            customer_email=customer_email,
+            promo_code=promo_code
+        ).exists()
+        if already_used:
+            return _json({'error': f'Promo code "{promo_code}" has already been used on this account.'}, 400)
 
     order = Order.objects.create(
         order_ref        = order_ref,
@@ -562,7 +572,7 @@ def submit_order(request):
         delivery_fee     = delivery_fee,
         discount         = float(data.get('discount', 0)),
         total            = float(data.get('total', 0)),
-        promo_code       = (data.get('promoCode') or data.get('promo_code') or ''),
+        promo_code       = promo_code,
         payment_method   = payment_method,
         status           = 'confirmed',
         delivery_address = delivery_address,

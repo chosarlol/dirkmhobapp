@@ -686,6 +686,55 @@
                 flex-direction: column;
             }
         }
+    /* ── Promo Code Modal ─────────────────────────────── */
+    .pm-overlay {
+        display: none; position: fixed; inset: 0;
+        background: rgba(0,0,0,.55); backdrop-filter: blur(4px);
+        z-index: 10000; align-items: center; justify-content: center;
+    }
+    .pm-overlay.open { display: flex; }
+    .pm-box {
+        background: #fff; border-radius: 20px; padding: 2rem 1.75rem 1.75rem;
+        max-width: 360px; width: 92%; position: relative;
+        box-shadow: 0 24px 60px rgba(0,0,0,.22); text-align: center;
+        animation: pmIn .22s ease;
+    }
+    @keyframes pmIn { from { opacity:0; transform: scale(.88) translateY(16px); } to { opacity:1; transform: none; } }
+    .pm-close {
+        position: absolute; top: 12px; right: 14px;
+        background: none; border: none; font-size: 22px; cursor: pointer; color: #888; line-height: 1;
+    }
+    .pm-emoji { font-size: 3rem; margin-bottom: .4rem; }
+    .pm-title { font-size: 1.25rem; font-weight: 800; margin: 0 0 .25rem; color: #111; }
+    .pm-desc  { font-size: .9rem; color: #666; margin: 0 0 1.2rem; }
+    .pm-code-row {
+        display: flex; align-items: center; gap: .5rem;
+        background: #f0f7ff; border: 2px dashed #0077C8; border-radius: 12px;
+        padding: .6rem 1rem; margin-bottom: 1rem;
+    }
+    .pm-code-text {
+        flex: 1; font-size: 1.3rem; font-weight: 900; letter-spacing: .12em;
+        color: #0077C8; font-family: monospace;
+    }
+    .pm-copy-btn {
+        background: #0077C8; color: #fff; border: none; border-radius: 8px;
+        padding: .35rem .7rem; font-size: .8rem; font-weight: 700; cursor: pointer; white-space: nowrap;
+    }
+    .pm-copy-btn:active { background: #005fa3; }
+    .pm-used-notice {
+        background: #fef2f2; color: #dc2626; border: 1px solid #fca5a5;
+        border-radius: 10px; padding: .55rem .9rem; font-size: .85rem; font-weight: 600;
+        margin-bottom: .9rem; display: none;
+    }
+    .pm-apply-btn {
+        width: 100%; padding: .85rem; background: #0077C8; color: #fff;
+        border: none; border-radius: 12px; font-size: 1rem; font-weight: 800;
+        cursor: pointer; margin-bottom: .6rem;
+    }
+    .pm-apply-btn:disabled { background: #93c5fd; cursor: default; }
+    .pm-later-btn {
+        background: none; border: none; color: #888; font-size: .88rem; cursor: pointer; padding: .3rem;
+    }
     </style>
 </head>
 <body>
@@ -939,15 +988,66 @@
     <script src="promo.js"></script>
     <script src="auth.js"></script>
     <script>
+        var _currentPromoKey = null;
+        var PROMO_ICONS = { WEEKEND50: '🎉', FREEDEL: '🚀', NEWUSER: '🎁' };
+
         function activatePromo(key) {
-            console.log('[HOME] Promo card clicked:', key);
-            var result = DirkPromo.applyByKey(key);
+            var promo = DirkPromo.CATALOG[key];
+            if (!promo) return;
+            _currentPromoKey = key;
+
+            document.getElementById('pm-emoji').textContent = PROMO_ICONS[key] || '🎉';
+            document.getElementById('pm-title').textContent = promo.label;
+            document.getElementById('pm-desc').textContent  = promo.description;
+            document.getElementById('pm-code').textContent  = promo.code;
+
+            var used    = DirkPromo.hasUsedPromo(key);
+            var expired = DirkPromo.isExpired(promo);
+            var blocked = used || expired;
+
+            document.getElementById('pm-used-notice').style.display = blocked ? 'block' : 'none';
+            document.getElementById('pm-used-notice').textContent    =
+                expired ? 'This promotion has expired.' : 'You\'ve already used this promo code.';
+            document.getElementById('pm-apply-btn').disabled = blocked;
+            document.getElementById('pm-copy-btn').textContent = '📋 Copy';
+
+            document.getElementById('pm-overlay').classList.add('open');
+        }
+
+        function closePromoModal() {
+            document.getElementById('pm-overlay').classList.remove('open');
+        }
+
+        function pmOverlayClick(e) {
+            if (e.target === document.getElementById('pm-overlay')) closePromoModal();
+        }
+
+        function copyPromoCode() {
+            var code = document.getElementById('pm-code').textContent;
+            navigator.clipboard.writeText(code).then(function() {
+                document.getElementById('pm-copy-btn').textContent = '✓ Copied!';
+            }).catch(function() {
+                /* fallback for older browsers */
+                var inp = document.createElement('input');
+                inp.value = code; document.body.appendChild(inp);
+                inp.select(); document.execCommand('copy'); inp.remove();
+                document.getElementById('pm-copy-btn').textContent = '✓ Copied!';
+            });
+        }
+
+        function applyPromoAndGo() {
+            if (!_currentPromoKey) return;
+            var result = DirkPromo.applyByKey(_currentPromoKey);
             if (result.success) {
-                showPromoToast('✓ ' + result.message, '#16a34a');
+                closePromoModal();
+                window.location.href = 'check_out2.html';
             } else {
-                showPromoToast('✗ ' + result.message, '#ef4444');
+                document.getElementById('pm-used-notice').textContent = result.message;
+                document.getElementById('pm-used-notice').style.display = 'block';
+                document.getElementById('pm-apply-btn').disabled = true;
             }
         }
+
         function showPromoToast(msg, bg) {
             var t = document.createElement('div');
             t.style.cssText = 'position:fixed;bottom:28px;right:28px;padding:13px 22px;border-radius:12px;' +
@@ -955,7 +1055,7 @@
                               'box-shadow:0 8px 28px rgba(0,0,0,0.18);transition:opacity 0.35s;background:' + bg + ';';
             t.textContent = msg;
             document.body.appendChild(t);
-            setTimeout(function() { t.style.opacity = '0'; setTimeout(function() { t.remove(); }, 350); }, 2800);
+            setTimeout(function() { t.style.opacity='0'; setTimeout(function(){ t.remove(); }, 350); }, 2800);
         }
     </script>
     <script>
@@ -1067,5 +1167,22 @@
             });
         });
     </script>
+
+<!-- Promo code modal -->
+<div class="pm-overlay" id="pm-overlay" onclick="pmOverlayClick(event)">
+  <div class="pm-box">
+    <button class="pm-close" onclick="closePromoModal()">×</button>
+    <div class="pm-emoji" id="pm-emoji">🎉</div>
+    <div class="pm-title" id="pm-title">Weekend Deal</div>
+    <div class="pm-desc"  id="pm-desc">50% OFF your order</div>
+    <div class="pm-code-row">
+      <span class="pm-code-text" id="pm-code">WEEKEND50</span>
+      <button class="pm-copy-btn" id="pm-copy-btn" onclick="copyPromoCode()">📋 Copy</button>
+    </div>
+    <div class="pm-used-notice" id="pm-used-notice">You've already used this promo code.</div>
+    <button class="pm-apply-btn" id="pm-apply-btn" onclick="applyPromoAndGo()">Apply &amp; Order Now</button>
+    <button class="pm-later-btn" onclick="closePromoModal()">Maybe later</button>
+  </div>
+</div>
 </body>
 </html>

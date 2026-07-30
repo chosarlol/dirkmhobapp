@@ -513,7 +513,13 @@
 
         var labelEl = document.getElementById('checkout2-discount-label');
         if (labelEl) {
-            labelEl.textContent = promoCalc.label ? 'Discount (' + promoCalc.label + ')' : 'Discount';
+            if (promoCalc.label) {
+                labelEl.textContent = promoCalc.type === 'FREE_DELIVERY'
+                    ? promoCalc.label + ' (Free Delivery)'
+                    : 'Discount (' + promoCalc.label + ')';
+            } else {
+                labelEl.textContent = 'Discount';
+            }
         }
         console.log('[CHECKOUT2] loadCheckoutInfo subtotal=$' + subtotal.toFixed(2) +
                     ' delivery=$' + delivery.toFixed(2) +
@@ -550,6 +556,14 @@
         var totalEl    = document.getElementById('total-amount');
         if (totalEl) totalEl.textContent = '$ ' + total.toFixed(2);
         if (delivEl) delivEl.textContent = '$ ' + delivery.toFixed(2);
+        var discEl = document.getElementById('discount-value');
+        if (discEl) discEl.textContent = '−$ ' + discount.toFixed(2);
+        var labelEl = document.getElementById('checkout2-discount-label');
+        if (labelEl && promoCalc.label) {
+            labelEl.textContent = promoCalc.type === 'FREE_DELIVERY'
+                ? promoCalc.label + ' (Free Delivery)'
+                : 'Discount (' + promoCalc.label + ')';
+        }
     }
 
     function initCheckoutMap() {

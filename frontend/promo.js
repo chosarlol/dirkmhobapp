@@ -211,9 +211,10 @@
             console.log('[PROMO] PERCENT_OFF ' + promo.value + '% → discount=$' + discount.toFixed(2));
 
         } else if (promo.type === 'FREE_DELIVERY') {
-            delivery = 0;
-            discount = 0;
-            console.log('[PROMO] FREE_DELIVERY → delivery fee $0');
+            /* Keep real delivery fee visible; discount equals it so net is $0 */
+            delivery = baseDelivery;
+            discount = baseDelivery;
+            console.log('[PROMO] FREE_DELIVERY → delivery=$' + delivery.toFixed(2) + ' discount=$' + discount.toFixed(2));
 
         } else if (promo.type === 'FLAT_OFF') {
             discount = Math.min(promo.value, subtotal);

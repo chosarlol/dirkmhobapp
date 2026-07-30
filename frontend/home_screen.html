@@ -771,8 +771,8 @@
                     <span class="eyebrow">Fast delivery • Fresh meals • Trusted riders</span>
                     <h1 class="hero-title">Food Delivered To Your Doorstep</h1>
                     <p class="hero-copy">Order from your favorite restaurants anytime, anywhere with fast delivery and mouthwatering meals.</p>
-                    <form class="hero-search" action="search_screen.html">
-                        <input type="text" placeholder="Search restaurants, food, cuisines...">
+                    <form class="hero-search" action="search_screen.html" onsubmit="var v=this.querySelector('input').value.trim();if(v){this.action='search_screen.html?q='+encodeURIComponent(v);}">
+                        <input type="text" name="q" placeholder="Search restaurants, food, cuisines...">
                         <button class="btn btn-primary" type="submit">Order Now</button>
                     </form>
                     <div class="hero-stats">

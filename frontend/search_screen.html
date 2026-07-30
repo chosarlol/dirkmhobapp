@@ -281,6 +281,16 @@
     var params = new URLSearchParams(window.location.search);
     activeCategory = params.get('category') || '';
 
+    /* Pre-fill search from ?q= param (sent by home page search bar) */
+    var qParam = params.get('q') || '';
+    if (qParam) {
+      searchVal = qParam;
+      var inp1 = document.getElementById('search-input');
+      var inp2 = document.getElementById('nav-search');
+      if (inp1) inp1.value = qParam;
+      if (inp2) inp2.value = qParam;
+    }
+
     // Activate the matching chip
     document.querySelectorAll('.chip').forEach(function(c) {
       if (c.dataset.cat === activeCategory) c.classList.add('active');

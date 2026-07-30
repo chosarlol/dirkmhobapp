@@ -601,6 +601,19 @@
     }).catch(function(){ toast('Request failed.', false); });
   }
 
+  /* ── Auto-refresh: poll every 30 s so new registrations appear ── */
+  (function startAutoRefresh() {
+    setInterval(function() {
+      /* Only refresh the section that is currently visible */
+      var active = document.querySelector('.sb-item.active');
+      if (!active) return;
+      var sec = active.dataset.section;
+      if (sec === 'users')       loadUsers();
+      if (sec === 'restaurants') { loadPending(); loadRestaurants(); }
+      if (sec === 'orders')      loadOrders();
+    }, 30000); /* 30 seconds */
+  })();
+
   /* ── Orders ──────────────────────────────────────── */
   function loadOrders(){
     var tbody = document.getElementById('orders-tbody');

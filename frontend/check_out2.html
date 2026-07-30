@@ -291,7 +291,18 @@
 
         <!-- Real Leaflet map — drag 📍 to change delivery location -->
         <div id="delivery-map"></div>
-        <div class="drag-hint">📍 Drag the blue pin on the map to change your delivery location</div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap;">
+            <div class="drag-hint" style="margin:0;flex:1;">📍 Drag the blue pin to set your delivery location</div>
+            <button onclick="useGPSLocation()" style="display:flex;align-items:center;gap:5px;background:#0077c8;color:white;border:none;border-radius:8px;padding:7px 12px;font-size:0.82rem;font-weight:700;cursor:pointer;white-space:nowrap;">
+                📡 Use my location
+            </button>
+        </div>
+        <div id="home-save-bar" style="display:none;margin-top:8px;background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px;padding:9px 14px;display:none;align-items:center;justify-content:space-between;gap:8px;">
+            <span id="home-save-addr" style="font-size:0.85rem;color:#166534;font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+            <button onclick="confirmSaveHome()" style="background:#16a34a;color:white;border:none;border-radius:7px;padding:5px 12px;font-size:0.82rem;font-weight:700;cursor:pointer;white-space:nowrap;">Save as home</button>
+            <button onclick="dismissSaveBar()" style="background:none;border:none;color:#64748b;cursor:pointer;font-size:1rem;padding:0 4px;">✕</button>
+        </div>
+        <div id="home-saved-note" style="display:none;margin-top:6px;font-size:0.8rem;color:#16a34a;font-weight:600;"></div>
     </div>
 
     <!-- RIGHT: DETAILS CARD -->
@@ -417,6 +428,8 @@
 <script>
     var selectedPayment = 'khqr';
     var currentPin = 'Phnom Penh';
+    var currentDeliveryFee = DirkCart.DELIVERY_FEE; /* updated by map route calc */
+    var pendingHomeLat = null, pendingHomeLng = null;
 
     function renderPromoSection() {
         var sec   = document.getElementById('promo-section');
@@ -523,6 +536,7 @@
     }
 
     function updateDeliveryFeeDisplay(fee) {
+        currentDeliveryFee = fee; /* track for placeOrder() */
         var delivEl = document.getElementById('delivery-value');
         if (delivEl) delivEl.textContent = '$ ' + fee.toFixed(2);
         /* Recalculate total */
@@ -531,6 +545,7 @@
         var serviceFee = 1.00;
         var discount   = promoCalc.discount;
         var delivery   = promoCalc.delivery !== undefined ? promoCalc.delivery : fee;
+        currentDeliveryFee = delivery;
         var total      = subtotal + delivery + serviceFee - discount;
         var totalEl    = document.getElementById('total-amount');
         if (totalEl) totalEl.textContent = '$ ' + total.toFixed(2);
@@ -545,6 +560,22 @@
         if (knownCoords) {
             RESTAURANT_LAT = knownCoords.lat;
             RESTAURANT_LNG = knownCoords.lng;
+        }
+
+        /* Load saved home location (set by GPS or previous drag) */
+        var savedLat  = parseFloat(localStorage.getItem('home_lat'));
+        var savedLng  = parseFloat(localStorage.getItem('home_lng'));
+        var savedAddr = localStorage.getItem('home_address');
+        if (savedLat && savedLng && !isNaN(savedLat) && !isNaN(savedLng)) {
+            CUSTOMER_LAT = savedLat;
+            CUSTOMER_LNG = savedLng;
+            if (savedAddr) {
+                currentPin = savedAddr;
+                var addrEl = document.getElementById('address-display');
+                if (addrEl) addrEl.textContent = savedAddr;
+            }
+            var note = document.getElementById('home-saved-note');
+            if (note) { note.textContent = '🏠 Using your saved home location'; note.style.display = 'block'; }
         }
 
         checkoutMap = L.map('delivery-map').setView(
@@ -584,11 +615,15 @@
         /* Show popup hint */
         setTimeout(function() { customerMarker.openPopup(); }, 700);
 
-        /* On drag end: reverse geocode + redraw route */
+        /* On drag end: reverse geocode + redraw route + offer to save home */
         customerMarker.on('dragend', function(e) {
             var pos = e.target.getLatLng();
+            pendingHomeLat = pos.lat;
+            pendingHomeLng = pos.lng;
             fetchCheckoutRoute(pos.lat, pos.lng);
-            reverseGeocodePin(pos.lat, pos.lng);
+            reverseGeocodePin(pos.lat, pos.lng, true /* showSaveBar */);
+            var note = document.getElementById('home-saved-note');
+            if (note) note.style.display = 'none';
         });
     }
 
@@ -610,22 +645,62 @@
         .catch(function() {});
     }
 
-    function reverseGeocodePin(lat, lng) {
+    function reverseGeocodePin(lat, lng, showSaveBar) {
         fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng, {
             headers: { 'Accept-Language': 'en' }
         })
         .then(function(r) { return r.json(); })
         .then(function(data) {
             var raw = data.display_name || '';
-            /* Keep first 3 parts for a short readable address */
             var short = raw.split(',').slice(0, 3).join(',').trim();
             currentPin = short || (lat.toFixed(5) + ', ' + lng.toFixed(5));
             var addrEl = document.getElementById('address-display');
             if (addrEl) addrEl.textContent = currentPin;
+            if (showSaveBar) {
+                var bar  = document.getElementById('home-save-bar');
+                var lbl  = document.getElementById('home-save-addr');
+                if (bar && lbl) { lbl.textContent = currentPin; bar.style.display = 'flex'; }
+            }
         })
         .catch(function() {
             currentPin = lat.toFixed(5) + ', ' + lng.toFixed(5);
         });
+    }
+
+    function confirmSaveHome() {
+        if (pendingHomeLat === null) return;
+        localStorage.setItem('home_lat',     pendingHomeLat);
+        localStorage.setItem('home_lng',     pendingHomeLng);
+        localStorage.setItem('home_address', currentPin);
+        dismissSaveBar();
+        var note = document.getElementById('home-saved-note');
+        if (note) { note.textContent = '🏠 Home location saved!'; note.style.display = 'block'; }
+    }
+
+    function dismissSaveBar() {
+        var bar = document.getElementById('home-save-bar');
+        if (bar) bar.style.display = 'none';
+    }
+
+    function useGPSLocation() {
+        if (!navigator.geolocation) { alert('Geolocation is not supported by your browser.'); return; }
+        var btn = document.querySelector('button[onclick="useGPSLocation()"]');
+        if (btn) { btn.textContent = '⏳ Locating…'; btn.disabled = true; }
+        navigator.geolocation.getCurrentPosition(function(pos) {
+            var lat = pos.coords.latitude, lng = pos.coords.longitude;
+            if (btn) { btn.textContent = '📡 Use my location'; btn.disabled = false; }
+            if (customerMarker) customerMarker.setLatLng([lat, lng]);
+            if (checkoutMap)    checkoutMap.setView([lat, lng], 15);
+            pendingHomeLat = lat;
+            pendingHomeLng = lng;
+            fetchCheckoutRoute(lat, lng);
+            reverseGeocodePin(lat, lng, true);
+            var note = document.getElementById('home-saved-note');
+            if (note) note.style.display = 'none';
+        }, function() {
+            if (btn) { btn.textContent = '📡 Use my location'; btn.disabled = false; }
+            alert('Could not get your location. Please drag the pin manually.');
+        }, { timeout: 10000 });
     }
 
     function editPinPrompt() {
@@ -652,7 +727,7 @@
     function placeOrder() {
         var cart       = DirkCart.getCart();
         var subtotal   = DirkCart.calculateSubtotal(cart);
-        var promoCalc  = DirkPromo.calculateDiscount(subtotal, DirkCart.DELIVERY_FEE);
+        var promoCalc  = DirkPromo.calculateDiscount(subtotal, currentDeliveryFee);
         var delivery   = promoCalc.delivery;
         var discount   = promoCalc.discount;
         var serviceFee = 1.00;

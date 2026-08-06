@@ -149,23 +149,8 @@
     'Desserts':  ['dessert','sweet','ice cream','cake','gelato','waffle','crepe'],
   };
 
-  // ── Restaurant → static page URL mapping ────────────────────────────
-  var PAGE_MAP = {
-    'brown - tk avenue': 'res_brown.html',
-    'brown':             'res_brown.html',
-    'texas chicken':     'res_texas.html',
-    'texas':             'res_texas.html',
-    'kfc - tk avenue':   'res_kfc.html',
-    'kfc':               'res_kfc.html',
-  };
-
+  // All restaurants use the dynamic restaurant page
   function getRestaurantPage(r) {
-    var key = r.name.toLowerCase().trim();
-    if (PAGE_MAP[key]) return PAGE_MAP[key];
-    // partial match
-    for (var k in PAGE_MAP) {
-      if (key.indexOf(k) !== -1 || k.indexOf(key) !== -1) return PAGE_MAP[k];
-    }
     return 'restaurant.html?id=' + r.id;
   }
 
@@ -199,10 +184,13 @@
     var grid = document.getElementById('rest-grid');
     var q    = searchVal.toLowerCase();
     var filtered = allRestaurants.filter(function(r) {
-      if (!matchesCategory(r, activeCategory)) return false;
-      if (q && r.name.toLowerCase().indexOf(q) === -1 &&
-               (r.cuisine_type || '').toLowerCase().indexOf(q) === -1) return false;
-      return true;
+      /* When user types a query, search across ALL restaurants (ignore chip) */
+      if (q) {
+        return r.name.toLowerCase().indexOf(q) !== -1 ||
+               (r.cuisine_type || '').toLowerCase().indexOf(q) !== -1;
+      }
+      /* No search query — filter by active category chip */
+      return matchesCategory(r, activeCategory);
     });
 
     if (!filtered.length) {
@@ -257,9 +245,12 @@
   }
 
   function onSearchInput(val) {
-    searchVal = val;
-    document.getElementById('nav-search').value = val;
-    document.getElementById('search-input').value = val;
+    searchVal = val.trim();
+    /* Sync the other input without re-triggering oninput */
+    var main = document.getElementById('search-input');
+    var nav  = document.getElementById('nav-search');
+    if (main && main !== document.activeElement) main.value = val;
+    if (nav  && nav  !== document.activeElement) nav.value  = val;
     render();
   }
 
